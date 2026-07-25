@@ -1,0 +1,48 @@
+import type { ModelRelationMap } from "../autoIncludePlanner.js";
+
+export const UserWordProgressRelations: ModelRelationMap = {
+  name: "UserWordProgress",
+  delegateKey: "userWordProgress",
+  scalarFields: [
+    "id",
+    "userId",
+    "wordId",
+    "level",
+    "unit",
+    "status",
+    "mastery",
+    "seenCount",
+    "knownCount",
+    "reviewCount",
+    "correctCount",
+    "incorrectCount",
+    "streak",
+    "lastSeenAt",
+    "lastCorrectAt",
+    "lastIncorrectAt",
+    "nextReviewAt",
+    "masteredAt",
+    "createdAt",
+    "updatedAt",
+  ],
+  relations: {
+    user: {
+      name: "user",
+      type: "User",
+      isList: false,
+      isRequired: true,
+      direction: "parentOwnsFk",
+      parentLinkFields: ["userId"],
+      childLinkFields: ["id"],
+    },
+    word: {
+      name: "word",
+      type: "VocabWord",
+      isList: false,
+      isRequired: true,
+      direction: "parentOwnsFk",
+      parentLinkFields: ["wordId"],
+      childLinkFields: ["id"],
+    },
+  },
+};

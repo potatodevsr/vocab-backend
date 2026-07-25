@@ -1,0 +1,63 @@
+import type { ModelRelationMap } from "../autoIncludePlanner.js";
+
+export const UserRelations: ModelRelationMap = {
+  name: "User",
+  delegateKey: "user",
+  scalarFields: [
+    "id",
+    "email",
+    "username",
+    "password",
+    "firstName",
+    "lastName",
+    "createdAt",
+    "updatedAt",
+  ],
+  relations: {
+    learningSessions: {
+      name: "learningSessions",
+      type: "LearningSession",
+      isList: true,
+      isRequired: true,
+      direction: "childOwnsFk",
+      parentLinkFields: ["id"],
+      childLinkFields: ["userId"],
+    },
+    quizResults: {
+      name: "quizResults",
+      type: "QuizResult",
+      isList: true,
+      isRequired: true,
+      direction: "childOwnsFk",
+      parentLinkFields: ["id"],
+      childLinkFields: ["userId"],
+    },
+    unitProgresses: {
+      name: "unitProgresses",
+      type: "UserUnitProgress",
+      isList: true,
+      isRequired: true,
+      direction: "childOwnsFk",
+      parentLinkFields: ["id"],
+      childLinkFields: ["userId"],
+    },
+    wordProgresses: {
+      name: "wordProgresses",
+      type: "UserWordProgress",
+      isList: true,
+      isRequired: true,
+      direction: "childOwnsFk",
+      parentLinkFields: ["id"],
+      childLinkFields: ["userId"],
+    },
+    wordAttempts: {
+      name: "wordAttempts",
+      type: "UserWordAttempt",
+      isList: true,
+      isRequired: true,
+      direction: "childOwnsFk",
+      parentLinkFields: ["id"],
+      childLinkFields: ["userId"],
+    },
+  },
+};

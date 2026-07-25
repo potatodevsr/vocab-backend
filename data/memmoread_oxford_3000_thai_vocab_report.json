@@ -1,0 +1,287 @@
+{
+  "pages": 69,
+  "rawRows": 3184,
+  "exportedRows": 2845,
+  "emptyMeaningTh": 0,
+  "emptyPronunciationTh": 0,
+  "pageStats": [
+    {
+      "page": 1,
+      "rows": 0
+    },
+    {
+      "page": 2,
+      "rows": 49
+    },
+    {
+      "page": 3,
+      "rows": 50
+    },
+    {
+      "page": 4,
+      "rows": 50
+    },
+    {
+      "page": 5,
+      "rows": 49
+    },
+    {
+      "page": 6,
+      "rows": 50
+    },
+    {
+      "page": 7,
+      "rows": 49
+    },
+    {
+      "page": 8,
+      "rows": 48
+    },
+    {
+      "page": 9,
+      "rows": 48
+    },
+    {
+      "page": 10,
+      "rows": 48
+    },
+    {
+      "page": 11,
+      "rows": 49
+    },
+    {
+      "page": 12,
+      "rows": 50
+    },
+    {
+      "page": 13,
+      "rows": 49
+    },
+    {
+      "page": 14,
+      "rows": 50
+    },
+    {
+      "page": 15,
+      "rows": 48
+    },
+    {
+      "page": 16,
+      "rows": 48
+    },
+    {
+      "page": 17,
+      "rows": 50
+    },
+    {
+      "page": 18,
+      "rows": 15
+    },
+    {
+      "page": 19,
+      "rows": 0
+    },
+    {
+      "page": 20,
+      "rows": 53
+    },
+    {
+      "page": 21,
+      "rows": 52
+    },
+    {
+      "page": 22,
+      "rows": 52
+    },
+    {
+      "page": 23,
+      "rows": 53
+    },
+    {
+      "page": 24,
+      "rows": 53
+    },
+    {
+      "page": 25,
+      "rows": 53
+    },
+    {
+      "page": 26,
+      "rows": 52
+    },
+    {
+      "page": 27,
+      "rows": 53
+    },
+    {
+      "page": 28,
+      "rows": 51
+    },
+    {
+      "page": 29,
+      "rows": 53
+    },
+    {
+      "page": 30,
+      "rows": 53
+    },
+    {
+      "page": 31,
+      "rows": 52
+    },
+    {
+      "page": 32,
+      "rows": 53
+    },
+    {
+      "page": 33,
+      "rows": 51
+    },
+    {
+      "page": 34,
+      "rows": 53
+    },
+    {
+      "page": 35,
+      "rows": 51
+    },
+    {
+      "page": 36,
+      "rows": 19
+    },
+    {
+      "page": 37,
+      "rows": 0
+    },
+    {
+      "page": 38,
+      "rows": 49
+    },
+    {
+      "page": 39,
+      "rows": 49
+    },
+    {
+      "page": 40,
+      "rows": 49
+    },
+    {
+      "page": 41,
+      "rows": 49
+    },
+    {
+      "page": 42,
+      "rows": 49
+    },
+    {
+      "page": 43,
+      "rows": 49
+    },
+    {
+      "page": 44,
+      "rows": 49
+    },
+    {
+      "page": 45,
+      "rows": 48
+    },
+    {
+      "page": 46,
+      "rows": 48
+    },
+    {
+      "page": 47,
+      "rows": 49
+    },
+    {
+      "page": 48,
+      "rows": 49
+    },
+    {
+      "page": 49,
+      "rows": 49
+    },
+    {
+      "page": 50,
+      "rows": 49
+    },
+    {
+      "page": 51,
+      "rows": 49
+    },
+    {
+      "page": 52,
+      "rows": 48
+    },
+    {
+      "page": 53,
+      "rows": 49
+    },
+    {
+      "page": 54,
+      "rows": 23
+    },
+    {
+      "page": 55,
+      "rows": 0
+    },
+    {
+      "page": 56,
+      "rows": 54
+    },
+    {
+      "page": 57,
+      "rows": 53
+    },
+    {
+      "page": 58,
+      "rows": 54
+    },
+    {
+      "page": 59,
+      "rows": 54
+    },
+    {
+      "page": 60,
+      "rows": 54
+    },
+    {
+      "page": 61,
+      "rows": 54
+    },
+    {
+      "page": 62,
+      "rows": 54
+    },
+    {
+      "page": 63,
+      "rows": 54
+    },
+    {
+      "page": 64,
+      "rows": 54
+    },
+    {
+      "page": 65,
+      "rows": 54
+    },
+    {
+      "page": 66,
+      "rows": 54
+    },
+    {
+      "page": 67,
+      "rows": 53
+    },
+    {
+      "page": 68,
+      "rows": 54
+    },
+    {
+      "page": 69,
+      "rows": 23
+    }
+  ],
+  "output": "/Users/potato/vocab-backend/data/memmoread_oxford_3000_thai_vocab_slim.json",
+  "fullOutput": "/Users/potato/vocab-backend/data/memmoread_oxford_3000_thai_vocab_rows.json"
+}

@@ -1,0 +1,11 @@
+allowBuilds:
+  "@prisma/engines": true
+  better-sqlite3: true
+  esbuild: true
+  prisma: true
+minimumReleaseAgeExclude:
+  - prisma-generator-express@1.41.0
+  - prisma-generator-express@1.42.0
+  - prisma-generator-express@1.44.0
+  - prisma-generator-express@1.45.0
+  - prisma-generator-express@1.45.1

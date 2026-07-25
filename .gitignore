@@ -1,0 +1,5 @@
+/.DS_Store
+/.env
+/dev.backup-before-merge-pos.db
+/dev.db
+/node_modules

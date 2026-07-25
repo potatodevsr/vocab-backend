@@ -1,0 +1,204 @@
+generator client {
+    provider = "prisma-client"
+    output   = "generated/prisma"
+}
+
+generator guard {
+    provider = "prisma-guard"
+    // output   = "../src/generated/guard"
+}
+
+generator express {
+    provider = "prisma-generator-express"
+    output   = "../src/generated/api"
+    target   = "express"
+}
+
+datasource db {
+    provider = "sqlite"
+}
+
+model VocabWord {
+    id               String             @id
+    sourceKey        String             @unique
+    sourceOrder      Int
+    sourceName       String
+    sourceTitle      String
+    level            String
+    unit             Int?
+    word             String
+    displayWord      String
+    slug             String
+    homograph        Int?
+    sense            String?
+    partOfSpeech     String
+    meaningTh        String             @default("")
+    pronunciationTh  String             @default("")
+    ipa              String             @default("")
+    exampleEn        String             @default("")
+    exampleTh        String             @default("")
+    notes            String             @default("")
+    status           String             @default("draft")
+    createdAt        DateTime           @default(now())
+    updatedAt        DateTime           @updatedAt
+
+    wordProgresses   UserWordProgress[]
+    wordAttempts     UserWordAttempt[]
+
+    @@index([level])
+    @@index([level, unit])
+    @@index([slug])
+    @@index([sourceOrder])
+    @@index([status])
+}
+
+model AdminUser {
+    id        String   @id @default(cuid())
+    username  String   @unique
+    password  String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model User {
+    id               String             @id @default(cuid())
+    email            String             @unique
+    username         String             @unique
+    password         String
+    firstName        String             @default("")
+    lastName         String             @default("")
+    createdAt        DateTime           @default(now())
+    updatedAt        DateTime           @updatedAt
+    learningSessions LearningSession[]
+    quizResults      QuizResult[]
+    unitProgresses   UserUnitProgress[]
+    wordProgresses   UserWordProgress[]
+    wordAttempts     UserWordAttempt[]
+}
+
+
+model LearningSession {
+    id             String    @id @default(cuid())
+    userId         String
+    level          String
+    unit           Int?
+    mode           String    @default("learn")
+    startedAt      DateTime  @default(now())
+    endedAt        DateTime?
+    totalWords     Int       @default(0)
+    completedWords Int       @default(0)
+    correctCount   Int       @default(0)
+    incorrectCount Int       @default(0)
+    durationSec    Int?
+    createdAt      DateTime  @default(now())
+    updatedAt      DateTime  @updatedAt
+    user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    attempts       UserWordAttempt[]
+
+    @@index([userId])
+    @@index([userId, startedAt])
+    @@index([userId, level, unit])
+}
+
+
+model QuizResult {
+    id             String            @id @default(cuid())
+    userId         String
+    level          String
+    unit           Int?
+    score          Int
+    total          Int
+    correctCount   Int               @default(0)
+    incorrectCount Int               @default(0)
+    startedAt      DateTime          @default(now())
+    endedAt        DateTime?
+    createdAt      DateTime          @default(now())
+
+    user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+    attempts       UserWordAttempt[]
+
+    @@index([userId])
+    @@index([userId, createdAt])
+    @@index([userId, level, unit])
+}
+
+model UserUnitProgress {
+    id               String   @id @default(cuid())
+    userId           String
+    level            String
+    unit             Int
+    totalWords       Int      @default(0)
+    currentIndex     Int      @default(0)
+    learnedCount     Int      @default(0)
+    reviewCount      Int      @default(0)
+    completedAt      DateTime?
+    lastStudiedAt    DateTime?
+    createdAt        DateTime @default(now())
+    updatedAt        DateTime @updatedAt
+    user             User     @relation(fields: [userId], references: [id])
+
+    @@unique([userId, level, unit])
+    @@index([userId])
+    @@index([level, unit])
+}
+
+model UserWordProgress {
+    id              String    @id @default(cuid())
+    userId          String
+    wordId          String
+    level           String
+    unit            Int?
+    status          String    @default("new")
+    mastery         Int       @default(0)
+    seenCount       Int       @default(0)
+    knownCount      Int       @default(0)
+    reviewCount     Int       @default(0)
+    correctCount    Int       @default(0)
+    incorrectCount  Int       @default(0)
+    streak          Int       @default(0)
+    lastSeenAt      DateTime?
+    lastCorrectAt   DateTime?
+    lastIncorrectAt DateTime?
+    nextReviewAt    DateTime?
+    masteredAt      DateTime?
+    createdAt       DateTime  @default(now())
+    updatedAt       DateTime  @updatedAt
+
+    user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    word            VocabWord @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, wordId])
+    @@index([userId])
+    @@index([wordId])
+    @@index([userId, status])
+    @@index([userId, nextReviewAt])
+    @@index([userId, level, unit])
+}
+
+model UserWordAttempt {
+    id            String           @id @default(cuid())
+    userId        String
+    wordId        String
+    sessionId     String?
+    quizResultId  String?
+    level         String
+    unit          Int?
+    activityType  String
+    result        String
+    answer        String           @default("")
+    correctAnswer String           @default("")
+    createdAt     DateTime         @default(now())
+
+    user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+    word          VocabWord        @relation(fields: [wordId], references: [id], onDelete: Cascade)
+    session       LearningSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+    quizResult    QuizResult?      @relation(fields: [quizResultId], references: [id], onDelete: SetNull)
+
+    @@index([userId])
+    @@index([wordId])
+    @@index([sessionId])
+    @@index([quizResultId])
+    @@index([activityType])
+    @@index([createdAt])
+}
