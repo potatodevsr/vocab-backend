@@ -1,6 +1,10 @@
 generator client {
     provider = "prisma-client"
     output   = "generated/prisma"
+    // Without this the generated client emits `fileURLToPath(import.meta.url)` at module
+    // scope and the Worker dies on boot. Node-targeted tooling (seeds, scripts) must go
+    // through wrangler/D1 rather than importing this client directly.
+    runtime  = "workerd"
 }
 
 generator guard {
@@ -8,10 +12,12 @@ generator guard {
     // output   = "../src/generated/guard"
 }
 
+// Emits to prisma/generated/hono/ — the path is derived from `target`, not configurable
+// via `output` (the generator has no documented output option).
 generator express {
-    provider = "prisma-generator-express"
-    output   = "../src/generated/api"
-    target   = "express"
+    provider              = "prisma-generator-express"
+    target                = "hono"
+    findManyPaginatedMode = "promiseAll" // D1 has no transactions; see AGENTS.md
 }
 
 datasource db {

@@ -4,16 +4,19 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "dev": "tsx watch src/index.ts",
         "db:generate": "prisma generate",
-        "db:migrate": "prisma migrate dev",
-        "db:push": "prisma db push",
-        "seed:vocab": "tsx src/seed-vocab.ts",
+        "db:migrate:local": "wrangler d1 migrations apply vocab --local",
+        "db:migrate:new": "prisma migrate diff --from-migrations migrations --to-schema prisma/schema.prisma --script",
+        "db:seed:dev": "node scripts/generate-dev-seed.mjs > seed/dev.sql && wrangler d1 execute vocab --local --file=seed/dev.sql",
+        "db:seed:e2e": "node scripts/generate-e2e-seed.mjs > seed/e2e.sql",
+        "dev": "wrangler dev --local --port 4000",
+        "generate:oxford-thai-local": "tsx scripts/generate-oxford-thai-local.ts",
         "seed:oxford-thai": "tsx scripts/seed-oxford-thai.ts",
-        "generate:oxford-thai-local": "tsx scripts/generate-oxford-thai-local.ts"
+        "seed:vocab": "tsx src/seed-vocab.ts"
     },
     "dependencies": {
         "@prisma/adapter-better-sqlite3": "^7.8.0",
+        "@prisma/adapter-d1": "^7.9.0",
         "@prisma/client": "7.8.0",
         "bcryptjs": "^3.0.3",
         "better-sqlite3": "^12.10.0",
@@ -22,6 +25,8 @@
         "dotenv": "^17.4.2",
         "dotenv-flow": "^4.1.0",
         "express": "5.2.1",
+        "hono": "^4.12.32",
+        "jose": "^6.2.4",
         "jsonwebtoken": "^9.0.3",
         "prisma-guard": "1.25.0",
         "zod": "4.4.3"
@@ -38,6 +43,7 @@
         "prisma": "7.8.0",
         "prisma-generator-express": "1.46.0",
         "tsx": "^4.22.3",
-        "typescript": "^5"
+        "typescript": "^5",
+        "wrangler": "^4.114.0"
     }
 }

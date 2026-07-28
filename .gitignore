@@ -1,5 +1,24 @@
 /.DS_Store
 /.env
+/node_modules
+
+# Local databases — never commit data
 /dev.backup-before-merge-pos.db
 /dev.db
-/node_modules
+*.db
+*.db-journal
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Wrangler local state: miniflare's D1/KV/R2 files, build cache, and the isolated e2e
+# database. Rebuilt by `pnpm db:migrate:local` + `pnpm db:seed:dev`.
+/.wrangler/
+
+# Generated SQL seed for dev — rebuilt from data/vocab_review.csv on demand.
+# seed/e2e.sql IS committed: e2e determinism depends on those exact fixture bytes.
+/seed/dev.sql
+
+# Prisma's compiled query engine, restored by `prisma generate`
+/prisma/generated/prisma/internal/query_compiler_fast_bg.wasm
+/prisma/generated/prisma/internal/query_compiler_fast_bg.js

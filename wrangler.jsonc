@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "vocab-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  // nodejs_compat is required by the Prisma client runtime.
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "vocab",
+      // Placeholder: replace with the real id from `wrangler d1 create vocab`
+      // before the first remote deploy. Local dev (--local) ignores it.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    // Local/dev only. Production sets this with `wrangler secret put JWT_SECRET`.
+    "JWT_SECRET": "49022f773409abad1e30a7057912cbe866a42791804a6dd2b0f763055da2b106",
+    "FRONTEND_URL": "http://localhost:3000"
+  }
+}

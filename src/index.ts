@@ -1,218 +1,318 @@
-import 'dotenv-flow/config';
-import cookieParser from "cookie-parser";
-import cors from "cors";
-import express from "express";
-import jwt from "jsonwebtoken";
-import { VocabWordRouter } from "../prisma/generated/express/VocabWord/VocabWordRouter.js";
-import { prisma } from "./helpers/instances.js";
-import { requireAuth, requireUserAuth } from "./middleware/auth.js";
-import bcrypt from "bcryptjs";
-import { UserRouter } from "../prisma/generated/express/User/UserRouter.js";
-import { LearningSessionRouter } from "../prisma/generated/express/LearningSession/LearningSessionRouter.js";
-import { QuizResultRouter } from "../prisma/generated/express/QuizResult/QuizResultRouter.js";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { getCookie, setCookie, deleteCookie } from "hono/cookie";
+import { PrismaD1 } from "@prisma/adapter-d1";
+import { PrismaClient } from "../prisma/generated/prisma/client.js";
+import { SignJWT, jwtVerify } from "jose";
 
+import { hashPassword, verifyPassword } from "./password.js";
+import { guard } from "../prisma/generated/guard/client.js";
+import { VocabWordRouter } from "../prisma/generated/hono/VocabWord/VocabWordRouter.js";
+import { UserRouter } from "../prisma/generated/hono/User/UserRouter.js";
+import {
+    USER_SHAPES,
+    VOCAB_WORD_SHAPES,
+    VOCAB_WORD_UPDATE_SHAPE,
+    resolveVariant,
+} from "./guard-shapes.js";
+import { progress } from "./progress.js";
 
+export type Bindings = {
+    DB: D1Database;
+    JWT_SECRET: string;
+    /**
+     * Origin allowed to call this Worker from a browser. Only needed while the web app
+     * and the API are on different origins in local dev — once Next forwards `/api/*`
+     * over a service binding (see docs/SPEC.md §2.1) requests are same-origin and this
+     * goes away entirely.
+     */
+    FRONTEND_URL?: string;
+};
 
-declare module "express-serve-static-core" {
-    interface Request {
-        prisma: typeof prisma;
+export type Variables = {
+    prisma: PrismaClient;
+    role: "admin" | "user" | "anonymous";
+    userId?: string;
+};
+
+type Env = { Bindings: Bindings; Variables: Variables };
+
+const USER_TOKEN = "user_token";
+const ADMIN_TOKEN = "admin_token";
+const USER_TTL_DAYS = 30;
+const ADMIN_TTL_DAYS = 7;
+
+const secretOf = (c: { env: Bindings }) =>
+    new TextEncoder().encode(c.env.JWT_SECRET);
+
+const sign = async (
+    payload: Record<string, unknown>,
+    secret: Uint8Array,
+    days: number,
+) =>
+    new SignJWT(payload)
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setExpirationTime(`${days}d`)
+        .sign(secret);
+
+const app = new Hono<Env>();
+
+app.use("*", async (c, next) =>
+    cors({
+        origin: c.env.FRONTEND_URL ?? "http://localhost:3000",
+        credentials: true,
+        allowHeaders: ["Content-Type"],
+        allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    })(c, next),
+);
+
+/**
+ * One guarded Prisma client per isolate, not per request.
+ *
+ * A per-request client was the original plan (it is how guard scope context can be
+ * supplied without `AsyncLocalStorage`), but we do not use scope roots yet, so the
+ * context function returns `{}` and the per-request instance bought nothing while
+ * instantiating a WASM query compiler on every call. Reuse is both cheaper and steadier
+ * under load. If scope roots are introduced later, either pass the caller through
+ * `.guard(shape, caller)` — which the generated routers already do — or revisit this.
+ */
+let cached: { db: D1Database; client: unknown } | null = null;
+
+const getPrisma = (db: D1Database) => {
+    if (cached?.db === db) return cached.client;
+
+    const client = new PrismaClient({ adapter: new PrismaD1(db) }).$extends(
+        guard.extension(() => ({})),
+    );
+
+    cached = { db, client };
+
+    return client;
+};
+
+app.use("*", async (c, next) => {
+    c.set("prisma", getPrisma(c.env.DB) as never);
+    c.set("role", "anonymous");
+
+    const userToken = getCookie(c, USER_TOKEN);
+    const adminToken = getCookie(c, ADMIN_TOKEN);
+
+    if (adminToken) {
+        try {
+            const { payload } = await jwtVerify(adminToken, secretOf(c));
+            if (payload.role === "admin") c.set("role", "admin");
+        } catch {
+            // fall through as anonymous
+        }
+    } else if (userToken) {
+        try {
+            const { payload } = await jwtVerify(userToken, secretOf(c));
+            if (payload.role === "user" && typeof payload.userId === "string") {
+                c.set("role", "user");
+                c.set("userId", payload.userId);
+            }
+        } catch {
+            // fall through as anonymous
+        }
     }
-}
 
-const JWT_SECRET = process.env.JWT_SECRET!;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD!;
-
-const app = express();
-
-app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    credentials: true,
-}));
-app.use(express.json());
-app.use(cookieParser());
-
-app.use((req, _res, next) => {
-    req.prisma = prisma;
-    next();
+    await next();
 });
 
-app.get("/health", (_req, res) => {
-    res.json({ ok: true });
-});
+const requireAdmin = async (c: { get: (k: "role") => string; json: Function }, next: () => Promise<void>) => {
+    if (c.get("role") !== "admin") return c.json({ message: "Unauthorized" }, 401);
+    await next();
+};
 
-app.post("/auth/login", async (req, res) => {
-    const { username, password } = req.body;
+const requireUser = async (c: { get: (k: "role") => string; json: Function }, next: () => Promise<void>) => {
+    if (c.get("role") !== "user") return c.json({ message: "Unauthorized" }, 401);
+    await next();
+};
+
+app.get("/health", (c) => c.json({ ok: true }));
+
+// ---------------------------------------------------------------- admin auth
+
+app.post("/auth/login", async (c) => {
+    const { username, password } = await c.req.json<{
+        username?: string;
+        password?: string;
+    }>();
+
     if (!username || !password) {
-        res.status(401).json({ message: "Invalid credentials" });
-        return;
+        return c.json({ message: "Invalid credentials" }, 401);
     }
-    const user = await prisma.adminUser.findUnique({ where: { username } });
-    if (!user) {
-        res.status(401).json({ message: "Invalid credentials" });
-        return;
+
+    const admin = await c.get("prisma").adminUser.findUnique({ where: { username } });
+
+    if (!admin || !(await verifyPassword(password, admin.password))) {
+        return c.json({ message: "Invalid credentials" }, 401);
     }
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) {
-        res.status(401).json({ message: "Invalid credentials" });
-        return;
-    }
-    const token = jwt.sign({ role: "admin", username }, JWT_SECRET, { expiresIn: "7d" });
-    res.cookie("admin_token", token, {
+
+    const token = await sign({ role: "admin", username }, secretOf(c), ADMIN_TTL_DAYS);
+
+    setCookie(c, ADMIN_TOKEN, token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        secure: c.env.JWT_SECRET !== undefined && c.req.url.startsWith("https"),
+        sameSite: "Lax",
+        path: "/",
+        maxAge: ADMIN_TTL_DAYS * 24 * 60 * 60,
     });
-    res.json({ ok: true });
+
+    return c.json({ ok: true });
 });
 
-app.post("/auth/logout", (_req, res) => {
-    res.clearCookie("admin_token");
-    res.json({ ok: true });
+app.post("/auth/logout", (c) => {
+    deleteCookie(c, ADMIN_TOKEN, { path: "/" });
+    return c.json({ ok: true });
 });
 
-app.get("/auth/me", requireAuth, (_req, res) => {
-    res.json({ role: "admin" });
+app.get("/auth/me", async (c) => {
+    if (c.get("role") !== "admin") return c.json({ message: "Unauthorized" }, 401);
+    return c.json({ role: "admin" });
 });
 
-app.post("/user/register", async (req, res) => {
-    const { email, username, password, firstName, lastName } = req.body;
+// ----------------------------------------------------------------- user auth
+
+app.post("/user/register", async (c) => {
+    const { email, username, password, firstName, lastName } = await c.req.json<{
+        email?: string;
+        username?: string;
+        password?: string;
+        firstName?: string;
+        lastName?: string;
+    }>();
+
     if (!email || !username || !password || !firstName || !lastName) {
-        res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบ" });
-        return;
+        return c.json({ message: "กรุณากรอกข้อมูลให้ครบ" }, 400);
     }
+
+    const prisma = c.get("prisma");
     const existing = await prisma.user.findFirst({
         where: { OR: [{ email }, { username }] },
+        select: { id: true },
     });
+
     if (existing) {
-        res.status(409).json({ message: "อีเมลหรือชื่อผู้ใช้นี้ถูกใช้แล้ว" });
-        return;
+        return c.json({ message: "อีเมลหรือชื่อผู้ใช้นี้ถูกใช้แล้ว" }, 409);
     }
-    const hash = await bcrypt.hash(password, 12);
+
     const user = await prisma.user.create({
-        data: { email, username, password: hash, firstName, lastName },
+        data: {
+            email,
+            username,
+            password: await hashPassword(password),
+            firstName,
+            lastName,
+        },
+        select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+        },
     });
-    res.json({
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        firstName: user.firstName,
-        lastName: user.lastName,
-    });
+
+    return c.json(user);
 });
 
-app.post("/user/login", async (req, res) => {
-    const { email, password } = req.body;
+app.post("/user/login", async (c) => {
+    const { email, password } = await c.req.json<{
+        email?: string;
+        password?: string;
+    }>();
+
     if (!email || !password) {
-        res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบ" });
-        return;
+        return c.json({ message: "กรุณากรอกข้อมูลให้ครบ" }, 400);
     }
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-        res.status(401).json({ message: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
-        return;
+
+    const user = await c.get("prisma").user.findUnique({ where: { email } });
+
+    if (!user || !(await verifyPassword(password, user.password))) {
+        return c.json({ message: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" }, 401);
     }
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) {
-        res.status(401).json({ message: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
-        return;
-    }
-    const token = jwt.sign(
+
+    const token = await sign(
         { role: "user", userId: user.id, username: user.username },
-        JWT_SECRET,
-        { expiresIn: "30d" }
+        secretOf(c),
+        USER_TTL_DAYS,
     );
-    res.cookie("user_token", token, {
+
+    setCookie(c, USER_TOKEN, token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 30 * 24 * 60 * 60 * 1000,
+        secure: c.req.url.startsWith("https"),
+        sameSite: "Lax",
+        path: "/",
+        maxAge: USER_TTL_DAYS * 24 * 60 * 60,
     });
-    res.json({ id: user.id, email: user.email, username: user.username });
+
+    return c.json({ id: user.id, email: user.email, username: user.username });
 });
 
-app.post("/user/logout", (_req, res) => {
-    res.clearCookie("user_token");
-    res.json({ ok: true });
+app.post("/user/logout", (c) => {
+    deleteCookie(c, USER_TOKEN, { path: "/" });
+    return c.json({ ok: true });
 });
 
-app.get("/user/me", async (req, res) => {
-    const token = req.cookies?.user_token;
-    if (!token) {
-        res.status(401).json({ message: "Unauthorized" });
-        return;
-    }
-    try {
-        const payload = jwt.verify(token, JWT_SECRET) as { userId: string };
-        const user = await prisma.user.findUnique({
-            where: { id: payload.userId },
-            select: { id: true, email: true, username: true },
-        });
-        if (!user) {
-            res.status(401).json({ message: "Unauthorized" });
-            return;
-        }
-        res.json(user);
-    } catch {
-        res.status(401).json({ message: "Unauthorized" });
-    }
+app.get("/user/me", async (c) => {
+    const userId = c.get("userId");
+
+    if (!userId) return c.json({ message: "Unauthorized" }, 401);
+
+    const user = await c.get("prisma").user.findUnique({
+        where: { id: userId },
+        select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            createdAt: true,
+        },
+    });
+
+    if (!user) return c.json({ message: "Unauthorized" }, 401);
+
+    return c.json(user);
 });
 
-app.use(
+// --------------------------------------------------------- gameplay verbs
+
+app.route("/", progress);
+
+// ------------------------------------------------------------ generated CRUD
+
+app.route(
     "/",
-    VocabWordRouter({
-        findMany: {},
-        findUnique: {},
-        findManyPaginated: {},
+    VocabWordRouter<Env>({
+        // findUnique is intentionally not exposed: nothing in the app needs it, and a
+        // unique-where shape cannot carry the forced `status = published` filter that
+        // keeps drafts invisible. Least privilege beats an endpoint nobody calls.
+        findMany: { shape: VOCAB_WORD_SHAPES },
+        findManyPaginated: { shape: VOCAB_WORD_SHAPES },
         update: {
-            before: [requireAuth],
+            before: [requireAdmin as never],
+            shape: VOCAB_WORD_UPDATE_SHAPE,
         },
-        pagination: {
-            defaultLimit: 50,
-            maxLimit: 100,
-        },
-    }),
+        guard: { resolveVariant },
+        pagination: { defaultLimit: 50, maxLimit: 100 },
+    } as never),
 );
 
-app.use(
+app.route(
     "/",
-    UserRouter({
-        findMany: {
-            before: [requireAuth],
-        },
-        findUnique: {
-            before: [requireAuth],
-        },
+    UserRouter<Env>({
+        findMany: { before: [requireAdmin as never], shape: USER_SHAPES },
         findManyPaginated: {
-            before: [requireAuth],
+            before: [requireAdmin as never],
+            shape: USER_SHAPES,
         },
-        pagination: {
-            defaultLimit: 50,
-            maxLimit: 100,
-        },
-    }),
+        guard: { resolveVariant },
+        pagination: { defaultLimit: 50, maxLimit: 100 },
+    } as never),
 );
 
-app.use(
-    "/",
-    LearningSessionRouter({
-        create: { before: [requireUserAuth] },
-        findMany: { before: [requireUserAuth] },
-        findManyPaginated: { before: [requireAuth] },
-    }),
-);
-
-app.use(
-    "/",
-    QuizResultRouter({
-        create: { before: [requireUserAuth] },
-        findMany: { before: [requireUserAuth] },
-        findManyPaginated: { before: [requireAuth] },
-    }),
-);
-
-const port = Number(process.env.PORT) || 4000;
-
-app.listen(port, () => {
-    console.log(`API listening on http://localhost:${port}`);
-});
+export default app;
+export { requireUser };
