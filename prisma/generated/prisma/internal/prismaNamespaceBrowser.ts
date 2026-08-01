@@ -54,6 +54,7 @@ export const ModelName = {
   VocabWord: 'VocabWord',
   AdminUser: 'AdminUser',
   User: 'User',
+  MagicLinkToken: 'MagicLinkToken',
   LearningSession: 'LearningSession',
   QuizResult: 'QuizResult',
   UserUnitProgress: 'UserUnitProgress',
@@ -125,6 +126,18 @@ export const UserScalarFieldEnum = {
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const MagicLinkTokenScalarFieldEnum = {
+  id: 'id',
+  tokenHash: 'tokenHash',
+  userId: 'userId',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type MagicLinkTokenScalarFieldEnum = (typeof MagicLinkTokenScalarFieldEnum)[keyof typeof MagicLinkTokenScalarFieldEnum]
 
 
 export const LearningSessionScalarFieldEnum = {

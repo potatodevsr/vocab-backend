@@ -11,6 +11,7 @@
 export type * from './models/VocabWord.js'
 export type * from './models/AdminUser.js'
 export type * from './models/User.js'
+export type * from './models/MagicLinkToken.js'
 export type * from './models/LearningSession.js'
 export type * from './models/QuizResult.js'
 export type * from './models/UserUnitProgress.js'

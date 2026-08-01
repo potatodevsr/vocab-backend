@@ -387,6 +387,7 @@ export const ModelName = {
   VocabWord: 'VocabWord',
   AdminUser: 'AdminUser',
   User: 'User',
+  MagicLinkToken: 'MagicLinkToken',
   LearningSession: 'LearningSession',
   QuizResult: 'QuizResult',
   UserUnitProgress: 'UserUnitProgress',
@@ -407,7 +408,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "vocabWord" | "adminUser" | "user" | "learningSession" | "quizResult" | "userUnitProgress" | "userWordProgress" | "userWordAttempt"
+    modelProps: "vocabWord" | "adminUser" | "user" | "magicLinkToken" | "learningSession" | "quizResult" | "userUnitProgress" | "userWordProgress" | "userWordAttempt"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -630,6 +631,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.UserCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.UserCountAggregateOutputType> | number
+        }
+      }
+    }
+    MagicLinkToken: {
+      payload: Prisma.$MagicLinkTokenPayload<ExtArgs>
+      fields: Prisma.MagicLinkTokenFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MagicLinkTokenFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MagicLinkTokenPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MagicLinkTokenFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MagicLinkTokenPayload>
+        }
+        findFirst: {
+          args: Prisma.MagicLinkTokenFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MagicLinkTokenPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MagicLinkTokenFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MagicLinkTokenPayload>
+        }
+        findMany: {
+          args: Prisma.MagicLinkTokenFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MagicLinkTokenPayload>[]
+        }
+        create: {
+          args: Prisma.MagicLinkTokenCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MagicLinkTokenPayload>
+        }
+        createMany: {
+          args: Prisma.MagicLinkTokenCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MagicLinkTokenCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MagicLinkTokenPayload>[]
+        }
+        delete: {
+          args: Prisma.MagicLinkTokenDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MagicLinkTokenPayload>
+        }
+        update: {
+          args: Prisma.MagicLinkTokenUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MagicLinkTokenPayload>
+        }
+        deleteMany: {
+          args: Prisma.MagicLinkTokenDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MagicLinkTokenUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MagicLinkTokenUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MagicLinkTokenPayload>[]
+        }
+        upsert: {
+          args: Prisma.MagicLinkTokenUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MagicLinkTokenPayload>
+        }
+        aggregate: {
+          args: Prisma.MagicLinkTokenAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMagicLinkToken>
+        }
+        groupBy: {
+          args: Prisma.MagicLinkTokenGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MagicLinkTokenGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MagicLinkTokenCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MagicLinkTokenCountAggregateOutputType> | number
         }
       }
     }
@@ -1092,6 +1167,18 @@ export const UserScalarFieldEnum = {
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
+export const MagicLinkTokenScalarFieldEnum = {
+  id: 'id',
+  tokenHash: 'tokenHash',
+  userId: 'userId',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type MagicLinkTokenScalarFieldEnum = (typeof MagicLinkTokenScalarFieldEnum)[keyof typeof MagicLinkTokenScalarFieldEnum]
+
+
 export const LearningSessionScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -1353,6 +1440,7 @@ export type GlobalOmitConfig = {
   vocabWord?: Prisma.VocabWordOmit
   adminUser?: Prisma.AdminUserOmit
   user?: Prisma.UserOmit
+  magicLinkToken?: Prisma.MagicLinkTokenOmit
   learningSession?: Prisma.LearningSessionOmit
   quizResult?: Prisma.QuizResultOmit
   userUnitProgress?: Prisma.UserUnitProgressOmit

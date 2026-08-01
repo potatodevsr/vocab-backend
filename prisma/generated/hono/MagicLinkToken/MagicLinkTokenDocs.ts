@@ -27,7 +27,7 @@ export const MODEL_FIELDS: FieldMeta[] = [
     isUnique: false,
   },
   {
-    name: "email",
+    name: "tokenHash",
     kind: "scalar",
     type: "String",
     isList: false,
@@ -39,19 +39,7 @@ export const MODEL_FIELDS: FieldMeta[] = [
     isUnique: true,
   },
   {
-    name: "username",
-    kind: "scalar",
-    type: "String",
-    isList: false,
-    isRequired: true,
-    hasDefaultValue: false,
-    isUpdatedAt: false,
-    documentation: null,
-    isId: false,
-    isUnique: true,
-  },
-  {
-    name: "password",
+    name: "userId",
     kind: "scalar",
     type: "String",
     isList: false,
@@ -63,24 +51,24 @@ export const MODEL_FIELDS: FieldMeta[] = [
     isUnique: false,
   },
   {
-    name: "firstName",
+    name: "expiresAt",
     kind: "scalar",
-    type: "String",
+    type: "DateTime",
     isList: false,
     isRequired: true,
-    hasDefaultValue: true,
+    hasDefaultValue: false,
     isUpdatedAt: false,
     documentation: null,
     isId: false,
     isUnique: false,
   },
   {
-    name: "lastName",
+    name: "usedAt",
     kind: "scalar",
-    type: "String",
+    type: "DateTime",
     isList: false,
-    isRequired: true,
-    hasDefaultValue: true,
+    isRequired: false,
+    hasDefaultValue: false,
     isUpdatedAt: false,
     documentation: null,
     isId: false,
@@ -99,94 +87,17 @@ export const MODEL_FIELDS: FieldMeta[] = [
     isUnique: false,
   },
   {
-    name: "updatedAt",
-    kind: "scalar",
-    type: "DateTime",
+    name: "user",
+    kind: "object",
+    type: "User",
     isList: false,
     isRequired: true,
     hasDefaultValue: false,
-    isUpdatedAt: true,
-    documentation: null,
-    isId: false,
-    isUnique: false,
-  },
-  {
-    name: "learningSessions",
-    kind: "object",
-    type: "LearningSession",
-    isList: true,
-    isRequired: true,
-    hasDefaultValue: false,
     isUpdatedAt: false,
     documentation: null,
     isId: false,
     isUnique: false,
-    relationFromFields: [],
-  },
-  {
-    name: "quizResults",
-    kind: "object",
-    type: "QuizResult",
-    isList: true,
-    isRequired: true,
-    hasDefaultValue: false,
-    isUpdatedAt: false,
-    documentation: null,
-    isId: false,
-    isUnique: false,
-    relationFromFields: [],
-  },
-  {
-    name: "unitProgresses",
-    kind: "object",
-    type: "UserUnitProgress",
-    isList: true,
-    isRequired: true,
-    hasDefaultValue: false,
-    isUpdatedAt: false,
-    documentation: null,
-    isId: false,
-    isUnique: false,
-    relationFromFields: [],
-  },
-  {
-    name: "wordProgresses",
-    kind: "object",
-    type: "UserWordProgress",
-    isList: true,
-    isRequired: true,
-    hasDefaultValue: false,
-    isUpdatedAt: false,
-    documentation: null,
-    isId: false,
-    isUnique: false,
-    relationFromFields: [],
-  },
-  {
-    name: "wordAttempts",
-    kind: "object",
-    type: "UserWordAttempt",
-    isList: true,
-    isRequired: true,
-    hasDefaultValue: false,
-    isUpdatedAt: false,
-    documentation: null,
-    isId: false,
-    isUnique: false,
-    relationFromFields: [],
-  },
-  {
-    name: "magicLinkTokens",
-    kind: "object",
-    type: "MagicLinkToken",
-    isList: true,
-    isRequired: true,
-    hasDefaultValue: false,
-    isUpdatedAt: false,
-    documentation: null,
-    isId: false,
-    isUnique: false,
-    relationFromFields: [],
+    relationFromFields: ["userId"],
   },
 ];
 
@@ -198,13 +109,11 @@ const COMPOUND_UNIQUES: { name: string; fields: string[] }[] = [];
 
 const EXAMPLE_VALUES: Record<string, unknown> = {
   id: "example",
-  email: "example",
-  username: "example",
-  password: "example",
-  firstName: "example",
-  lastName: "example",
+  tokenHash: "example",
+  userId: "example",
+  expiresAt: "2025-01-01T00:00:00.000Z",
+  usedAt: "2025-01-01T00:00:00.000Z",
   createdAt: "2025-01-01T00:00:00.000Z",
-  updatedAt: "2025-01-01T00:00:00.000Z",
 };
 
 const MODEL_CONTEXT: DocsModelContext = {
@@ -215,7 +124,7 @@ const MODEL_CONTEXT: DocsModelContext = {
   exampleValues: EXAMPLE_VALUES,
 };
 
-export function UserDocs(config: DocsConfig = {}) {
+export function MagicLinkTokenDocs(config: DocsConfig = {}) {
   return (c: Context): Response | Promise<Response> => {
     const disabled = isOpenApiDisabled(config.disableOpenApi);
     if (disabled)
@@ -231,12 +140,12 @@ export function UserDocs(config: DocsConfig = {}) {
       if (!isPlaygroundAvailable(config)) {
         return c.text("Query builder is disabled", 404);
       }
-      return c.html(renderPlayground("User", config));
+      return c.html(renderPlayground("MagicLinkToken", config));
     }
 
     if (ui === "yaml") {
       const yaml = buildModelOpenApi(
-        "User",
+        "MagicLinkToken",
         MODEL_FIELDS as unknown as Parameters<typeof buildModelOpenApi>[1],
         MODEL_ENUMS as unknown as Parameters<typeof buildModelOpenApi>[2],
         config,
@@ -246,7 +155,7 @@ export function UserDocs(config: DocsConfig = {}) {
     }
 
     const spec = buildModelOpenApi(
-      "User",
+      "MagicLinkToken",
       MODEL_FIELDS as unknown as Parameters<typeof buildModelOpenApi>[1],
       MODEL_ENUMS as unknown as Parameters<typeof buildModelOpenApi>[2],
       config,
@@ -255,13 +164,15 @@ export function UserDocs(config: DocsConfig = {}) {
 
     if (ui === "json") return c.json(spec as Record<string, unknown>);
 
-    const pageTitle = config.docsTitle || `User API`;
+    const pageTitle = config.docsTitle || `MagicLinkToken API`;
 
     if (ui === "scalar") {
-      return c.html(renderScalar("User", spec, pageTitle, config.scalarCdnUrl));
+      return c.html(
+        renderScalar("MagicLinkToken", spec, pageTitle, config.scalarCdnUrl),
+      );
     }
 
-    const html = renderDocs("User", config, MODEL_CONTEXT);
+    const html = renderDocs("MagicLinkToken", config, MODEL_CONTEXT);
     return c.html(html);
   };
 }

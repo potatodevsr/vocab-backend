@@ -137,6 +137,48 @@ export type UserDeleteShapeInput<TCtx = unknown> = ShapeInput<UserDeleteShape, T
 export type UserDeleteManyShape = OperationShape<TM, 'User', 'deleteMany', 1, UM>
 export type UserDeleteManyShapeInput<TCtx = unknown> = ShapeInput<UserDeleteManyShape, TCtx>
 
+export type MagicLinkTokenSelect = TypedProjection<TM, 'MagicLinkToken', 1, UM>
+export type MagicLinkTokenProjection = MagicLinkTokenSelect
+export type MagicLinkTokenInclude = TypedInclude<TM, 'MagicLinkToken', 1, UM>
+export type MagicLinkTokenCountSelect = TypedCountSelect<TM, 'MagicLinkToken'>
+export type MagicLinkTokenGuardShape = TypedGuardShape<TM, 'MagicLinkToken', 1, UM>
+export type MagicLinkTokenFindManyShape = OperationShape<TM, 'MagicLinkToken', 'findMany', 1, UM>
+export type MagicLinkTokenFindManyShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenFindManyShape, TCtx>
+export type MagicLinkTokenFindFirstShape = OperationShape<TM, 'MagicLinkToken', 'findFirst', 1, UM>
+export type MagicLinkTokenFindFirstShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenFindFirstShape, TCtx>
+export type MagicLinkTokenFindFirstOrThrowShape = OperationShape<TM, 'MagicLinkToken', 'findFirstOrThrow', 1, UM>
+export type MagicLinkTokenFindFirstOrThrowShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenFindFirstOrThrowShape, TCtx>
+export type MagicLinkTokenFindUniqueShape = OperationShape<TM, 'MagicLinkToken', 'findUnique', 1, UM>
+export type MagicLinkTokenFindUniqueShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenFindUniqueShape, TCtx>
+export type MagicLinkTokenFindUniqueOrThrowShape = OperationShape<TM, 'MagicLinkToken', 'findUniqueOrThrow', 1, UM>
+export type MagicLinkTokenFindUniqueOrThrowShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenFindUniqueOrThrowShape, TCtx>
+export type MagicLinkTokenFindManyPaginatedShape = OperationShape<TM, 'MagicLinkToken', 'findManyPaginated', 1, UM>
+export type MagicLinkTokenFindManyPaginatedShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenFindManyPaginatedShape, TCtx>
+export type MagicLinkTokenCountShape = OperationShape<TM, 'MagicLinkToken', 'count', 1, UM>
+export type MagicLinkTokenCountShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenCountShape, TCtx>
+export type MagicLinkTokenAggregateShape = OperationShape<TM, 'MagicLinkToken', 'aggregate', 1, UM>
+export type MagicLinkTokenAggregateShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenAggregateShape, TCtx>
+export type MagicLinkTokenGroupByShape = OperationShape<TM, 'MagicLinkToken', 'groupBy', 1, UM>
+export type MagicLinkTokenGroupByShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenGroupByShape, TCtx>
+export type MagicLinkTokenCreateShape = OperationShape<TM, 'MagicLinkToken', 'create', 1, UM>
+export type MagicLinkTokenCreateShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenCreateShape, TCtx>
+export type MagicLinkTokenCreateManyShape = OperationShape<TM, 'MagicLinkToken', 'createMany', 1, UM>
+export type MagicLinkTokenCreateManyShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenCreateManyShape, TCtx>
+export type MagicLinkTokenCreateManyAndReturnShape = OperationShape<TM, 'MagicLinkToken', 'createManyAndReturn', 1, UM>
+export type MagicLinkTokenCreateManyAndReturnShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenCreateManyAndReturnShape, TCtx>
+export type MagicLinkTokenUpdateShape = OperationShape<TM, 'MagicLinkToken', 'update', 1, UM>
+export type MagicLinkTokenUpdateShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenUpdateShape, TCtx>
+export type MagicLinkTokenUpdateManyShape = OperationShape<TM, 'MagicLinkToken', 'updateMany', 1, UM>
+export type MagicLinkTokenUpdateManyShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenUpdateManyShape, TCtx>
+export type MagicLinkTokenUpdateManyAndReturnShape = OperationShape<TM, 'MagicLinkToken', 'updateManyAndReturn', 1, UM>
+export type MagicLinkTokenUpdateManyAndReturnShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenUpdateManyAndReturnShape, TCtx>
+export type MagicLinkTokenUpsertShape = OperationShape<TM, 'MagicLinkToken', 'upsert', 1, UM>
+export type MagicLinkTokenUpsertShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenUpsertShape, TCtx>
+export type MagicLinkTokenDeleteShape = OperationShape<TM, 'MagicLinkToken', 'delete', 1, UM>
+export type MagicLinkTokenDeleteShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenDeleteShape, TCtx>
+export type MagicLinkTokenDeleteManyShape = OperationShape<TM, 'MagicLinkToken', 'deleteMany', 1, UM>
+export type MagicLinkTokenDeleteManyShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenDeleteManyShape, TCtx>
+
 export type LearningSessionSelect = TypedProjection<TM, 'LearningSession', 1, UM>
 export type LearningSessionProjection = LearningSessionSelect
 export type LearningSessionInclude = TypedInclude<TM, 'LearningSession', 1, UM>

@@ -643,10 +643,6 @@ export type LearningSessionUncheckedUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.LearningSessionScalarWhereInput | Prisma.LearningSessionScalarWhereInput[]
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type LearningSessionCreateNestedOneWithoutAttemptsInput = {
   create?: Prisma.XOR<Prisma.LearningSessionCreateWithoutAttemptsInput, Prisma.LearningSessionUncheckedCreateWithoutAttemptsInput>
   connectOrCreate?: Prisma.LearningSessionCreateOrConnectWithoutAttemptsInput

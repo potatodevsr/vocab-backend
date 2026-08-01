@@ -211,6 +211,7 @@ export type UserWhereInput = {
   unitProgresses?: Prisma.UserUnitProgressListRelationFilter
   wordProgresses?: Prisma.UserWordProgressListRelationFilter
   wordAttempts?: Prisma.UserWordAttemptListRelationFilter
+  magicLinkTokens?: Prisma.MagicLinkTokenListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -227,6 +228,7 @@ export type UserOrderByWithRelationInput = {
   unitProgresses?: Prisma.UserUnitProgressOrderByRelationAggregateInput
   wordProgresses?: Prisma.UserWordProgressOrderByRelationAggregateInput
   wordAttempts?: Prisma.UserWordAttemptOrderByRelationAggregateInput
+  magicLinkTokens?: Prisma.MagicLinkTokenOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -246,6 +248,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   unitProgresses?: Prisma.UserUnitProgressListRelationFilter
   wordProgresses?: Prisma.UserWordProgressListRelationFilter
   wordAttempts?: Prisma.UserWordAttemptListRelationFilter
+  magicLinkTokens?: Prisma.MagicLinkTokenListRelationFilter
 }, "id" | "email" | "username">
 
 export type UserOrderByWithAggregationInput = {
@@ -290,6 +293,7 @@ export type UserCreateInput = {
   unitProgresses?: Prisma.UserUnitProgressCreateNestedManyWithoutUserInput
   wordProgresses?: Prisma.UserWordProgressCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -306,6 +310,7 @@ export type UserUncheckedCreateInput = {
   unitProgresses?: Prisma.UserUnitProgressUncheckedCreateNestedManyWithoutUserInput
   wordProgresses?: Prisma.UserWordProgressUncheckedCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -322,6 +327,7 @@ export type UserUpdateInput = {
   unitProgresses?: Prisma.UserUnitProgressUpdateManyWithoutUserNestedInput
   wordProgresses?: Prisma.UserWordProgressUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -338,6 +344,7 @@ export type UserUncheckedUpdateInput = {
   unitProgresses?: Prisma.UserUnitProgressUncheckedUpdateManyWithoutUserNestedInput
   wordProgresses?: Prisma.UserWordProgressUncheckedUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -411,6 +418,20 @@ export type UserScalarRelationFilter = {
   isNot?: Prisma.UserWhereInput
 }
 
+export type UserCreateNestedOneWithoutMagicLinkTokensInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMagicLinkTokensInput, Prisma.UserUncheckedCreateWithoutMagicLinkTokensInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMagicLinkTokensInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutMagicLinkTokensNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMagicLinkTokensInput, Prisma.UserUncheckedCreateWithoutMagicLinkTokensInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMagicLinkTokensInput
+  upsert?: Prisma.UserUpsertWithoutMagicLinkTokensInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutMagicLinkTokensInput, Prisma.UserUpdateWithoutMagicLinkTokensInput>, Prisma.UserUncheckedUpdateWithoutMagicLinkTokensInput>
+}
+
 export type UserCreateNestedOneWithoutLearningSessionsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutLearningSessionsInput, Prisma.UserUncheckedCreateWithoutLearningSessionsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutLearningSessionsInput
@@ -481,6 +502,86 @@ export type UserUpdateOneRequiredWithoutWordAttemptsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutWordAttemptsInput, Prisma.UserUpdateWithoutWordAttemptsInput>, Prisma.UserUncheckedUpdateWithoutWordAttemptsInput>
 }
 
+export type UserCreateWithoutMagicLinkTokensInput = {
+  id?: string
+  email: string
+  username: string
+  password: string
+  firstName?: string
+  lastName?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
+  quizResults?: Prisma.QuizResultCreateNestedManyWithoutUserInput
+  unitProgresses?: Prisma.UserUnitProgressCreateNestedManyWithoutUserInput
+  wordProgresses?: Prisma.UserWordProgressCreateNestedManyWithoutUserInput
+  wordAttempts?: Prisma.UserWordAttemptCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutMagicLinkTokensInput = {
+  id?: string
+  email: string
+  username: string
+  password: string
+  firstName?: string
+  lastName?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
+  quizResults?: Prisma.QuizResultUncheckedCreateNestedManyWithoutUserInput
+  unitProgresses?: Prisma.UserUnitProgressUncheckedCreateNestedManyWithoutUserInput
+  wordProgresses?: Prisma.UserWordProgressUncheckedCreateNestedManyWithoutUserInput
+  wordAttempts?: Prisma.UserWordAttemptUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutMagicLinkTokensInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutMagicLinkTokensInput, Prisma.UserUncheckedCreateWithoutMagicLinkTokensInput>
+}
+
+export type UserUpsertWithoutMagicLinkTokensInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutMagicLinkTokensInput, Prisma.UserUncheckedUpdateWithoutMagicLinkTokensInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutMagicLinkTokensInput, Prisma.UserUncheckedCreateWithoutMagicLinkTokensInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutMagicLinkTokensInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutMagicLinkTokensInput, Prisma.UserUncheckedUpdateWithoutMagicLinkTokensInput>
+}
+
+export type UserUpdateWithoutMagicLinkTokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
+  quizResults?: Prisma.QuizResultUpdateManyWithoutUserNestedInput
+  unitProgresses?: Prisma.UserUnitProgressUpdateManyWithoutUserNestedInput
+  wordProgresses?: Prisma.UserWordProgressUpdateManyWithoutUserNestedInput
+  wordAttempts?: Prisma.UserWordAttemptUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutMagicLinkTokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
+  quizResults?: Prisma.QuizResultUncheckedUpdateManyWithoutUserNestedInput
+  unitProgresses?: Prisma.UserUnitProgressUncheckedUpdateManyWithoutUserNestedInput
+  wordProgresses?: Prisma.UserWordProgressUncheckedUpdateManyWithoutUserNestedInput
+  wordAttempts?: Prisma.UserWordAttemptUncheckedUpdateManyWithoutUserNestedInput
+}
+
 export type UserCreateWithoutLearningSessionsInput = {
   id?: string
   email: string
@@ -494,6 +595,7 @@ export type UserCreateWithoutLearningSessionsInput = {
   unitProgresses?: Prisma.UserUnitProgressCreateNestedManyWithoutUserInput
   wordProgresses?: Prisma.UserWordProgressCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutLearningSessionsInput = {
@@ -509,6 +611,7 @@ export type UserUncheckedCreateWithoutLearningSessionsInput = {
   unitProgresses?: Prisma.UserUnitProgressUncheckedCreateNestedManyWithoutUserInput
   wordProgresses?: Prisma.UserWordProgressUncheckedCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutLearningSessionsInput = {
@@ -540,6 +643,7 @@ export type UserUpdateWithoutLearningSessionsInput = {
   unitProgresses?: Prisma.UserUnitProgressUpdateManyWithoutUserNestedInput
   wordProgresses?: Prisma.UserWordProgressUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLearningSessionsInput = {
@@ -555,6 +659,7 @@ export type UserUncheckedUpdateWithoutLearningSessionsInput = {
   unitProgresses?: Prisma.UserUnitProgressUncheckedUpdateManyWithoutUserNestedInput
   wordProgresses?: Prisma.UserWordProgressUncheckedUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutQuizResultsInput = {
@@ -570,6 +675,7 @@ export type UserCreateWithoutQuizResultsInput = {
   unitProgresses?: Prisma.UserUnitProgressCreateNestedManyWithoutUserInput
   wordProgresses?: Prisma.UserWordProgressCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutQuizResultsInput = {
@@ -585,6 +691,7 @@ export type UserUncheckedCreateWithoutQuizResultsInput = {
   unitProgresses?: Prisma.UserUnitProgressUncheckedCreateNestedManyWithoutUserInput
   wordProgresses?: Prisma.UserWordProgressUncheckedCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutQuizResultsInput = {
@@ -616,6 +723,7 @@ export type UserUpdateWithoutQuizResultsInput = {
   unitProgresses?: Prisma.UserUnitProgressUpdateManyWithoutUserNestedInput
   wordProgresses?: Prisma.UserWordProgressUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutQuizResultsInput = {
@@ -631,6 +739,7 @@ export type UserUncheckedUpdateWithoutQuizResultsInput = {
   unitProgresses?: Prisma.UserUnitProgressUncheckedUpdateManyWithoutUserNestedInput
   wordProgresses?: Prisma.UserWordProgressUncheckedUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutUnitProgressesInput = {
@@ -646,6 +755,7 @@ export type UserCreateWithoutUnitProgressesInput = {
   quizResults?: Prisma.QuizResultCreateNestedManyWithoutUserInput
   wordProgresses?: Prisma.UserWordProgressCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutUnitProgressesInput = {
@@ -661,6 +771,7 @@ export type UserUncheckedCreateWithoutUnitProgressesInput = {
   quizResults?: Prisma.QuizResultUncheckedCreateNestedManyWithoutUserInput
   wordProgresses?: Prisma.UserWordProgressUncheckedCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutUnitProgressesInput = {
@@ -692,6 +803,7 @@ export type UserUpdateWithoutUnitProgressesInput = {
   quizResults?: Prisma.QuizResultUpdateManyWithoutUserNestedInput
   wordProgresses?: Prisma.UserWordProgressUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUnitProgressesInput = {
@@ -707,6 +819,7 @@ export type UserUncheckedUpdateWithoutUnitProgressesInput = {
   quizResults?: Prisma.QuizResultUncheckedUpdateManyWithoutUserNestedInput
   wordProgresses?: Prisma.UserWordProgressUncheckedUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutWordProgressesInput = {
@@ -722,6 +835,7 @@ export type UserCreateWithoutWordProgressesInput = {
   quizResults?: Prisma.QuizResultCreateNestedManyWithoutUserInput
   unitProgresses?: Prisma.UserUnitProgressCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutWordProgressesInput = {
@@ -737,6 +851,7 @@ export type UserUncheckedCreateWithoutWordProgressesInput = {
   quizResults?: Prisma.QuizResultUncheckedCreateNestedManyWithoutUserInput
   unitProgresses?: Prisma.UserUnitProgressUncheckedCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutWordProgressesInput = {
@@ -768,6 +883,7 @@ export type UserUpdateWithoutWordProgressesInput = {
   quizResults?: Prisma.QuizResultUpdateManyWithoutUserNestedInput
   unitProgresses?: Prisma.UserUnitProgressUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWordProgressesInput = {
@@ -783,6 +899,7 @@ export type UserUncheckedUpdateWithoutWordProgressesInput = {
   quizResults?: Prisma.QuizResultUncheckedUpdateManyWithoutUserNestedInput
   unitProgresses?: Prisma.UserUnitProgressUncheckedUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutWordAttemptsInput = {
@@ -798,6 +915,7 @@ export type UserCreateWithoutWordAttemptsInput = {
   quizResults?: Prisma.QuizResultCreateNestedManyWithoutUserInput
   unitProgresses?: Prisma.UserUnitProgressCreateNestedManyWithoutUserInput
   wordProgresses?: Prisma.UserWordProgressCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutWordAttemptsInput = {
@@ -813,6 +931,7 @@ export type UserUncheckedCreateWithoutWordAttemptsInput = {
   quizResults?: Prisma.QuizResultUncheckedCreateNestedManyWithoutUserInput
   unitProgresses?: Prisma.UserUnitProgressUncheckedCreateNestedManyWithoutUserInput
   wordProgresses?: Prisma.UserWordProgressUncheckedCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutWordAttemptsInput = {
@@ -844,6 +963,7 @@ export type UserUpdateWithoutWordAttemptsInput = {
   quizResults?: Prisma.QuizResultUpdateManyWithoutUserNestedInput
   unitProgresses?: Prisma.UserUnitProgressUpdateManyWithoutUserNestedInput
   wordProgresses?: Prisma.UserWordProgressUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWordAttemptsInput = {
@@ -859,6 +979,7 @@ export type UserUncheckedUpdateWithoutWordAttemptsInput = {
   quizResults?: Prisma.QuizResultUncheckedUpdateManyWithoutUserNestedInput
   unitProgresses?: Prisma.UserUnitProgressUncheckedUpdateManyWithoutUserNestedInput
   wordProgresses?: Prisma.UserWordProgressUncheckedUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -872,6 +993,7 @@ export type UserCountOutputType = {
   unitProgresses: number
   wordProgresses: number
   wordAttempts: number
+  magicLinkTokens: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -880,6 +1002,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   unitProgresses?: boolean | UserCountOutputTypeCountUnitProgressesArgs
   wordProgresses?: boolean | UserCountOutputTypeCountWordProgressesArgs
   wordAttempts?: boolean | UserCountOutputTypeCountWordAttemptsArgs
+  magicLinkTokens?: boolean | UserCountOutputTypeCountMagicLinkTokensArgs
 }
 
 /**
@@ -927,6 +1050,13 @@ export type UserCountOutputTypeCountWordAttemptsArgs<ExtArgs extends runtime.Typ
   where?: Prisma.UserWordAttemptWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountMagicLinkTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MagicLinkTokenWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -942,6 +1072,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   unitProgresses?: boolean | Prisma.User$unitProgressesArgs<ExtArgs>
   wordProgresses?: boolean | Prisma.User$wordProgressesArgs<ExtArgs>
   wordAttempts?: boolean | Prisma.User$wordAttemptsArgs<ExtArgs>
+  magicLinkTokens?: boolean | Prisma.User$magicLinkTokensArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -985,6 +1116,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   unitProgresses?: boolean | Prisma.User$unitProgressesArgs<ExtArgs>
   wordProgresses?: boolean | Prisma.User$wordProgressesArgs<ExtArgs>
   wordAttempts?: boolean | Prisma.User$wordAttemptsArgs<ExtArgs>
+  magicLinkTokens?: boolean | Prisma.User$magicLinkTokensArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -998,6 +1130,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     unitProgresses: Prisma.$UserUnitProgressPayload<ExtArgs>[]
     wordProgresses: Prisma.$UserWordProgressPayload<ExtArgs>[]
     wordAttempts: Prisma.$UserWordAttemptPayload<ExtArgs>[]
+    magicLinkTokens: Prisma.$MagicLinkTokenPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1407,6 +1540,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   unitProgresses<T extends Prisma.User$unitProgressesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$unitProgressesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserUnitProgressPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   wordProgresses<T extends Prisma.User$wordProgressesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$wordProgressesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserWordProgressPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   wordAttempts<T extends Prisma.User$wordAttemptsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$wordAttemptsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserWordAttemptPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  magicLinkTokens<T extends Prisma.User$magicLinkTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$magicLinkTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MagicLinkTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1952,6 +2086,30 @@ export type User$wordAttemptsArgs<ExtArgs extends runtime.Types.Extensions.Inter
   take?: number
   skip?: number
   distinct?: Prisma.UserWordAttemptScalarFieldEnum | Prisma.UserWordAttemptScalarFieldEnum[]
+}
+
+/**
+ * User.magicLinkTokens
+ */
+export type User$magicLinkTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MagicLinkToken
+   */
+  select?: Prisma.MagicLinkTokenSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the MagicLinkToken
+   */
+  omit?: Prisma.MagicLinkTokenOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MagicLinkTokenInclude<ExtArgs> | null
+  where?: Prisma.MagicLinkTokenWhereInput
+  orderBy?: Prisma.MagicLinkTokenOrderByWithRelationInput | Prisma.MagicLinkTokenOrderByWithRelationInput[]
+  cursor?: Prisma.MagicLinkTokenWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.MagicLinkTokenScalarFieldEnum | Prisma.MagicLinkTokenScalarFieldEnum[]
 }
 
 /**

@@ -33,6 +33,11 @@ export type AdminUser = Prisma.AdminUserModel
  */
 export type User = Prisma.UserModel
 /**
+ * Model MagicLinkToken
+ * 
+ */
+export type MagicLinkToken = Prisma.MagicLinkTokenModel
+/**
  * Model LearningSession
  * 
  */

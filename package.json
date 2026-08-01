@@ -9,7 +9,7 @@
         "db:migrate:new": "prisma migrate diff --from-migrations migrations --to-schema prisma/schema.prisma --script",
         "db:seed:dev": "node scripts/generate-dev-seed.mjs > seed/dev.sql && wrangler d1 execute vocab --local --file=seed/dev.sql",
         "db:seed:e2e": "node scripts/generate-e2e-seed.mjs > seed/e2e.sql",
-        "dev": "wrangler dev --local --port 4000",
+        "dev": "wrangler dev --local --port 4000 --var APP_URL:http://localhost:3000 --var MAGIC_LINK_DEV_MODE:true",
         "generate:oxford-thai-local": "tsx scripts/generate-oxford-thai-local.ts",
         "seed:oxford-thai": "tsx scripts/seed-oxford-thai.ts",
         "seed:vocab": "tsx src/seed-vocab.ts"

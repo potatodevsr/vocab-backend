@@ -19,6 +19,7 @@
   "vars": {
     // Local/dev only. Production sets this with `wrangler secret put JWT_SECRET`.
     "JWT_SECRET": "49022f773409abad1e30a7057912cbe866a42791804a6dd2b0f763055da2b106",
-    "FRONTEND_URL": "http://localhost:3000"
+    "FRONTEND_URL": "http://localhost:3000",
+    "APP_URL": "http://localhost:3000"
   }
 }

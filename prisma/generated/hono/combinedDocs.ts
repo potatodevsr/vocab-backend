@@ -7,6 +7,7 @@ const MODELS = [
   "VocabWord",
   "AdminUser",
   "User",
+  "MagicLinkToken",
   "LearningSession",
   "QuizResult",
   "UserUnitProgress",
