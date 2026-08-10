@@ -34,6 +34,36 @@ const PARTS = ["noun", "verb", "adjective"];
 const STAMP = "2026-01-01T00:00:00.000Z";
 
 /**
+ * Two words carry more than one part of speech, because 260 of the real ones do and each
+ * sense needs its own meaning and example (`across`: "walk across the street" vs "the shop
+ * is across the street"). They cover the two halves of that feature:
+ *
+ *   word19 — already curated. Read-only: the word page must show both senses.
+ *   word20 — the reserved mutable word, deliberately left empty so the admin spec can
+ *            fill both blocks and prove the JSON round-trips.
+ */
+const MULTI_POS = {
+    19: {
+        partOfSpeech: "prep., adv.",
+        usages: [
+            {
+                pos: "prep.",
+                meaningTh: "ข้ามจากฝั่งหนึ่งไปอีกฝั่งหนึ่ง",
+                exampleEn: "She walked across the street.",
+                exampleTh: "เธอเดินข้ามถนน",
+            },
+            {
+                pos: "adv.",
+                meaningTh: "อยู่ฝั่งตรงข้าม",
+                exampleEn: "The shop is across from the station.",
+                exampleTh: "ร้านค้าอยู่ตรงข้ามสถานี",
+            },
+        ],
+    },
+    20: { partOfSpeech: "n., v.", usages: [] },
+};
+
+/**
  * Unit 1 (order 1-20):  complete + published — the happy path.
  * Unit 2 (order 21-40): only 3 words carry a Thai meaning, so the quiz's
  *                       "not enough ready words" branch stays covered.
@@ -48,6 +78,7 @@ for (let index = 0; index < 45; index += 1) {
     const isDraft = order > 40;
     const hasMeaning = order <= 20 || (order > 20 && order <= 23);
     const word = `word${order}`;
+    const multi = MULTI_POS[order];
 
     words.push({
         id: `e2e-a1-${String(order).padStart(4, "0")}`,
@@ -62,12 +93,19 @@ for (let index = 0; index < 45; index += 1) {
         slug: word,
         homograph: null,
         sense: null,
-        partOfSpeech: PARTS[index % PARTS.length],
+        partOfSpeech: multi?.partOfSpeech ?? PARTS[index % PARTS.length],
         meaningTh: hasMeaning ? `ความหมาย${order}` : "",
         pronunciationTh: hasMeaning ? `คำอ่าน${order}` : "",
+        meaningThReading: hasMeaning ? `ความ-หมาย-${order}` : "",
+        meaningThRoman: hasMeaning ? `khwam-mai-${order}` : "",
         ipa: hasMeaning ? `wɜːd${order}` : "",
-        exampleEn: hasMeaning ? `This is an example sentence for ${word}.` : "",
-        exampleTh: hasMeaning ? `ประโยคตัวอย่างของ ${word}` : "",
+        // Entry 0 of `posUsages` owns the single-example columns when it exists — the
+        // admin form writes them together, so the fixture keeps them together too.
+        exampleEn: multi?.usages[0]?.exampleEn
+            ?? (hasMeaning ? `This is an example sentence for ${word}.` : ""),
+        exampleTh: multi?.usages[0]?.exampleTh
+            ?? (hasMeaning ? `ประโยคตัวอย่างของ ${word}` : ""),
+        posUsages: JSON.stringify(multi?.usages ?? []),
         notes: "",
         status: isDraft ? "draft" : "published",
     });
@@ -92,7 +130,7 @@ const lines = [
 
 for (const w of words) {
     lines.push(
-        `INSERT INTO VocabWord (id, sourceKey, sourceOrder, sourceName, sourceTitle, level, unit, word, displayWord, slug, homograph, sense, partOfSpeech, meaningTh, pronunciationTh, ipa, exampleEn, exampleTh, notes, status, createdAt, updatedAt) VALUES (` +
+        `INSERT INTO VocabWord (id, sourceKey, sourceOrder, sourceName, sourceTitle, level, unit, word, displayWord, slug, homograph, sense, partOfSpeech, meaningTh, pronunciationTh, meaningThReading, meaningThRoman, ipa, exampleEn, exampleTh, posUsages, notes, status, createdAt, updatedAt) VALUES (` +
             [
                 sql(w.id),
                 sql(w.sourceKey),
@@ -109,9 +147,12 @@ for (const w of words) {
                 sql(w.partOfSpeech),
                 sql(w.meaningTh),
                 sql(w.pronunciationTh),
+                sql(w.meaningThReading),
+                sql(w.meaningThRoman),
                 sql(w.ipa),
                 sql(w.exampleEn),
                 sql(w.exampleTh),
+                sql(w.posUsages),
                 sql(w.notes),
                 sql(w.status),
                 sql(STAMP),

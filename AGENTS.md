@@ -116,6 +116,14 @@ Two datasets exist and **do not join**: `data/vocab_review.csv` (3,752 rows,
 `sourceKey` schemes, different level assignments. Choosing the canonical one is a blocker,
 not a detail — see `docs/SPEC.md` §4.4.
 
+Most of that row-count gap was never a content difference. The CSV carries **one row per
+(word, part of speech)** — `about` appears as `prep.` and again as `adv.`, with identical
+Thai — while the JSON already joins them (`"prep., adv."`). `generate-dev-seed.mjs` now
+merges them on import, so the seeded database holds **3,295 words**, and units are
+recomputed over the merged list rather than inherited (22 groups straddled a boundary).
+Measured before the change: of the 436 collapsing groups, zero disagreed on `meaningTh`
+and zero on `pronunciationTh`.
+
 De-spacing is essentially done (4 rows still show `"ล ะ ท ิ ้ ง"`-style spacing).
 Character accuracy is **not** verified — `"ความสามารถึง"` (should be `ความสามารถ`) survives
 cleaning. The remaining job is proofreading, not reprocessing. A word only reaches

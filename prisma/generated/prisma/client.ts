@@ -44,6 +44,29 @@ export { Prisma }
  */
 export type VocabWord = Prisma.VocabWordModel
 /**
+ * Model ThaiLetter
+ * *
+ *  * The Thai writing system, as curated content.
+ *  *
+ *  * Rows ship in `migrations/0011_thai_letter.sql`, compiled from `data/thai-letters.mjs`, so
+ *  * every environment starts identical without a seeding step — then `/admin/letters` edits
+ *  * the romanisations in place. Content, not configuration: the alphabet is fixed, but what a
+ *  * learner who cannot read Thai script is *told* each mark is called is a wording decision,
+ *  * and wording decisions belong to whoever curates the course, not to a deploy.
+ *  *
+ *  * `kind` discriminates four lists that answer different questions — `consonant` (44),
+ *  * `vowelSign` (22 written marks), `tone` (4), and `vowelSound` (the traditional 32 vowel
+ *  * *sounds*). Only the first three can label a per-character breakdown: `เ‑ีย` is one sound
+ *  * written across three characters, so a button pointing at `เ` can honestly name the mark
+ *  * and nothing more. `vowelSound` exists for the reference table a learner reads on its own.
+ *  *
+ *  * `roman` and `sound` are separate on purpose. `roman` is the romanised *name* and is what
+ *  * a button shows (`sara i` / `sara ii`); `sound` is the strict RTGS value, which drops vowel
+ *  * length and would collapse both to `i`. `vowelLength` keeps that distinction as data rather
+ *  * than smuggling it into the spelling.
+ */
+export type ThaiLetter = Prisma.ThaiLetterModel
+/**
  * Model AdminUser
  * 
  */
@@ -59,6 +82,70 @@ export type User = Prisma.UserModel
  */
 export type MagicLinkToken = Prisma.MagicLinkTokenModel
 /**
+ * Model PracticeTrial
+ * *
+ *  * The anonymous practice trial (LEARNER-LIFECYCLE.md §3.2): five graded items served and
+ *  * answered before any account exists. `wordIds` is the serving order — the target of item
+ *  * N is `wordIds[N]` — and `poolIds` is the fixed candidate pool (id + partOfSpeech only)
+ *  * distractors are drawn from; both are persisted so `/practice/answer` and the claim path
+ *  * can re-derive the exact same per-item shuffle the client was shown without ever storing
+ *  * or re-sending a "correct option" field the client could read. `answers` is a JSON array
+ *  * of booleans, one per answered item so far, which is what makes `/practice/answer`
+ *  * idempotent: replaying an already-answered index returns the stored verdict instead of
+ *  * re-grading.
+ */
+export type PracticeTrial = Prisma.PracticeTrialModel
+/**
+ * Model TrialRateLimit
+ * *
+ *  * Per-IP throttle for `/practice/start`, so an anonymous client can't be told "a trial is
+ *  * already in progress" and simply clear its cookie to mint another. `id` is
+ *  * `${sha256(ip)}:${windowStartMs}`; the insert-or-increment below is one atomic SQLite
+ *  * statement, so it needs no transaction to be race-safe.
+ */
+export type TrialRateLimit = Prisma.TrialRateLimitModel
+/**
+ * Model MixedSession
+ * *
+ *  * The merged eight-item mixed session that replaces lesson→quiz
+ *  * (LEARNER-LIFECYCLE.md §0, §3.5, §8 L2). Same server-authoritative shape as
+ *  * `PracticeTrial`: `wordIds[i]` is the target of item `i`, `poolIds` is the fixed
+ *  * candidate pool distractors are drawn from, and both are persisted so
+ *  * `/progress/session/answer` can re-derive the exact shuffle the client was shown without
+ *  * ever sending a "correct option" field to the client. `itemTypes[i]` picks the variant
+ *  * (choose-meaning, choose-word, spelling, match-pairs, speed-round) for item `i`, chosen
+ *  * server-side at `/progress/session/start` so the client cannot bias its own mix.
+ *  * `dueWordIds` records which targets were due reviews (vs new/random) purely for the
+ *  * completion summary — grading never depends on it.
+ *  *
+ *  * "At most one open session per learner" is enforced by a partial unique index —
+ *  * `CREATE UNIQUE INDEX ... ON MixedSession(userId) WHERE completedAt IS NULL` — added in
+ *  * `migrations/0008_mixed_session.sql`. Prisma's `@@unique` cannot express a `WHERE`
+ *  * clause, so this constraint is real in the database but invisible here; do not assume
+ *  * `@@index([userId, completedAt])` below is doing that job.
+ */
+export type MixedSession = Prisma.MixedSessionModel
+/**
+ * Model UnitCheckpoint
+ * *
+ *  * The end-of-unit checkpoint: a graded gate a learner must pass to be credited with the
+ *  * unit. Same server-authoritative shape as `MixedSession` and `PracticeTrial` —
+ *  * `wordIds[i]` is the target of item `i`, `itemTypes[i]` picks that item's variant, and
+ *  * `poolIds` is the fixed candidate pool distractors are drawn from — all persisted so the
+ *  * answer path can re-derive the exact shuffle the client was shown without ever sending a
+ *  * "correct option" field. `answers` is the JSON array of per-item verdicts recorded so far.
+ *  * `passed` is null until the checkpoint is completed (`completedAt` set), then the boolean
+ *  * gate result; `awarded` guards the one-time completion reward so a crash-and-retry cannot
+ *  * double-credit the unit.
+ *  *
+ *  * "At most one open checkpoint per learner per unit" is enforced by a partial unique index —
+ *  * `CREATE UNIQUE INDEX ... ON UnitCheckpoint(userId, level, unit) WHERE completedAt IS NULL`
+ *  * — added in `migrations/0014_unit_checkpoint.sql`. Prisma's `@@unique` cannot express a
+ *  * `WHERE` clause, so this constraint is real in the database but invisible here; do not
+ *  * assume `@@index([userId, level, unit])` below is doing that job.
+ */
+export type UnitCheckpoint = Prisma.UnitCheckpointModel
+/**
  * Model LearningSession
  * 
  */
@@ -68,6 +155,26 @@ export type LearningSession = Prisma.LearningSessionModel
  * 
  */
 export type QuizResult = Prisma.QuizResultModel
+/**
+ * Model CompletionLedger
+ * *
+ *  * Exactly-once completion of a unit, level, course or collection.
+ *  *
+ *  * A completion is worth a one-time reward (XP, a badge, an unlock), so it must fire once and
+ *  * only once even under the crash-and-retry, no-transactions reality of D1 (backend/AGENTS.md
+ *  * "Worker constraints"). The guarantee lives in the database, not in application logic: the
+ *  * `@@unique([userId, kind, scope])` below compiles to a UNIQUE INDEX in
+ *  * `migrations/0012_completion_ledger.sql`, so a genuine concurrent double-award — two
+ *  * requests both deciding the same unit just finished — can insert at most one row no matter
+ *  * how they interleave. The verb inserts the ledger row first and treats the unique-constraint
+ *  * violation as "already granted": whoever loses the race applies no reward.
+ *  *
+ *  * `kind` discriminates the four completable things — "unit", "level", "course",
+ *  * "collection" — and `scope` is the identifier of the specific one within its kind (a level
+ *  * name like "a1", a unit key, a collection id). The pair is unique per user, never globally:
+ *  * two learners completing the same unit are two rows.
+ */
+export type CompletionLedger = Prisma.CompletionLedgerModel
 /**
  * Model UserUnitProgress
  * 

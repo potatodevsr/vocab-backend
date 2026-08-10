@@ -250,6 +250,15 @@ const MODEL_FIELDS = [
     isUpdatedAt: false,
     relationFromFields: ["userId"],
   },
+  {
+    name: "pendingTrialId",
+    kind: "scalar",
+    type: "String",
+    isList: false,
+    isRequired: false,
+    hasDefaultValue: false,
+    isUpdatedAt: false,
+  },
 ] as const;
 
 const MODEL_ENUMS = [] as const;

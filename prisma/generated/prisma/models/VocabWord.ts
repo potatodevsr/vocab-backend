@@ -54,9 +54,13 @@ export type VocabWordMinAggregateOutputType = {
   partOfSpeech: string | null
   meaningTh: string | null
   pronunciationTh: string | null
+  meaningThReading: string | null
+  meaningThRoman: string | null
   ipa: string | null
   exampleEn: string | null
   exampleTh: string | null
+  posUsages: string | null
+  letterBreakdown: string | null
   notes: string | null
   status: string | null
   createdAt: Date | null
@@ -79,9 +83,13 @@ export type VocabWordMaxAggregateOutputType = {
   partOfSpeech: string | null
   meaningTh: string | null
   pronunciationTh: string | null
+  meaningThReading: string | null
+  meaningThRoman: string | null
   ipa: string | null
   exampleEn: string | null
   exampleTh: string | null
+  posUsages: string | null
+  letterBreakdown: string | null
   notes: string | null
   status: string | null
   createdAt: Date | null
@@ -104,9 +112,13 @@ export type VocabWordCountAggregateOutputType = {
   partOfSpeech: number
   meaningTh: number
   pronunciationTh: number
+  meaningThReading: number
+  meaningThRoman: number
   ipa: number
   exampleEn: number
   exampleTh: number
+  posUsages: number
+  letterBreakdown: number
   notes: number
   status: number
   createdAt: number
@@ -143,9 +155,13 @@ export type VocabWordMinAggregateInputType = {
   partOfSpeech?: true
   meaningTh?: true
   pronunciationTh?: true
+  meaningThReading?: true
+  meaningThRoman?: true
   ipa?: true
   exampleEn?: true
   exampleTh?: true
+  posUsages?: true
+  letterBreakdown?: true
   notes?: true
   status?: true
   createdAt?: true
@@ -168,9 +184,13 @@ export type VocabWordMaxAggregateInputType = {
   partOfSpeech?: true
   meaningTh?: true
   pronunciationTh?: true
+  meaningThReading?: true
+  meaningThRoman?: true
   ipa?: true
   exampleEn?: true
   exampleTh?: true
+  posUsages?: true
+  letterBreakdown?: true
   notes?: true
   status?: true
   createdAt?: true
@@ -193,9 +213,13 @@ export type VocabWordCountAggregateInputType = {
   partOfSpeech?: true
   meaningTh?: true
   pronunciationTh?: true
+  meaningThReading?: true
+  meaningThRoman?: true
   ipa?: true
   exampleEn?: true
   exampleTh?: true
+  posUsages?: true
+  letterBreakdown?: true
   notes?: true
   status?: true
   createdAt?: true
@@ -305,9 +329,13 @@ export type VocabWordGroupByOutputType = {
   partOfSpeech: string
   meaningTh: string
   pronunciationTh: string
+  meaningThReading: string
+  meaningThRoman: string
   ipa: string
   exampleEn: string
   exampleTh: string
+  posUsages: string
+  letterBreakdown: string
   notes: string
   status: string
   createdAt: Date
@@ -353,9 +381,13 @@ export type VocabWordWhereInput = {
   partOfSpeech?: Prisma.StringFilter<"VocabWord"> | string
   meaningTh?: Prisma.StringFilter<"VocabWord"> | string
   pronunciationTh?: Prisma.StringFilter<"VocabWord"> | string
+  meaningThReading?: Prisma.StringFilter<"VocabWord"> | string
+  meaningThRoman?: Prisma.StringFilter<"VocabWord"> | string
   ipa?: Prisma.StringFilter<"VocabWord"> | string
   exampleEn?: Prisma.StringFilter<"VocabWord"> | string
   exampleTh?: Prisma.StringFilter<"VocabWord"> | string
+  posUsages?: Prisma.StringFilter<"VocabWord"> | string
+  letterBreakdown?: Prisma.StringFilter<"VocabWord"> | string
   notes?: Prisma.StringFilter<"VocabWord"> | string
   status?: Prisma.StringFilter<"VocabWord"> | string
   createdAt?: Prisma.DateTimeFilter<"VocabWord"> | Date | string
@@ -380,9 +412,13 @@ export type VocabWordOrderByWithRelationInput = {
   partOfSpeech?: Prisma.SortOrder
   meaningTh?: Prisma.SortOrder
   pronunciationTh?: Prisma.SortOrder
+  meaningThReading?: Prisma.SortOrder
+  meaningThRoman?: Prisma.SortOrder
   ipa?: Prisma.SortOrder
   exampleEn?: Prisma.SortOrder
   exampleTh?: Prisma.SortOrder
+  posUsages?: Prisma.SortOrder
+  letterBreakdown?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -410,9 +446,13 @@ export type VocabWordWhereUniqueInput = Prisma.AtLeast<{
   partOfSpeech?: Prisma.StringFilter<"VocabWord"> | string
   meaningTh?: Prisma.StringFilter<"VocabWord"> | string
   pronunciationTh?: Prisma.StringFilter<"VocabWord"> | string
+  meaningThReading?: Prisma.StringFilter<"VocabWord"> | string
+  meaningThRoman?: Prisma.StringFilter<"VocabWord"> | string
   ipa?: Prisma.StringFilter<"VocabWord"> | string
   exampleEn?: Prisma.StringFilter<"VocabWord"> | string
   exampleTh?: Prisma.StringFilter<"VocabWord"> | string
+  posUsages?: Prisma.StringFilter<"VocabWord"> | string
+  letterBreakdown?: Prisma.StringFilter<"VocabWord"> | string
   notes?: Prisma.StringFilter<"VocabWord"> | string
   status?: Prisma.StringFilter<"VocabWord"> | string
   createdAt?: Prisma.DateTimeFilter<"VocabWord"> | Date | string
@@ -437,9 +477,13 @@ export type VocabWordOrderByWithAggregationInput = {
   partOfSpeech?: Prisma.SortOrder
   meaningTh?: Prisma.SortOrder
   pronunciationTh?: Prisma.SortOrder
+  meaningThReading?: Prisma.SortOrder
+  meaningThRoman?: Prisma.SortOrder
   ipa?: Prisma.SortOrder
   exampleEn?: Prisma.SortOrder
   exampleTh?: Prisma.SortOrder
+  posUsages?: Prisma.SortOrder
+  letterBreakdown?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -470,9 +514,13 @@ export type VocabWordScalarWhereWithAggregatesInput = {
   partOfSpeech?: Prisma.StringWithAggregatesFilter<"VocabWord"> | string
   meaningTh?: Prisma.StringWithAggregatesFilter<"VocabWord"> | string
   pronunciationTh?: Prisma.StringWithAggregatesFilter<"VocabWord"> | string
+  meaningThReading?: Prisma.StringWithAggregatesFilter<"VocabWord"> | string
+  meaningThRoman?: Prisma.StringWithAggregatesFilter<"VocabWord"> | string
   ipa?: Prisma.StringWithAggregatesFilter<"VocabWord"> | string
   exampleEn?: Prisma.StringWithAggregatesFilter<"VocabWord"> | string
   exampleTh?: Prisma.StringWithAggregatesFilter<"VocabWord"> | string
+  posUsages?: Prisma.StringWithAggregatesFilter<"VocabWord"> | string
+  letterBreakdown?: Prisma.StringWithAggregatesFilter<"VocabWord"> | string
   notes?: Prisma.StringWithAggregatesFilter<"VocabWord"> | string
   status?: Prisma.StringWithAggregatesFilter<"VocabWord"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"VocabWord"> | Date | string
@@ -495,9 +543,13 @@ export type VocabWordCreateInput = {
   partOfSpeech: string
   meaningTh?: string
   pronunciationTh?: string
+  meaningThReading?: string
+  meaningThRoman?: string
   ipa?: string
   exampleEn?: string
   exampleTh?: string
+  posUsages?: string
+  letterBreakdown?: string
   notes?: string
   status?: string
   createdAt?: Date | string
@@ -522,9 +574,13 @@ export type VocabWordUncheckedCreateInput = {
   partOfSpeech: string
   meaningTh?: string
   pronunciationTh?: string
+  meaningThReading?: string
+  meaningThRoman?: string
   ipa?: string
   exampleEn?: string
   exampleTh?: string
+  posUsages?: string
+  letterBreakdown?: string
   notes?: string
   status?: string
   createdAt?: Date | string
@@ -549,9 +605,13 @@ export type VocabWordUpdateInput = {
   partOfSpeech?: Prisma.StringFieldUpdateOperationsInput | string
   meaningTh?: Prisma.StringFieldUpdateOperationsInput | string
   pronunciationTh?: Prisma.StringFieldUpdateOperationsInput | string
+  meaningThReading?: Prisma.StringFieldUpdateOperationsInput | string
+  meaningThRoman?: Prisma.StringFieldUpdateOperationsInput | string
   ipa?: Prisma.StringFieldUpdateOperationsInput | string
   exampleEn?: Prisma.StringFieldUpdateOperationsInput | string
   exampleTh?: Prisma.StringFieldUpdateOperationsInput | string
+  posUsages?: Prisma.StringFieldUpdateOperationsInput | string
+  letterBreakdown?: Prisma.StringFieldUpdateOperationsInput | string
   notes?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -576,9 +636,13 @@ export type VocabWordUncheckedUpdateInput = {
   partOfSpeech?: Prisma.StringFieldUpdateOperationsInput | string
   meaningTh?: Prisma.StringFieldUpdateOperationsInput | string
   pronunciationTh?: Prisma.StringFieldUpdateOperationsInput | string
+  meaningThReading?: Prisma.StringFieldUpdateOperationsInput | string
+  meaningThRoman?: Prisma.StringFieldUpdateOperationsInput | string
   ipa?: Prisma.StringFieldUpdateOperationsInput | string
   exampleEn?: Prisma.StringFieldUpdateOperationsInput | string
   exampleTh?: Prisma.StringFieldUpdateOperationsInput | string
+  posUsages?: Prisma.StringFieldUpdateOperationsInput | string
+  letterBreakdown?: Prisma.StringFieldUpdateOperationsInput | string
   notes?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -603,9 +667,13 @@ export type VocabWordCreateManyInput = {
   partOfSpeech: string
   meaningTh?: string
   pronunciationTh?: string
+  meaningThReading?: string
+  meaningThRoman?: string
   ipa?: string
   exampleEn?: string
   exampleTh?: string
+  posUsages?: string
+  letterBreakdown?: string
   notes?: string
   status?: string
   createdAt?: Date | string
@@ -628,9 +696,13 @@ export type VocabWordUpdateManyMutationInput = {
   partOfSpeech?: Prisma.StringFieldUpdateOperationsInput | string
   meaningTh?: Prisma.StringFieldUpdateOperationsInput | string
   pronunciationTh?: Prisma.StringFieldUpdateOperationsInput | string
+  meaningThReading?: Prisma.StringFieldUpdateOperationsInput | string
+  meaningThRoman?: Prisma.StringFieldUpdateOperationsInput | string
   ipa?: Prisma.StringFieldUpdateOperationsInput | string
   exampleEn?: Prisma.StringFieldUpdateOperationsInput | string
   exampleTh?: Prisma.StringFieldUpdateOperationsInput | string
+  posUsages?: Prisma.StringFieldUpdateOperationsInput | string
+  letterBreakdown?: Prisma.StringFieldUpdateOperationsInput | string
   notes?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -653,9 +725,13 @@ export type VocabWordUncheckedUpdateManyInput = {
   partOfSpeech?: Prisma.StringFieldUpdateOperationsInput | string
   meaningTh?: Prisma.StringFieldUpdateOperationsInput | string
   pronunciationTh?: Prisma.StringFieldUpdateOperationsInput | string
+  meaningThReading?: Prisma.StringFieldUpdateOperationsInput | string
+  meaningThRoman?: Prisma.StringFieldUpdateOperationsInput | string
   ipa?: Prisma.StringFieldUpdateOperationsInput | string
   exampleEn?: Prisma.StringFieldUpdateOperationsInput | string
   exampleTh?: Prisma.StringFieldUpdateOperationsInput | string
+  posUsages?: Prisma.StringFieldUpdateOperationsInput | string
+  letterBreakdown?: Prisma.StringFieldUpdateOperationsInput | string
   notes?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -678,9 +754,13 @@ export type VocabWordCountOrderByAggregateInput = {
   partOfSpeech?: Prisma.SortOrder
   meaningTh?: Prisma.SortOrder
   pronunciationTh?: Prisma.SortOrder
+  meaningThReading?: Prisma.SortOrder
+  meaningThRoman?: Prisma.SortOrder
   ipa?: Prisma.SortOrder
   exampleEn?: Prisma.SortOrder
   exampleTh?: Prisma.SortOrder
+  posUsages?: Prisma.SortOrder
+  letterBreakdown?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -709,9 +789,13 @@ export type VocabWordMaxOrderByAggregateInput = {
   partOfSpeech?: Prisma.SortOrder
   meaningTh?: Prisma.SortOrder
   pronunciationTh?: Prisma.SortOrder
+  meaningThReading?: Prisma.SortOrder
+  meaningThRoman?: Prisma.SortOrder
   ipa?: Prisma.SortOrder
   exampleEn?: Prisma.SortOrder
   exampleTh?: Prisma.SortOrder
+  posUsages?: Prisma.SortOrder
+  letterBreakdown?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -734,9 +818,13 @@ export type VocabWordMinOrderByAggregateInput = {
   partOfSpeech?: Prisma.SortOrder
   meaningTh?: Prisma.SortOrder
   pronunciationTh?: Prisma.SortOrder
+  meaningThReading?: Prisma.SortOrder
+  meaningThRoman?: Prisma.SortOrder
   ipa?: Prisma.SortOrder
   exampleEn?: Prisma.SortOrder
   exampleTh?: Prisma.SortOrder
+  posUsages?: Prisma.SortOrder
+  letterBreakdown?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -826,9 +914,13 @@ export type VocabWordCreateWithoutWordProgressesInput = {
   partOfSpeech: string
   meaningTh?: string
   pronunciationTh?: string
+  meaningThReading?: string
+  meaningThRoman?: string
   ipa?: string
   exampleEn?: string
   exampleTh?: string
+  posUsages?: string
+  letterBreakdown?: string
   notes?: string
   status?: string
   createdAt?: Date | string
@@ -852,9 +944,13 @@ export type VocabWordUncheckedCreateWithoutWordProgressesInput = {
   partOfSpeech: string
   meaningTh?: string
   pronunciationTh?: string
+  meaningThReading?: string
+  meaningThRoman?: string
   ipa?: string
   exampleEn?: string
   exampleTh?: string
+  posUsages?: string
+  letterBreakdown?: string
   notes?: string
   status?: string
   createdAt?: Date | string
@@ -894,9 +990,13 @@ export type VocabWordUpdateWithoutWordProgressesInput = {
   partOfSpeech?: Prisma.StringFieldUpdateOperationsInput | string
   meaningTh?: Prisma.StringFieldUpdateOperationsInput | string
   pronunciationTh?: Prisma.StringFieldUpdateOperationsInput | string
+  meaningThReading?: Prisma.StringFieldUpdateOperationsInput | string
+  meaningThRoman?: Prisma.StringFieldUpdateOperationsInput | string
   ipa?: Prisma.StringFieldUpdateOperationsInput | string
   exampleEn?: Prisma.StringFieldUpdateOperationsInput | string
   exampleTh?: Prisma.StringFieldUpdateOperationsInput | string
+  posUsages?: Prisma.StringFieldUpdateOperationsInput | string
+  letterBreakdown?: Prisma.StringFieldUpdateOperationsInput | string
   notes?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -920,9 +1020,13 @@ export type VocabWordUncheckedUpdateWithoutWordProgressesInput = {
   partOfSpeech?: Prisma.StringFieldUpdateOperationsInput | string
   meaningTh?: Prisma.StringFieldUpdateOperationsInput | string
   pronunciationTh?: Prisma.StringFieldUpdateOperationsInput | string
+  meaningThReading?: Prisma.StringFieldUpdateOperationsInput | string
+  meaningThRoman?: Prisma.StringFieldUpdateOperationsInput | string
   ipa?: Prisma.StringFieldUpdateOperationsInput | string
   exampleEn?: Prisma.StringFieldUpdateOperationsInput | string
   exampleTh?: Prisma.StringFieldUpdateOperationsInput | string
+  posUsages?: Prisma.StringFieldUpdateOperationsInput | string
+  letterBreakdown?: Prisma.StringFieldUpdateOperationsInput | string
   notes?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -946,9 +1050,13 @@ export type VocabWordCreateWithoutWordAttemptsInput = {
   partOfSpeech: string
   meaningTh?: string
   pronunciationTh?: string
+  meaningThReading?: string
+  meaningThRoman?: string
   ipa?: string
   exampleEn?: string
   exampleTh?: string
+  posUsages?: string
+  letterBreakdown?: string
   notes?: string
   status?: string
   createdAt?: Date | string
@@ -972,9 +1080,13 @@ export type VocabWordUncheckedCreateWithoutWordAttemptsInput = {
   partOfSpeech: string
   meaningTh?: string
   pronunciationTh?: string
+  meaningThReading?: string
+  meaningThRoman?: string
   ipa?: string
   exampleEn?: string
   exampleTh?: string
+  posUsages?: string
+  letterBreakdown?: string
   notes?: string
   status?: string
   createdAt?: Date | string
@@ -1014,9 +1126,13 @@ export type VocabWordUpdateWithoutWordAttemptsInput = {
   partOfSpeech?: Prisma.StringFieldUpdateOperationsInput | string
   meaningTh?: Prisma.StringFieldUpdateOperationsInput | string
   pronunciationTh?: Prisma.StringFieldUpdateOperationsInput | string
+  meaningThReading?: Prisma.StringFieldUpdateOperationsInput | string
+  meaningThRoman?: Prisma.StringFieldUpdateOperationsInput | string
   ipa?: Prisma.StringFieldUpdateOperationsInput | string
   exampleEn?: Prisma.StringFieldUpdateOperationsInput | string
   exampleTh?: Prisma.StringFieldUpdateOperationsInput | string
+  posUsages?: Prisma.StringFieldUpdateOperationsInput | string
+  letterBreakdown?: Prisma.StringFieldUpdateOperationsInput | string
   notes?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1040,9 +1156,13 @@ export type VocabWordUncheckedUpdateWithoutWordAttemptsInput = {
   partOfSpeech?: Prisma.StringFieldUpdateOperationsInput | string
   meaningTh?: Prisma.StringFieldUpdateOperationsInput | string
   pronunciationTh?: Prisma.StringFieldUpdateOperationsInput | string
+  meaningThReading?: Prisma.StringFieldUpdateOperationsInput | string
+  meaningThRoman?: Prisma.StringFieldUpdateOperationsInput | string
   ipa?: Prisma.StringFieldUpdateOperationsInput | string
   exampleEn?: Prisma.StringFieldUpdateOperationsInput | string
   exampleTh?: Prisma.StringFieldUpdateOperationsInput | string
+  posUsages?: Prisma.StringFieldUpdateOperationsInput | string
+  letterBreakdown?: Prisma.StringFieldUpdateOperationsInput | string
   notes?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1106,9 +1226,13 @@ export type VocabWordSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   partOfSpeech?: boolean
   meaningTh?: boolean
   pronunciationTh?: boolean
+  meaningThReading?: boolean
+  meaningThRoman?: boolean
   ipa?: boolean
   exampleEn?: boolean
   exampleTh?: boolean
+  posUsages?: boolean
+  letterBreakdown?: boolean
   notes?: boolean
   status?: boolean
   createdAt?: boolean
@@ -1134,9 +1258,13 @@ export type VocabWordSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   partOfSpeech?: boolean
   meaningTh?: boolean
   pronunciationTh?: boolean
+  meaningThReading?: boolean
+  meaningThRoman?: boolean
   ipa?: boolean
   exampleEn?: boolean
   exampleTh?: boolean
+  posUsages?: boolean
+  letterBreakdown?: boolean
   notes?: boolean
   status?: boolean
   createdAt?: boolean
@@ -1159,9 +1287,13 @@ export type VocabWordSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   partOfSpeech?: boolean
   meaningTh?: boolean
   pronunciationTh?: boolean
+  meaningThReading?: boolean
+  meaningThRoman?: boolean
   ipa?: boolean
   exampleEn?: boolean
   exampleTh?: boolean
+  posUsages?: boolean
+  letterBreakdown?: boolean
   notes?: boolean
   status?: boolean
   createdAt?: boolean
@@ -1184,16 +1316,20 @@ export type VocabWordSelectScalar = {
   partOfSpeech?: boolean
   meaningTh?: boolean
   pronunciationTh?: boolean
+  meaningThReading?: boolean
+  meaningThRoman?: boolean
   ipa?: boolean
   exampleEn?: boolean
   exampleTh?: boolean
+  posUsages?: boolean
+  letterBreakdown?: boolean
   notes?: boolean
   status?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type VocabWordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sourceKey" | "sourceOrder" | "sourceName" | "sourceTitle" | "level" | "unit" | "word" | "displayWord" | "slug" | "homograph" | "sense" | "partOfSpeech" | "meaningTh" | "pronunciationTh" | "ipa" | "exampleEn" | "exampleTh" | "notes" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["vocabWord"]>
+export type VocabWordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sourceKey" | "sourceOrder" | "sourceName" | "sourceTitle" | "level" | "unit" | "word" | "displayWord" | "slug" | "homograph" | "sense" | "partOfSpeech" | "meaningTh" | "pronunciationTh" | "meaningThReading" | "meaningThRoman" | "ipa" | "exampleEn" | "exampleTh" | "posUsages" | "letterBreakdown" | "notes" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["vocabWord"]>
 export type VocabWordInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   wordProgresses?: boolean | Prisma.VocabWord$wordProgressesArgs<ExtArgs>
   wordAttempts?: boolean | Prisma.VocabWord$wordAttemptsArgs<ExtArgs>
@@ -1224,9 +1360,13 @@ export type $VocabWordPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     partOfSpeech: string
     meaningTh: string
     pronunciationTh: string
+    meaningThReading: string
+    meaningThRoman: string
     ipa: string
     exampleEn: string
     exampleTh: string
+    posUsages: string
+    letterBreakdown: string
     notes: string
     status: string
     createdAt: Date
@@ -1671,9 +1811,13 @@ export interface VocabWordFieldRefs {
   readonly partOfSpeech: Prisma.FieldRef<"VocabWord", 'String'>
   readonly meaningTh: Prisma.FieldRef<"VocabWord", 'String'>
   readonly pronunciationTh: Prisma.FieldRef<"VocabWord", 'String'>
+  readonly meaningThReading: Prisma.FieldRef<"VocabWord", 'String'>
+  readonly meaningThRoman: Prisma.FieldRef<"VocabWord", 'String'>
   readonly ipa: Prisma.FieldRef<"VocabWord", 'String'>
   readonly exampleEn: Prisma.FieldRef<"VocabWord", 'String'>
   readonly exampleTh: Prisma.FieldRef<"VocabWord", 'String'>
+  readonly posUsages: Prisma.FieldRef<"VocabWord", 'String'>
+  readonly letterBreakdown: Prisma.FieldRef<"VocabWord", 'String'>
   readonly notes: Prisma.FieldRef<"VocabWord", 'String'>
   readonly status: Prisma.FieldRef<"VocabWord", 'String'>
   readonly createdAt: Prisma.FieldRef<"VocabWord", 'DateTime'>

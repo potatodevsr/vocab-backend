@@ -52,11 +52,17 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   VocabWord: 'VocabWord',
+  ThaiLetter: 'ThaiLetter',
   AdminUser: 'AdminUser',
   User: 'User',
   MagicLinkToken: 'MagicLinkToken',
+  PracticeTrial: 'PracticeTrial',
+  TrialRateLimit: 'TrialRateLimit',
+  MixedSession: 'MixedSession',
+  UnitCheckpoint: 'UnitCheckpoint',
   LearningSession: 'LearningSession',
   QuizResult: 'QuizResult',
+  CompletionLedger: 'CompletionLedger',
   UserUnitProgress: 'UserUnitProgress',
   UserWordProgress: 'UserWordProgress',
   UserWordAttempt: 'UserWordAttempt'
@@ -91,9 +97,13 @@ export const VocabWordScalarFieldEnum = {
   partOfSpeech: 'partOfSpeech',
   meaningTh: 'meaningTh',
   pronunciationTh: 'pronunciationTh',
+  meaningThReading: 'meaningThReading',
+  meaningThRoman: 'meaningThRoman',
   ipa: 'ipa',
   exampleEn: 'exampleEn',
   exampleTh: 'exampleTh',
+  posUsages: 'posUsages',
+  letterBreakdown: 'letterBreakdown',
   notes: 'notes',
   status: 'status',
   createdAt: 'createdAt',
@@ -101,6 +111,24 @@ export const VocabWordScalarFieldEnum = {
 } as const
 
 export type VocabWordScalarFieldEnum = (typeof VocabWordScalarFieldEnum)[keyof typeof VocabWordScalarFieldEnum]
+
+
+export const ThaiLetterScalarFieldEnum = {
+  id: 'id',
+  kind: 'kind',
+  ordinal: 'ordinal',
+  char: 'char',
+  name: 'name',
+  roman: 'roman',
+  sound: 'sound',
+  soundFinal: 'soundFinal',
+  vowelLength: 'vowelLength',
+  clip: 'clip',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ThaiLetterScalarFieldEnum = (typeof ThaiLetterScalarFieldEnum)[keyof typeof ThaiLetterScalarFieldEnum]
 
 
 export const AdminUserScalarFieldEnum = {
@@ -121,6 +149,8 @@ export const UserScalarFieldEnum = {
   password: 'password',
   firstName: 'firstName',
   lastName: 'lastName',
+  timezone: 'timezone',
+  weeklyGoalDays: 'weeklyGoalDays',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -134,10 +164,79 @@ export const MagicLinkTokenScalarFieldEnum = {
   userId: 'userId',
   expiresAt: 'expiresAt',
   usedAt: 'usedAt',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  pendingTrialId: 'pendingTrialId'
 } as const
 
 export type MagicLinkTokenScalarFieldEnum = (typeof MagicLinkTokenScalarFieldEnum)[keyof typeof MagicLinkTokenScalarFieldEnum]
+
+
+export const PracticeTrialScalarFieldEnum = {
+  id: 'id',
+  level: 'level',
+  unit: 'unit',
+  wordIds: 'wordIds',
+  poolIds: 'poolIds',
+  answers: 'answers',
+  correctCount: 'correctCount',
+  completedAt: 'completedAt',
+  claimedAt: 'claimedAt',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PracticeTrialScalarFieldEnum = (typeof PracticeTrialScalarFieldEnum)[keyof typeof PracticeTrialScalarFieldEnum]
+
+
+export const TrialRateLimitScalarFieldEnum = {
+  id: 'id',
+  count: 'count',
+  createdAt: 'createdAt'
+} as const
+
+export type TrialRateLimitScalarFieldEnum = (typeof TrialRateLimitScalarFieldEnum)[keyof typeof TrialRateLimitScalarFieldEnum]
+
+
+export const MixedSessionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  level: 'level',
+  unit: 'unit',
+  mode: 'mode',
+  wordIds: 'wordIds',
+  itemTypes: 'itemTypes',
+  poolIds: 'poolIds',
+  dueWordIds: 'dueWordIds',
+  answers: 'answers',
+  correctCount: 'correctCount',
+  completedAt: 'completedAt',
+  rewardAppliedAt: 'rewardAppliedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MixedSessionScalarFieldEnum = (typeof MixedSessionScalarFieldEnum)[keyof typeof MixedSessionScalarFieldEnum]
+
+
+export const UnitCheckpointScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  level: 'level',
+  unit: 'unit',
+  wordIds: 'wordIds',
+  itemTypes: 'itemTypes',
+  poolIds: 'poolIds',
+  answers: 'answers',
+  correctCount: 'correctCount',
+  completedAt: 'completedAt',
+  passed: 'passed',
+  awarded: 'awarded',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UnitCheckpointScalarFieldEnum = (typeof UnitCheckpointScalarFieldEnum)[keyof typeof UnitCheckpointScalarFieldEnum]
 
 
 export const LearningSessionScalarFieldEnum = {
@@ -177,6 +276,17 @@ export const QuizResultScalarFieldEnum = {
 export type QuizResultScalarFieldEnum = (typeof QuizResultScalarFieldEnum)[keyof typeof QuizResultScalarFieldEnum]
 
 
+export const CompletionLedgerScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  kind: 'kind',
+  scope: 'scope',
+  createdAt: 'createdAt'
+} as const
+
+export type CompletionLedgerScalarFieldEnum = (typeof CompletionLedgerScalarFieldEnum)[keyof typeof CompletionLedgerScalarFieldEnum]
+
+
 export const UserUnitProgressScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -214,6 +324,9 @@ export const UserWordProgressScalarFieldEnum = {
   lastIncorrectAt: 'lastIncorrectAt',
   nextReviewAt: 'nextReviewAt',
   masteredAt: 'masteredAt',
+  trialClaimId: 'trialClaimId',
+  lastSessionRewardId: 'lastSessionRewardId',
+  lastQuizId: 'lastQuizId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -227,6 +340,7 @@ export const UserWordAttemptScalarFieldEnum = {
   wordId: 'wordId',
   sessionId: 'sessionId',
   quizResultId: 'quizResultId',
+  trialId: 'trialId',
   level: 'level',
   unit: 'unit',
   activityType: 'activityType',

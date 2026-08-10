@@ -31,6 +31,7 @@ export type MagicLinkTokenMinAggregateOutputType = {
   expiresAt: Date | null
   usedAt: Date | null
   createdAt: Date | null
+  pendingTrialId: string | null
 }
 
 export type MagicLinkTokenMaxAggregateOutputType = {
@@ -40,6 +41,7 @@ export type MagicLinkTokenMaxAggregateOutputType = {
   expiresAt: Date | null
   usedAt: Date | null
   createdAt: Date | null
+  pendingTrialId: string | null
 }
 
 export type MagicLinkTokenCountAggregateOutputType = {
@@ -49,6 +51,7 @@ export type MagicLinkTokenCountAggregateOutputType = {
   expiresAt: number
   usedAt: number
   createdAt: number
+  pendingTrialId: number
   _all: number
 }
 
@@ -60,6 +63,7 @@ export type MagicLinkTokenMinAggregateInputType = {
   expiresAt?: true
   usedAt?: true
   createdAt?: true
+  pendingTrialId?: true
 }
 
 export type MagicLinkTokenMaxAggregateInputType = {
@@ -69,6 +73,7 @@ export type MagicLinkTokenMaxAggregateInputType = {
   expiresAt?: true
   usedAt?: true
   createdAt?: true
+  pendingTrialId?: true
 }
 
 export type MagicLinkTokenCountAggregateInputType = {
@@ -78,6 +83,7 @@ export type MagicLinkTokenCountAggregateInputType = {
   expiresAt?: true
   usedAt?: true
   createdAt?: true
+  pendingTrialId?: true
   _all?: true
 }
 
@@ -160,6 +166,7 @@ export type MagicLinkTokenGroupByOutputType = {
   expiresAt: Date
   usedAt: Date | null
   createdAt: Date
+  pendingTrialId: string | null
   _count: MagicLinkTokenCountAggregateOutputType | null
   _min: MagicLinkTokenMinAggregateOutputType | null
   _max: MagicLinkTokenMaxAggregateOutputType | null
@@ -190,6 +197,7 @@ export type MagicLinkTokenWhereInput = {
   expiresAt?: Prisma.DateTimeFilter<"MagicLinkToken"> | Date | string
   usedAt?: Prisma.DateTimeNullableFilter<"MagicLinkToken"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"MagicLinkToken"> | Date | string
+  pendingTrialId?: Prisma.StringNullableFilter<"MagicLinkToken"> | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
 
@@ -200,6 +208,7 @@ export type MagicLinkTokenOrderByWithRelationInput = {
   expiresAt?: Prisma.SortOrder
   usedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  pendingTrialId?: Prisma.SortOrderInput | Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
 }
 
@@ -213,6 +222,7 @@ export type MagicLinkTokenWhereUniqueInput = Prisma.AtLeast<{
   expiresAt?: Prisma.DateTimeFilter<"MagicLinkToken"> | Date | string
   usedAt?: Prisma.DateTimeNullableFilter<"MagicLinkToken"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"MagicLinkToken"> | Date | string
+  pendingTrialId?: Prisma.StringNullableFilter<"MagicLinkToken"> | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "id" | "tokenHash">
 
@@ -223,6 +233,7 @@ export type MagicLinkTokenOrderByWithAggregationInput = {
   expiresAt?: Prisma.SortOrder
   usedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  pendingTrialId?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.MagicLinkTokenCountOrderByAggregateInput
   _max?: Prisma.MagicLinkTokenMaxOrderByAggregateInput
   _min?: Prisma.MagicLinkTokenMinOrderByAggregateInput
@@ -238,6 +249,7 @@ export type MagicLinkTokenScalarWhereWithAggregatesInput = {
   expiresAt?: Prisma.DateTimeWithAggregatesFilter<"MagicLinkToken"> | Date | string
   usedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"MagicLinkToken"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"MagicLinkToken"> | Date | string
+  pendingTrialId?: Prisma.StringNullableWithAggregatesFilter<"MagicLinkToken"> | string | null
 }
 
 export type MagicLinkTokenCreateInput = {
@@ -246,6 +258,7 @@ export type MagicLinkTokenCreateInput = {
   expiresAt: Date | string
   usedAt?: Date | string | null
   createdAt?: Date | string
+  pendingTrialId?: string | null
   user: Prisma.UserCreateNestedOneWithoutMagicLinkTokensInput
 }
 
@@ -256,6 +269,7 @@ export type MagicLinkTokenUncheckedCreateInput = {
   expiresAt: Date | string
   usedAt?: Date | string | null
   createdAt?: Date | string
+  pendingTrialId?: string | null
 }
 
 export type MagicLinkTokenUpdateInput = {
@@ -264,6 +278,7 @@ export type MagicLinkTokenUpdateInput = {
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   usedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pendingTrialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutMagicLinkTokensNestedInput
 }
 
@@ -274,6 +289,7 @@ export type MagicLinkTokenUncheckedUpdateInput = {
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   usedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pendingTrialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type MagicLinkTokenCreateManyInput = {
@@ -283,6 +299,7 @@ export type MagicLinkTokenCreateManyInput = {
   expiresAt: Date | string
   usedAt?: Date | string | null
   createdAt?: Date | string
+  pendingTrialId?: string | null
 }
 
 export type MagicLinkTokenUpdateManyMutationInput = {
@@ -291,6 +308,7 @@ export type MagicLinkTokenUpdateManyMutationInput = {
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   usedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pendingTrialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type MagicLinkTokenUncheckedUpdateManyInput = {
@@ -300,6 +318,7 @@ export type MagicLinkTokenUncheckedUpdateManyInput = {
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   usedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pendingTrialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type MagicLinkTokenListRelationFilter = {
@@ -319,6 +338,7 @@ export type MagicLinkTokenCountOrderByAggregateInput = {
   expiresAt?: Prisma.SortOrder
   usedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  pendingTrialId?: Prisma.SortOrder
 }
 
 export type MagicLinkTokenMaxOrderByAggregateInput = {
@@ -328,6 +348,7 @@ export type MagicLinkTokenMaxOrderByAggregateInput = {
   expiresAt?: Prisma.SortOrder
   usedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  pendingTrialId?: Prisma.SortOrder
 }
 
 export type MagicLinkTokenMinOrderByAggregateInput = {
@@ -337,6 +358,7 @@ export type MagicLinkTokenMinOrderByAggregateInput = {
   expiresAt?: Prisma.SortOrder
   usedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  pendingTrialId?: Prisma.SortOrder
 }
 
 export type MagicLinkTokenCreateNestedManyWithoutUserInput = {
@@ -391,6 +413,7 @@ export type MagicLinkTokenCreateWithoutUserInput = {
   expiresAt: Date | string
   usedAt?: Date | string | null
   createdAt?: Date | string
+  pendingTrialId?: string | null
 }
 
 export type MagicLinkTokenUncheckedCreateWithoutUserInput = {
@@ -399,6 +422,7 @@ export type MagicLinkTokenUncheckedCreateWithoutUserInput = {
   expiresAt: Date | string
   usedAt?: Date | string | null
   createdAt?: Date | string
+  pendingTrialId?: string | null
 }
 
 export type MagicLinkTokenCreateOrConnectWithoutUserInput = {
@@ -436,6 +460,7 @@ export type MagicLinkTokenScalarWhereInput = {
   expiresAt?: Prisma.DateTimeFilter<"MagicLinkToken"> | Date | string
   usedAt?: Prisma.DateTimeNullableFilter<"MagicLinkToken"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"MagicLinkToken"> | Date | string
+  pendingTrialId?: Prisma.StringNullableFilter<"MagicLinkToken"> | string | null
 }
 
 export type MagicLinkTokenCreateManyUserInput = {
@@ -444,6 +469,7 @@ export type MagicLinkTokenCreateManyUserInput = {
   expiresAt: Date | string
   usedAt?: Date | string | null
   createdAt?: Date | string
+  pendingTrialId?: string | null
 }
 
 export type MagicLinkTokenUpdateWithoutUserInput = {
@@ -452,6 +478,7 @@ export type MagicLinkTokenUpdateWithoutUserInput = {
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   usedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pendingTrialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type MagicLinkTokenUncheckedUpdateWithoutUserInput = {
@@ -460,6 +487,7 @@ export type MagicLinkTokenUncheckedUpdateWithoutUserInput = {
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   usedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pendingTrialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type MagicLinkTokenUncheckedUpdateManyWithoutUserInput = {
@@ -468,6 +496,7 @@ export type MagicLinkTokenUncheckedUpdateManyWithoutUserInput = {
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   usedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pendingTrialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -479,6 +508,7 @@ export type MagicLinkTokenSelect<ExtArgs extends runtime.Types.Extensions.Intern
   expiresAt?: boolean
   usedAt?: boolean
   createdAt?: boolean
+  pendingTrialId?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["magicLinkToken"]>
 
@@ -489,6 +519,7 @@ export type MagicLinkTokenSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   expiresAt?: boolean
   usedAt?: boolean
   createdAt?: boolean
+  pendingTrialId?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["magicLinkToken"]>
 
@@ -499,6 +530,7 @@ export type MagicLinkTokenSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   expiresAt?: boolean
   usedAt?: boolean
   createdAt?: boolean
+  pendingTrialId?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["magicLinkToken"]>
 
@@ -509,9 +541,10 @@ export type MagicLinkTokenSelectScalar = {
   expiresAt?: boolean
   usedAt?: boolean
   createdAt?: boolean
+  pendingTrialId?: boolean
 }
 
-export type MagicLinkTokenOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "tokenHash" | "userId" | "expiresAt" | "usedAt" | "createdAt", ExtArgs["result"]["magicLinkToken"]>
+export type MagicLinkTokenOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "tokenHash" | "userId" | "expiresAt" | "usedAt" | "createdAt" | "pendingTrialId", ExtArgs["result"]["magicLinkToken"]>
 export type MagicLinkTokenInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -534,6 +567,7 @@ export type $MagicLinkTokenPayload<ExtArgs extends runtime.Types.Extensions.Inte
     expiresAt: Date
     usedAt: Date | null
     createdAt: Date
+    pendingTrialId: string | null
   }, ExtArgs["result"]["magicLinkToken"]>
   composites: {}
 }
@@ -964,6 +998,7 @@ export interface MagicLinkTokenFieldRefs {
   readonly expiresAt: Prisma.FieldRef<"MagicLinkToken", 'DateTime'>
   readonly usedAt: Prisma.FieldRef<"MagicLinkToken", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"MagicLinkToken", 'DateTime'>
+  readonly pendingTrialId: Prisma.FieldRef<"MagicLinkToken", 'String'>
 }
     
 

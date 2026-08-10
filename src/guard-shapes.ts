@@ -63,13 +63,35 @@ const PUBLIC_WORD_FIELDS = {
     partOfSpeech: true,
     meaningTh: true,
     pronunciationTh: true,
+    meaningThReading: true,
+    meaningThRoman: true,
     ipa: true,
     exampleEn: true,
     exampleTh: true,
+    // JSON: the per-part-of-speech meanings and examples. Public because the word page
+    // renders them — see the column comment in schema.prisma.
+    posUsages: true,
+    // JSON: the hand-corrected letter breakdown, when a curator has supplied one. Public
+    // for the same reason — the word page is where it is rendered.
+    letterBreakdown: true,
     sourceOrder: true,
     status: true,
     // Powers <lastmod> in the sitemap — crawlers use it to decide what to re-fetch.
     updatedAt: true,
+} as const;
+
+/**
+ * What an admin gets back, on reads *and* on writes.
+ *
+ * The update route must project this too, not `PUBLIC_WORD_FIELDS`. The admin table
+ * replaces its row with whatever `update` returns, so a field that is writable but absent
+ * from the response blanks its own cell the moment you save it — which is what `notes`
+ * did before this constant existed.
+ */
+const ADMIN_WORD_FIELDS = {
+    ...PUBLIC_WORD_FIELDS,
+    notes: true,
+    sourceKey: true,
 } as const;
 
 export const VOCAB_WORD_SHAPES = {
@@ -82,7 +104,11 @@ export const VOCAB_WORD_SHAPES = {
             slug: { equals: true },
             status: { equals: force("published") },
         },
-        orderBy: { sourceOrder: true },
+        // `level` and `unit` order the same way the admin list does. Both are already in
+        // PUBLIC_WORD_FIELDS, so ordering by them exposes nothing a public read cannot
+        // already select — and `lib/admin-api.ts` is one client serving both variants, so
+        // an ordering the public shape rejects breaks anonymous callers outright.
+        orderBy: { level: true, unit: true, sourceOrder: true },
         select: PUBLIC_WORD_FIELDS,
         take: { max: 100, default: 100 },
         // Public reads may page. The sitemap has to walk every published word, and
@@ -98,10 +124,117 @@ export const VOCAB_WORD_SHAPES = {
             status: { equals: true },
             word: { contains: true, equals: true },
         },
-        orderBy: { sourceOrder: true, updatedAt: true },
-        select: { ...PUBLIC_WORD_FIELDS, notes: true, sourceKey: true },
+        // `level` and `unit` are here so the curation list can be walked in the same
+        // order a learner meets the words (A1 unit 1 first), rather than in the Oxford
+        // list's global alphabetical order, which interleaves all four levels.
+        orderBy: { level: true, unit: true, sourceOrder: true, updatedAt: true },
+        select: ADMIN_WORD_FIELDS,
         take: { max: 100, default: 50 },
         skip: true,
+    },
+} as const;
+
+/**
+ * The alphabet is public reference content — there is no draft state and nothing to hide,
+ * so the learner and the admin select the same columns. `updatedAt` is the only addition,
+ * and only because the curation screen sorts by it.
+ */
+const PUBLIC_LETTER_FIELDS = {
+    id: true,
+    kind: true,
+    ordinal: true,
+    char: true,
+    name: true,
+    roman: true,
+    sound: true,
+    soundFinal: true,
+    vowelLength: true,
+    clip: true,
+} as const;
+
+const ADMIN_LETTER_FIELDS = {
+    ...PUBLIC_LETTER_FIELDS,
+    updatedAt: true,
+} as const;
+
+/**
+ * The whole table is 102 rows, and the per-character breakdown needs 70 of them at once
+ * (every consonant, sign and tone mark) to name the letters of a single Thai word. A cap
+ * below the table size would truncate that silently — the failure mode AGENTS.md rule 9
+ * describes for words — so the ceiling sits above it deliberately. Nothing leaks: this is
+ * content we publish on a reference page.
+ */
+const LETTER_TAKE = { max: 120, default: 120 } as const;
+
+export const THAI_LETTER_SHAPES = {
+    public: {
+        where: { kind: { equals: true }, char: { equals: true } },
+        orderBy: { kind: true, ordinal: true },
+        select: PUBLIC_LETTER_FIELDS,
+        take: LETTER_TAKE,
+        skip: true,
+    },
+    admin: {
+        where: {
+            id: { equals: true },
+            kind: { equals: true },
+            char: { equals: true },
+            name: { contains: true },
+            roman: { contains: true },
+        },
+        orderBy: { kind: true, ordinal: true, updatedAt: true },
+        select: ADMIN_LETTER_FIELDS,
+        take: LETTER_TAKE,
+        skip: true,
+    },
+} as const;
+
+/**
+ * The writable surface of a letter, shared by create and update.
+ *
+ * `char`, `kind` and `ordinal` are here because the curation screen adds and removes rows,
+ * which is impossible without them. It is worth knowing what that costs: the per-character
+ * breakdown resolves a letter *by its character*, so retyping `char` on an existing row
+ * silently detaches it from every word that renders through it — the mark stops being
+ * recognised rather than showing an error. `e2e/unit/thai-letters.spec.ts` pins the
+ * characters the corpus actually uses so that damage cannot land unnoticed.
+ */
+const LETTER_WRITABLE_FIELDS = {
+    kind: true,
+    ordinal: true,
+    char: true,
+    name: true,
+    roman: true,
+    sound: true,
+    soundFinal: true,
+    vowelLength: true,
+    clip: true,
+} as const;
+
+export const THAI_LETTER_CREATE_SHAPE = {
+    admin: {
+        data: LETTER_WRITABLE_FIELDS,
+        select: ADMIN_LETTER_FIELDS,
+    },
+} as const;
+
+/**
+ * Note the `where` form: `update` and `delete` target a Prisma WhereUniqueInput, which
+ * rejects operator objects. It must be `{ id: true }`, not `{ id: { equals: true } }` like
+ * the read shapes above — guard returns a 400 explaining this if you get it wrong.
+ */
+export const THAI_LETTER_UPDATE_SHAPE = {
+    admin: {
+        where: { id: true },
+        data: LETTER_WRITABLE_FIELDS,
+        select: ADMIN_LETTER_FIELDS,
+    },
+} as const;
+
+export const THAI_LETTER_DELETE_SHAPE = {
+    admin: {
+        where: { id: true },
+        select: ADMIN_LETTER_FIELDS,
     },
 } as const;
 
@@ -118,12 +251,16 @@ export const VOCAB_WORD_UPDATE_SHAPE = {
         data: {
             meaningTh: true,
             pronunciationTh: true,
+            meaningThReading: true,
+            meaningThRoman: true,
             ipa: true,
             exampleEn: true,
             exampleTh: true,
+            posUsages: true,
+            letterBreakdown: true,
             notes: true,
             status: true,
         },
-        select: PUBLIC_WORD_FIELDS,
+        select: ADMIN_WORD_FIELDS,
     },
 } as const;

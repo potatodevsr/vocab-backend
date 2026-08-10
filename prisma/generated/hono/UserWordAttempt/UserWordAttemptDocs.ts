@@ -75,6 +75,18 @@ export const MODEL_FIELDS: FieldMeta[] = [
     isUnique: false,
   },
   {
+    name: "trialId",
+    kind: "scalar",
+    type: "String",
+    isList: false,
+    isRequired: false,
+    hasDefaultValue: false,
+    isUpdatedAt: false,
+    documentation: null,
+    isId: false,
+    isUnique: false,
+  },
+  {
     name: "level",
     kind: "scalar",
     type: "String",
@@ -216,7 +228,9 @@ export const MODEL_ENUMS: EnumMeta[] = [];
 
 const COMPOUND_ID: { fields: string[] } | null = null;
 
-const COMPOUND_UNIQUES: { name: string; fields: string[] }[] = [];
+const COMPOUND_UNIQUES: { name: string; fields: string[] }[] = [
+  { name: "userId_wordId_trialId", fields: ["userId", "wordId", "trialId"] },
+];
 
 const EXAMPLE_VALUES: Record<string, unknown> = {
   id: "example",
@@ -224,6 +238,7 @@ const EXAMPLE_VALUES: Record<string, unknown> = {
   wordId: "example",
   sessionId: "example",
   quizResultId: "example",
+  trialId: "example",
   level: "example",
   unit: 1,
   activityType: "example",

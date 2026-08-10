@@ -20,8 +20,18 @@ export type UserModel = runtime.Types.Result.DefaultSelection<Prisma.$UserPayloa
 
 export type AggregateUser = {
   _count: UserCountAggregateOutputType | null
+  _avg: UserAvgAggregateOutputType | null
+  _sum: UserSumAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
   _max: UserMaxAggregateOutputType | null
+}
+
+export type UserAvgAggregateOutputType = {
+  weeklyGoalDays: number | null
+}
+
+export type UserSumAggregateOutputType = {
+  weeklyGoalDays: number | null
 }
 
 export type UserMinAggregateOutputType = {
@@ -31,6 +41,8 @@ export type UserMinAggregateOutputType = {
   password: string | null
   firstName: string | null
   lastName: string | null
+  timezone: string | null
+  weeklyGoalDays: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -42,6 +54,8 @@ export type UserMaxAggregateOutputType = {
   password: string | null
   firstName: string | null
   lastName: string | null
+  timezone: string | null
+  weeklyGoalDays: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -53,11 +67,21 @@ export type UserCountAggregateOutputType = {
   password: number
   firstName: number
   lastName: number
+  timezone: number
+  weeklyGoalDays: number
   createdAt: number
   updatedAt: number
   _all: number
 }
 
+
+export type UserAvgAggregateInputType = {
+  weeklyGoalDays?: true
+}
+
+export type UserSumAggregateInputType = {
+  weeklyGoalDays?: true
+}
 
 export type UserMinAggregateInputType = {
   id?: true
@@ -66,6 +90,8 @@ export type UserMinAggregateInputType = {
   password?: true
   firstName?: true
   lastName?: true
+  timezone?: true
+  weeklyGoalDays?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -77,6 +103,8 @@ export type UserMaxAggregateInputType = {
   password?: true
   firstName?: true
   lastName?: true
+  timezone?: true
+  weeklyGoalDays?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -88,6 +116,8 @@ export type UserCountAggregateInputType = {
   password?: true
   firstName?: true
   lastName?: true
+  timezone?: true
+  weeklyGoalDays?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -131,6 +161,18 @@ export type UserAggregateArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: UserAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: UserSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: UserMinAggregateInputType
@@ -161,6 +203,8 @@ export type UserGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
   take?: number
   skip?: number
   _count?: UserCountAggregateInputType | true
+  _avg?: UserAvgAggregateInputType
+  _sum?: UserSumAggregateInputType
   _min?: UserMinAggregateInputType
   _max?: UserMaxAggregateInputType
 }
@@ -172,9 +216,13 @@ export type UserGroupByOutputType = {
   password: string
   firstName: string
   lastName: string
+  timezone: string | null
+  weeklyGoalDays: number | null
   createdAt: Date
   updatedAt: Date
   _count: UserCountAggregateOutputType | null
+  _avg: UserAvgAggregateOutputType | null
+  _sum: UserSumAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
   _max: UserMaxAggregateOutputType | null
 }
@@ -204,6 +252,8 @@ export type UserWhereInput = {
   password?: Prisma.StringFilter<"User"> | string
   firstName?: Prisma.StringFilter<"User"> | string
   lastName?: Prisma.StringFilter<"User"> | string
+  timezone?: Prisma.StringNullableFilter<"User"> | string | null
+  weeklyGoalDays?: Prisma.IntNullableFilter<"User"> | number | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   learningSessions?: Prisma.LearningSessionListRelationFilter
@@ -212,6 +262,9 @@ export type UserWhereInput = {
   wordProgresses?: Prisma.UserWordProgressListRelationFilter
   wordAttempts?: Prisma.UserWordAttemptListRelationFilter
   magicLinkTokens?: Prisma.MagicLinkTokenListRelationFilter
+  mixedSessions?: Prisma.MixedSessionListRelationFilter
+  completions?: Prisma.CompletionLedgerListRelationFilter
+  unitCheckpoints?: Prisma.UnitCheckpointListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -221,6 +274,8 @@ export type UserOrderByWithRelationInput = {
   password?: Prisma.SortOrder
   firstName?: Prisma.SortOrder
   lastName?: Prisma.SortOrder
+  timezone?: Prisma.SortOrderInput | Prisma.SortOrder
+  weeklyGoalDays?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   learningSessions?: Prisma.LearningSessionOrderByRelationAggregateInput
@@ -229,6 +284,9 @@ export type UserOrderByWithRelationInput = {
   wordProgresses?: Prisma.UserWordProgressOrderByRelationAggregateInput
   wordAttempts?: Prisma.UserWordAttemptOrderByRelationAggregateInput
   magicLinkTokens?: Prisma.MagicLinkTokenOrderByRelationAggregateInput
+  mixedSessions?: Prisma.MixedSessionOrderByRelationAggregateInput
+  completions?: Prisma.CompletionLedgerOrderByRelationAggregateInput
+  unitCheckpoints?: Prisma.UnitCheckpointOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -241,6 +299,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   password?: Prisma.StringFilter<"User"> | string
   firstName?: Prisma.StringFilter<"User"> | string
   lastName?: Prisma.StringFilter<"User"> | string
+  timezone?: Prisma.StringNullableFilter<"User"> | string | null
+  weeklyGoalDays?: Prisma.IntNullableFilter<"User"> | number | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   learningSessions?: Prisma.LearningSessionListRelationFilter
@@ -249,6 +309,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   wordProgresses?: Prisma.UserWordProgressListRelationFilter
   wordAttempts?: Prisma.UserWordAttemptListRelationFilter
   magicLinkTokens?: Prisma.MagicLinkTokenListRelationFilter
+  mixedSessions?: Prisma.MixedSessionListRelationFilter
+  completions?: Prisma.CompletionLedgerListRelationFilter
+  unitCheckpoints?: Prisma.UnitCheckpointListRelationFilter
 }, "id" | "email" | "username">
 
 export type UserOrderByWithAggregationInput = {
@@ -258,11 +321,15 @@ export type UserOrderByWithAggregationInput = {
   password?: Prisma.SortOrder
   firstName?: Prisma.SortOrder
   lastName?: Prisma.SortOrder
+  timezone?: Prisma.SortOrderInput | Prisma.SortOrder
+  weeklyGoalDays?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
+  _avg?: Prisma.UserAvgOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
   _min?: Prisma.UserMinOrderByAggregateInput
+  _sum?: Prisma.UserSumOrderByAggregateInput
 }
 
 export type UserScalarWhereWithAggregatesInput = {
@@ -275,6 +342,8 @@ export type UserScalarWhereWithAggregatesInput = {
   password?: Prisma.StringWithAggregatesFilter<"User"> | string
   firstName?: Prisma.StringWithAggregatesFilter<"User"> | string
   lastName?: Prisma.StringWithAggregatesFilter<"User"> | string
+  timezone?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  weeklyGoalDays?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
@@ -286,6 +355,8 @@ export type UserCreateInput = {
   password: string
   firstName?: string
   lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
@@ -294,6 +365,9 @@ export type UserCreateInput = {
   wordProgresses?: Prisma.UserWordProgressCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptCreateNestedManyWithoutUserInput
   magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -303,6 +377,8 @@ export type UserUncheckedCreateInput = {
   password: string
   firstName?: string
   lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
@@ -311,6 +387,9 @@ export type UserUncheckedCreateInput = {
   wordProgresses?: Prisma.UserWordProgressUncheckedCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedCreateNestedManyWithoutUserInput
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -320,6 +399,8 @@ export type UserUpdateInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
@@ -328,6 +409,9 @@ export type UserUpdateInput = {
   wordProgresses?: Prisma.UserWordProgressUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUpdateManyWithoutUserNestedInput
   magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -337,6 +421,8 @@ export type UserUncheckedUpdateInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -345,6 +431,9 @@ export type UserUncheckedUpdateInput = {
   wordProgresses?: Prisma.UserWordProgressUncheckedUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedUpdateManyWithoutUserNestedInput
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -354,6 +443,8 @@ export type UserCreateManyInput = {
   password: string
   firstName?: string
   lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -365,6 +456,8 @@ export type UserUpdateManyMutationInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -376,6 +469,8 @@ export type UserUncheckedUpdateManyInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -387,8 +482,14 @@ export type UserCountOrderByAggregateInput = {
   password?: Prisma.SortOrder
   firstName?: Prisma.SortOrder
   lastName?: Prisma.SortOrder
+  timezone?: Prisma.SortOrder
+  weeklyGoalDays?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type UserAvgOrderByAggregateInput = {
+  weeklyGoalDays?: Prisma.SortOrder
 }
 
 export type UserMaxOrderByAggregateInput = {
@@ -398,6 +499,8 @@ export type UserMaxOrderByAggregateInput = {
   password?: Prisma.SortOrder
   firstName?: Prisma.SortOrder
   lastName?: Prisma.SortOrder
+  timezone?: Prisma.SortOrder
+  weeklyGoalDays?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -409,8 +512,14 @@ export type UserMinOrderByAggregateInput = {
   password?: Prisma.SortOrder
   firstName?: Prisma.SortOrder
   lastName?: Prisma.SortOrder
+  timezone?: Prisma.SortOrder
+  weeklyGoalDays?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type UserSumOrderByAggregateInput = {
+  weeklyGoalDays?: Prisma.SortOrder
 }
 
 export type UserScalarRelationFilter = {
@@ -430,6 +539,34 @@ export type UserUpdateOneRequiredWithoutMagicLinkTokensNestedInput = {
   upsert?: Prisma.UserUpsertWithoutMagicLinkTokensInput
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutMagicLinkTokensInput, Prisma.UserUpdateWithoutMagicLinkTokensInput>, Prisma.UserUncheckedUpdateWithoutMagicLinkTokensInput>
+}
+
+export type UserCreateNestedOneWithoutMixedSessionsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMixedSessionsInput, Prisma.UserUncheckedCreateWithoutMixedSessionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMixedSessionsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutMixedSessionsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMixedSessionsInput, Prisma.UserUncheckedCreateWithoutMixedSessionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMixedSessionsInput
+  upsert?: Prisma.UserUpsertWithoutMixedSessionsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutMixedSessionsInput, Prisma.UserUpdateWithoutMixedSessionsInput>, Prisma.UserUncheckedUpdateWithoutMixedSessionsInput>
+}
+
+export type UserCreateNestedOneWithoutUnitCheckpointsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutUnitCheckpointsInput, Prisma.UserUncheckedCreateWithoutUnitCheckpointsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutUnitCheckpointsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutUnitCheckpointsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutUnitCheckpointsInput, Prisma.UserUncheckedCreateWithoutUnitCheckpointsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutUnitCheckpointsInput
+  upsert?: Prisma.UserUpsertWithoutUnitCheckpointsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutUnitCheckpointsInput, Prisma.UserUpdateWithoutUnitCheckpointsInput>, Prisma.UserUncheckedUpdateWithoutUnitCheckpointsInput>
 }
 
 export type UserCreateNestedOneWithoutLearningSessionsInput = {
@@ -458,6 +595,20 @@ export type UserUpdateOneRequiredWithoutQuizResultsNestedInput = {
   upsert?: Prisma.UserUpsertWithoutQuizResultsInput
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutQuizResultsInput, Prisma.UserUpdateWithoutQuizResultsInput>, Prisma.UserUncheckedUpdateWithoutQuizResultsInput>
+}
+
+export type UserCreateNestedOneWithoutCompletionsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCompletionsInput, Prisma.UserUncheckedCreateWithoutCompletionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCompletionsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutCompletionsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCompletionsInput, Prisma.UserUncheckedCreateWithoutCompletionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCompletionsInput
+  upsert?: Prisma.UserUpsertWithoutCompletionsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCompletionsInput, Prisma.UserUpdateWithoutCompletionsInput>, Prisma.UserUncheckedUpdateWithoutCompletionsInput>
 }
 
 export type UserCreateNestedOneWithoutUnitProgressesInput = {
@@ -509,6 +660,8 @@ export type UserCreateWithoutMagicLinkTokensInput = {
   password: string
   firstName?: string
   lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
@@ -516,6 +669,9 @@ export type UserCreateWithoutMagicLinkTokensInput = {
   unitProgresses?: Prisma.UserUnitProgressCreateNestedManyWithoutUserInput
   wordProgresses?: Prisma.UserWordProgressCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutMagicLinkTokensInput = {
@@ -525,6 +681,8 @@ export type UserUncheckedCreateWithoutMagicLinkTokensInput = {
   password: string
   firstName?: string
   lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
@@ -532,6 +690,9 @@ export type UserUncheckedCreateWithoutMagicLinkTokensInput = {
   unitProgresses?: Prisma.UserUnitProgressUncheckedCreateNestedManyWithoutUserInput
   wordProgresses?: Prisma.UserWordProgressUncheckedCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutMagicLinkTokensInput = {
@@ -557,6 +718,8 @@ export type UserUpdateWithoutMagicLinkTokensInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
@@ -564,6 +727,9 @@ export type UserUpdateWithoutMagicLinkTokensInput = {
   unitProgresses?: Prisma.UserUnitProgressUpdateManyWithoutUserNestedInput
   wordProgresses?: Prisma.UserWordProgressUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMagicLinkTokensInput = {
@@ -573,6 +739,8 @@ export type UserUncheckedUpdateWithoutMagicLinkTokensInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -580,6 +748,209 @@ export type UserUncheckedUpdateWithoutMagicLinkTokensInput = {
   unitProgresses?: Prisma.UserUnitProgressUncheckedUpdateManyWithoutUserNestedInput
   wordProgresses?: Prisma.UserWordProgressUncheckedUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutMixedSessionsInput = {
+  id?: string
+  email: string
+  username: string
+  password: string
+  firstName?: string
+  lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
+  quizResults?: Prisma.QuizResultCreateNestedManyWithoutUserInput
+  unitProgresses?: Prisma.UserUnitProgressCreateNestedManyWithoutUserInput
+  wordProgresses?: Prisma.UserWordProgressCreateNestedManyWithoutUserInput
+  wordAttempts?: Prisma.UserWordAttemptCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutMixedSessionsInput = {
+  id?: string
+  email: string
+  username: string
+  password: string
+  firstName?: string
+  lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
+  quizResults?: Prisma.QuizResultUncheckedCreateNestedManyWithoutUserInput
+  unitProgresses?: Prisma.UserUnitProgressUncheckedCreateNestedManyWithoutUserInput
+  wordProgresses?: Prisma.UserWordProgressUncheckedCreateNestedManyWithoutUserInput
+  wordAttempts?: Prisma.UserWordAttemptUncheckedCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutMixedSessionsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutMixedSessionsInput, Prisma.UserUncheckedCreateWithoutMixedSessionsInput>
+}
+
+export type UserUpsertWithoutMixedSessionsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutMixedSessionsInput, Prisma.UserUncheckedUpdateWithoutMixedSessionsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutMixedSessionsInput, Prisma.UserUncheckedCreateWithoutMixedSessionsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutMixedSessionsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutMixedSessionsInput, Prisma.UserUncheckedUpdateWithoutMixedSessionsInput>
+}
+
+export type UserUpdateWithoutMixedSessionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
+  quizResults?: Prisma.QuizResultUpdateManyWithoutUserNestedInput
+  unitProgresses?: Prisma.UserUnitProgressUpdateManyWithoutUserNestedInput
+  wordProgresses?: Prisma.UserWordProgressUpdateManyWithoutUserNestedInput
+  wordAttempts?: Prisma.UserWordAttemptUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutMixedSessionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
+  quizResults?: Prisma.QuizResultUncheckedUpdateManyWithoutUserNestedInput
+  unitProgresses?: Prisma.UserUnitProgressUncheckedUpdateManyWithoutUserNestedInput
+  wordProgresses?: Prisma.UserWordProgressUncheckedUpdateManyWithoutUserNestedInput
+  wordAttempts?: Prisma.UserWordAttemptUncheckedUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutUnitCheckpointsInput = {
+  id?: string
+  email: string
+  username: string
+  password: string
+  firstName?: string
+  lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
+  quizResults?: Prisma.QuizResultCreateNestedManyWithoutUserInput
+  unitProgresses?: Prisma.UserUnitProgressCreateNestedManyWithoutUserInput
+  wordProgresses?: Prisma.UserWordProgressCreateNestedManyWithoutUserInput
+  wordAttempts?: Prisma.UserWordAttemptCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutUnitCheckpointsInput = {
+  id?: string
+  email: string
+  username: string
+  password: string
+  firstName?: string
+  lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
+  quizResults?: Prisma.QuizResultUncheckedCreateNestedManyWithoutUserInput
+  unitProgresses?: Prisma.UserUnitProgressUncheckedCreateNestedManyWithoutUserInput
+  wordProgresses?: Prisma.UserWordProgressUncheckedCreateNestedManyWithoutUserInput
+  wordAttempts?: Prisma.UserWordAttemptUncheckedCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutUnitCheckpointsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutUnitCheckpointsInput, Prisma.UserUncheckedCreateWithoutUnitCheckpointsInput>
+}
+
+export type UserUpsertWithoutUnitCheckpointsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutUnitCheckpointsInput, Prisma.UserUncheckedUpdateWithoutUnitCheckpointsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutUnitCheckpointsInput, Prisma.UserUncheckedCreateWithoutUnitCheckpointsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutUnitCheckpointsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutUnitCheckpointsInput, Prisma.UserUncheckedUpdateWithoutUnitCheckpointsInput>
+}
+
+export type UserUpdateWithoutUnitCheckpointsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
+  quizResults?: Prisma.QuizResultUpdateManyWithoutUserNestedInput
+  unitProgresses?: Prisma.UserUnitProgressUpdateManyWithoutUserNestedInput
+  wordProgresses?: Prisma.UserWordProgressUpdateManyWithoutUserNestedInput
+  wordAttempts?: Prisma.UserWordAttemptUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutUnitCheckpointsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
+  quizResults?: Prisma.QuizResultUncheckedUpdateManyWithoutUserNestedInput
+  unitProgresses?: Prisma.UserUnitProgressUncheckedUpdateManyWithoutUserNestedInput
+  wordProgresses?: Prisma.UserWordProgressUncheckedUpdateManyWithoutUserNestedInput
+  wordAttempts?: Prisma.UserWordAttemptUncheckedUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutLearningSessionsInput = {
@@ -589,6 +960,8 @@ export type UserCreateWithoutLearningSessionsInput = {
   password: string
   firstName?: string
   lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   quizResults?: Prisma.QuizResultCreateNestedManyWithoutUserInput
@@ -596,6 +969,9 @@ export type UserCreateWithoutLearningSessionsInput = {
   wordProgresses?: Prisma.UserWordProgressCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptCreateNestedManyWithoutUserInput
   magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutLearningSessionsInput = {
@@ -605,6 +981,8 @@ export type UserUncheckedCreateWithoutLearningSessionsInput = {
   password: string
   firstName?: string
   lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   quizResults?: Prisma.QuizResultUncheckedCreateNestedManyWithoutUserInput
@@ -612,6 +990,9 @@ export type UserUncheckedCreateWithoutLearningSessionsInput = {
   wordProgresses?: Prisma.UserWordProgressUncheckedCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedCreateNestedManyWithoutUserInput
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutLearningSessionsInput = {
@@ -637,6 +1018,8 @@ export type UserUpdateWithoutLearningSessionsInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   quizResults?: Prisma.QuizResultUpdateManyWithoutUserNestedInput
@@ -644,6 +1027,9 @@ export type UserUpdateWithoutLearningSessionsInput = {
   wordProgresses?: Prisma.UserWordProgressUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUpdateManyWithoutUserNestedInput
   magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLearningSessionsInput = {
@@ -653,6 +1039,8 @@ export type UserUncheckedUpdateWithoutLearningSessionsInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   quizResults?: Prisma.QuizResultUncheckedUpdateManyWithoutUserNestedInput
@@ -660,6 +1048,9 @@ export type UserUncheckedUpdateWithoutLearningSessionsInput = {
   wordProgresses?: Prisma.UserWordProgressUncheckedUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedUpdateManyWithoutUserNestedInput
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutQuizResultsInput = {
@@ -669,6 +1060,8 @@ export type UserCreateWithoutQuizResultsInput = {
   password: string
   firstName?: string
   lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
@@ -676,6 +1069,9 @@ export type UserCreateWithoutQuizResultsInput = {
   wordProgresses?: Prisma.UserWordProgressCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptCreateNestedManyWithoutUserInput
   magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutQuizResultsInput = {
@@ -685,6 +1081,8 @@ export type UserUncheckedCreateWithoutQuizResultsInput = {
   password: string
   firstName?: string
   lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
@@ -692,6 +1090,9 @@ export type UserUncheckedCreateWithoutQuizResultsInput = {
   wordProgresses?: Prisma.UserWordProgressUncheckedCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedCreateNestedManyWithoutUserInput
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutQuizResultsInput = {
@@ -717,6 +1118,8 @@ export type UserUpdateWithoutQuizResultsInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
@@ -724,6 +1127,9 @@ export type UserUpdateWithoutQuizResultsInput = {
   wordProgresses?: Prisma.UserWordProgressUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUpdateManyWithoutUserNestedInput
   magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutQuizResultsInput = {
@@ -733,6 +1139,8 @@ export type UserUncheckedUpdateWithoutQuizResultsInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -740,6 +1148,109 @@ export type UserUncheckedUpdateWithoutQuizResultsInput = {
   wordProgresses?: Prisma.UserWordProgressUncheckedUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedUpdateManyWithoutUserNestedInput
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutCompletionsInput = {
+  id?: string
+  email: string
+  username: string
+  password: string
+  firstName?: string
+  lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
+  quizResults?: Prisma.QuizResultCreateNestedManyWithoutUserInput
+  unitProgresses?: Prisma.UserUnitProgressCreateNestedManyWithoutUserInput
+  wordProgresses?: Prisma.UserWordProgressCreateNestedManyWithoutUserInput
+  wordAttempts?: Prisma.UserWordAttemptCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutCompletionsInput = {
+  id?: string
+  email: string
+  username: string
+  password: string
+  firstName?: string
+  lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
+  quizResults?: Prisma.QuizResultUncheckedCreateNestedManyWithoutUserInput
+  unitProgresses?: Prisma.UserUnitProgressUncheckedCreateNestedManyWithoutUserInput
+  wordProgresses?: Prisma.UserWordProgressUncheckedCreateNestedManyWithoutUserInput
+  wordAttempts?: Prisma.UserWordAttemptUncheckedCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutCompletionsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutCompletionsInput, Prisma.UserUncheckedCreateWithoutCompletionsInput>
+}
+
+export type UserUpsertWithoutCompletionsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutCompletionsInput, Prisma.UserUncheckedUpdateWithoutCompletionsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutCompletionsInput, Prisma.UserUncheckedCreateWithoutCompletionsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutCompletionsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutCompletionsInput, Prisma.UserUncheckedUpdateWithoutCompletionsInput>
+}
+
+export type UserUpdateWithoutCompletionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
+  quizResults?: Prisma.QuizResultUpdateManyWithoutUserNestedInput
+  unitProgresses?: Prisma.UserUnitProgressUpdateManyWithoutUserNestedInput
+  wordProgresses?: Prisma.UserWordProgressUpdateManyWithoutUserNestedInput
+  wordAttempts?: Prisma.UserWordAttemptUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutCompletionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
+  quizResults?: Prisma.QuizResultUncheckedUpdateManyWithoutUserNestedInput
+  unitProgresses?: Prisma.UserUnitProgressUncheckedUpdateManyWithoutUserNestedInput
+  wordProgresses?: Prisma.UserWordProgressUncheckedUpdateManyWithoutUserNestedInput
+  wordAttempts?: Prisma.UserWordAttemptUncheckedUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutUnitProgressesInput = {
@@ -749,6 +1260,8 @@ export type UserCreateWithoutUnitProgressesInput = {
   password: string
   firstName?: string
   lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
@@ -756,6 +1269,9 @@ export type UserCreateWithoutUnitProgressesInput = {
   wordProgresses?: Prisma.UserWordProgressCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptCreateNestedManyWithoutUserInput
   magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutUnitProgressesInput = {
@@ -765,6 +1281,8 @@ export type UserUncheckedCreateWithoutUnitProgressesInput = {
   password: string
   firstName?: string
   lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
@@ -772,6 +1290,9 @@ export type UserUncheckedCreateWithoutUnitProgressesInput = {
   wordProgresses?: Prisma.UserWordProgressUncheckedCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedCreateNestedManyWithoutUserInput
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutUnitProgressesInput = {
@@ -797,6 +1318,8 @@ export type UserUpdateWithoutUnitProgressesInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
@@ -804,6 +1327,9 @@ export type UserUpdateWithoutUnitProgressesInput = {
   wordProgresses?: Prisma.UserWordProgressUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUpdateManyWithoutUserNestedInput
   magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUnitProgressesInput = {
@@ -813,6 +1339,8 @@ export type UserUncheckedUpdateWithoutUnitProgressesInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -820,6 +1348,9 @@ export type UserUncheckedUpdateWithoutUnitProgressesInput = {
   wordProgresses?: Prisma.UserWordProgressUncheckedUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedUpdateManyWithoutUserNestedInput
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutWordProgressesInput = {
@@ -829,6 +1360,8 @@ export type UserCreateWithoutWordProgressesInput = {
   password: string
   firstName?: string
   lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
@@ -836,6 +1369,9 @@ export type UserCreateWithoutWordProgressesInput = {
   unitProgresses?: Prisma.UserUnitProgressCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptCreateNestedManyWithoutUserInput
   magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutWordProgressesInput = {
@@ -845,6 +1381,8 @@ export type UserUncheckedCreateWithoutWordProgressesInput = {
   password: string
   firstName?: string
   lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
@@ -852,6 +1390,9 @@ export type UserUncheckedCreateWithoutWordProgressesInput = {
   unitProgresses?: Prisma.UserUnitProgressUncheckedCreateNestedManyWithoutUserInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedCreateNestedManyWithoutUserInput
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutWordProgressesInput = {
@@ -877,6 +1418,8 @@ export type UserUpdateWithoutWordProgressesInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
@@ -884,6 +1427,9 @@ export type UserUpdateWithoutWordProgressesInput = {
   unitProgresses?: Prisma.UserUnitProgressUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUpdateManyWithoutUserNestedInput
   magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWordProgressesInput = {
@@ -893,6 +1439,8 @@ export type UserUncheckedUpdateWithoutWordProgressesInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -900,6 +1448,9 @@ export type UserUncheckedUpdateWithoutWordProgressesInput = {
   unitProgresses?: Prisma.UserUnitProgressUncheckedUpdateManyWithoutUserNestedInput
   wordAttempts?: Prisma.UserWordAttemptUncheckedUpdateManyWithoutUserNestedInput
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutWordAttemptsInput = {
@@ -909,6 +1460,8 @@ export type UserCreateWithoutWordAttemptsInput = {
   password: string
   firstName?: string
   lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
@@ -916,6 +1469,9 @@ export type UserCreateWithoutWordAttemptsInput = {
   unitProgresses?: Prisma.UserUnitProgressCreateNestedManyWithoutUserInput
   wordProgresses?: Prisma.UserWordProgressCreateNestedManyWithoutUserInput
   magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutWordAttemptsInput = {
@@ -925,6 +1481,8 @@ export type UserUncheckedCreateWithoutWordAttemptsInput = {
   password: string
   firstName?: string
   lastName?: string
+  timezone?: string | null
+  weeklyGoalDays?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
@@ -932,6 +1490,9 @@ export type UserUncheckedCreateWithoutWordAttemptsInput = {
   unitProgresses?: Prisma.UserUnitProgressUncheckedCreateNestedManyWithoutUserInput
   wordProgresses?: Prisma.UserWordProgressUncheckedCreateNestedManyWithoutUserInput
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutWordAttemptsInput = {
@@ -957,6 +1518,8 @@ export type UserUpdateWithoutWordAttemptsInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
@@ -964,6 +1527,9 @@ export type UserUpdateWithoutWordAttemptsInput = {
   unitProgresses?: Prisma.UserUnitProgressUpdateManyWithoutUserNestedInput
   wordProgresses?: Prisma.UserWordProgressUpdateManyWithoutUserNestedInput
   magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWordAttemptsInput = {
@@ -973,6 +1539,8 @@ export type UserUncheckedUpdateWithoutWordAttemptsInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -980,6 +1548,9 @@ export type UserUncheckedUpdateWithoutWordAttemptsInput = {
   unitProgresses?: Prisma.UserUnitProgressUncheckedUpdateManyWithoutUserNestedInput
   wordProgresses?: Prisma.UserWordProgressUncheckedUpdateManyWithoutUserNestedInput
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -994,6 +1565,9 @@ export type UserCountOutputType = {
   wordProgresses: number
   wordAttempts: number
   magicLinkTokens: number
+  mixedSessions: number
+  completions: number
+  unitCheckpoints: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1003,6 +1577,9 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   wordProgresses?: boolean | UserCountOutputTypeCountWordProgressesArgs
   wordAttempts?: boolean | UserCountOutputTypeCountWordAttemptsArgs
   magicLinkTokens?: boolean | UserCountOutputTypeCountMagicLinkTokensArgs
+  mixedSessions?: boolean | UserCountOutputTypeCountMixedSessionsArgs
+  completions?: boolean | UserCountOutputTypeCountCompletionsArgs
+  unitCheckpoints?: boolean | UserCountOutputTypeCountUnitCheckpointsArgs
 }
 
 /**
@@ -1057,6 +1634,27 @@ export type UserCountOutputTypeCountMagicLinkTokensArgs<ExtArgs extends runtime.
   where?: Prisma.MagicLinkTokenWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountMixedSessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MixedSessionWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountCompletionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CompletionLedgerWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountUnitCheckpointsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UnitCheckpointWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1065,6 +1663,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   password?: boolean
   firstName?: boolean
   lastName?: boolean
+  timezone?: boolean
+  weeklyGoalDays?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   learningSessions?: boolean | Prisma.User$learningSessionsArgs<ExtArgs>
@@ -1073,6 +1673,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   wordProgresses?: boolean | Prisma.User$wordProgressesArgs<ExtArgs>
   wordAttempts?: boolean | Prisma.User$wordAttemptsArgs<ExtArgs>
   magicLinkTokens?: boolean | Prisma.User$magicLinkTokensArgs<ExtArgs>
+  mixedSessions?: boolean | Prisma.User$mixedSessionsArgs<ExtArgs>
+  completions?: boolean | Prisma.User$completionsArgs<ExtArgs>
+  unitCheckpoints?: boolean | Prisma.User$unitCheckpointsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1083,6 +1686,8 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   password?: boolean
   firstName?: boolean
   lastName?: boolean
+  timezone?: boolean
+  weeklyGoalDays?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -1094,6 +1699,8 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   password?: boolean
   firstName?: boolean
   lastName?: boolean
+  timezone?: boolean
+  weeklyGoalDays?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -1105,11 +1712,13 @@ export type UserSelectScalar = {
   password?: boolean
   firstName?: boolean
   lastName?: boolean
+  timezone?: boolean
+  weeklyGoalDays?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "username" | "password" | "firstName" | "lastName" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "username" | "password" | "firstName" | "lastName" | "timezone" | "weeklyGoalDays" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   learningSessions?: boolean | Prisma.User$learningSessionsArgs<ExtArgs>
   quizResults?: boolean | Prisma.User$quizResultsArgs<ExtArgs>
@@ -1117,6 +1726,9 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   wordProgresses?: boolean | Prisma.User$wordProgressesArgs<ExtArgs>
   wordAttempts?: boolean | Prisma.User$wordAttemptsArgs<ExtArgs>
   magicLinkTokens?: boolean | Prisma.User$magicLinkTokensArgs<ExtArgs>
+  mixedSessions?: boolean | Prisma.User$mixedSessionsArgs<ExtArgs>
+  completions?: boolean | Prisma.User$completionsArgs<ExtArgs>
+  unitCheckpoints?: boolean | Prisma.User$unitCheckpointsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1131,6 +1743,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     wordProgresses: Prisma.$UserWordProgressPayload<ExtArgs>[]
     wordAttempts: Prisma.$UserWordAttemptPayload<ExtArgs>[]
     magicLinkTokens: Prisma.$MagicLinkTokenPayload<ExtArgs>[]
+    mixedSessions: Prisma.$MixedSessionPayload<ExtArgs>[]
+    completions: Prisma.$CompletionLedgerPayload<ExtArgs>[]
+    unitCheckpoints: Prisma.$UnitCheckpointPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1139,6 +1754,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     password: string
     firstName: string
     lastName: string
+    timezone: string | null
+    weeklyGoalDays: number | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["user"]>
@@ -1541,6 +2158,9 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   wordProgresses<T extends Prisma.User$wordProgressesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$wordProgressesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserWordProgressPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   wordAttempts<T extends Prisma.User$wordAttemptsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$wordAttemptsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserWordAttemptPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   magicLinkTokens<T extends Prisma.User$magicLinkTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$magicLinkTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MagicLinkTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  mixedSessions<T extends Prisma.User$mixedSessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mixedSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MixedSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  completions<T extends Prisma.User$completionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$completionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CompletionLedgerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  unitCheckpoints<T extends Prisma.User$unitCheckpointsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$unitCheckpointsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UnitCheckpointPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1576,6 +2196,8 @@ export interface UserFieldRefs {
   readonly password: Prisma.FieldRef<"User", 'String'>
   readonly firstName: Prisma.FieldRef<"User", 'String'>
   readonly lastName: Prisma.FieldRef<"User", 'String'>
+  readonly timezone: Prisma.FieldRef<"User", 'String'>
+  readonly weeklyGoalDays: Prisma.FieldRef<"User", 'Int'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
 }
@@ -2110,6 +2732,78 @@ export type User$magicLinkTokensArgs<ExtArgs extends runtime.Types.Extensions.In
   take?: number
   skip?: number
   distinct?: Prisma.MagicLinkTokenScalarFieldEnum | Prisma.MagicLinkTokenScalarFieldEnum[]
+}
+
+/**
+ * User.mixedSessions
+ */
+export type User$mixedSessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MixedSession
+   */
+  select?: Prisma.MixedSessionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the MixedSession
+   */
+  omit?: Prisma.MixedSessionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MixedSessionInclude<ExtArgs> | null
+  where?: Prisma.MixedSessionWhereInput
+  orderBy?: Prisma.MixedSessionOrderByWithRelationInput | Prisma.MixedSessionOrderByWithRelationInput[]
+  cursor?: Prisma.MixedSessionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.MixedSessionScalarFieldEnum | Prisma.MixedSessionScalarFieldEnum[]
+}
+
+/**
+ * User.completions
+ */
+export type User$completionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CompletionLedger
+   */
+  select?: Prisma.CompletionLedgerSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CompletionLedger
+   */
+  omit?: Prisma.CompletionLedgerOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CompletionLedgerInclude<ExtArgs> | null
+  where?: Prisma.CompletionLedgerWhereInput
+  orderBy?: Prisma.CompletionLedgerOrderByWithRelationInput | Prisma.CompletionLedgerOrderByWithRelationInput[]
+  cursor?: Prisma.CompletionLedgerWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CompletionLedgerScalarFieldEnum | Prisma.CompletionLedgerScalarFieldEnum[]
+}
+
+/**
+ * User.unitCheckpoints
+ */
+export type User$unitCheckpointsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the UnitCheckpoint
+   */
+  select?: Prisma.UnitCheckpointSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the UnitCheckpoint
+   */
+  omit?: Prisma.UnitCheckpointOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UnitCheckpointInclude<ExtArgs> | null
+  where?: Prisma.UnitCheckpointWhereInput
+  orderBy?: Prisma.UnitCheckpointOrderByWithRelationInput | Prisma.UnitCheckpointOrderByWithRelationInput[]
+  cursor?: Prisma.UnitCheckpointWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.UnitCheckpointScalarFieldEnum | Prisma.UnitCheckpointScalarFieldEnum[]
 }
 
 /**

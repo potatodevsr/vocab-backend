@@ -232,6 +232,15 @@ const MODEL_FIELDS = [
     isUpdatedAt: false,
   },
   {
+    name: "trialId",
+    kind: "scalar",
+    type: "String",
+    isList: false,
+    isRequired: false,
+    hasDefaultValue: false,
+    isUpdatedAt: false,
+  },
+  {
     name: "level",
     kind: "scalar",
     type: "String",

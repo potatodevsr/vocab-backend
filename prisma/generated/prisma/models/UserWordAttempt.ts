@@ -40,6 +40,7 @@ export type UserWordAttemptMinAggregateOutputType = {
   wordId: string | null
   sessionId: string | null
   quizResultId: string | null
+  trialId: string | null
   level: string | null
   unit: number | null
   activityType: string | null
@@ -55,6 +56,7 @@ export type UserWordAttemptMaxAggregateOutputType = {
   wordId: string | null
   sessionId: string | null
   quizResultId: string | null
+  trialId: string | null
   level: string | null
   unit: number | null
   activityType: string | null
@@ -70,6 +72,7 @@ export type UserWordAttemptCountAggregateOutputType = {
   wordId: number
   sessionId: number
   quizResultId: number
+  trialId: number
   level: number
   unit: number
   activityType: number
@@ -95,6 +98,7 @@ export type UserWordAttemptMinAggregateInputType = {
   wordId?: true
   sessionId?: true
   quizResultId?: true
+  trialId?: true
   level?: true
   unit?: true
   activityType?: true
@@ -110,6 +114,7 @@ export type UserWordAttemptMaxAggregateInputType = {
   wordId?: true
   sessionId?: true
   quizResultId?: true
+  trialId?: true
   level?: true
   unit?: true
   activityType?: true
@@ -125,6 +130,7 @@ export type UserWordAttemptCountAggregateInputType = {
   wordId?: true
   sessionId?: true
   quizResultId?: true
+  trialId?: true
   level?: true
   unit?: true
   activityType?: true
@@ -227,6 +233,7 @@ export type UserWordAttemptGroupByOutputType = {
   wordId: string
   sessionId: string | null
   quizResultId: string | null
+  trialId: string | null
   level: string
   unit: number | null
   activityType: string
@@ -265,6 +272,7 @@ export type UserWordAttemptWhereInput = {
   wordId?: Prisma.StringFilter<"UserWordAttempt"> | string
   sessionId?: Prisma.StringNullableFilter<"UserWordAttempt"> | string | null
   quizResultId?: Prisma.StringNullableFilter<"UserWordAttempt"> | string | null
+  trialId?: Prisma.StringNullableFilter<"UserWordAttempt"> | string | null
   level?: Prisma.StringFilter<"UserWordAttempt"> | string
   unit?: Prisma.IntNullableFilter<"UserWordAttempt"> | number | null
   activityType?: Prisma.StringFilter<"UserWordAttempt"> | string
@@ -284,6 +292,7 @@ export type UserWordAttemptOrderByWithRelationInput = {
   wordId?: Prisma.SortOrder
   sessionId?: Prisma.SortOrderInput | Prisma.SortOrder
   quizResultId?: Prisma.SortOrderInput | Prisma.SortOrder
+  trialId?: Prisma.SortOrderInput | Prisma.SortOrder
   level?: Prisma.SortOrder
   unit?: Prisma.SortOrderInput | Prisma.SortOrder
   activityType?: Prisma.SortOrder
@@ -299,6 +308,7 @@ export type UserWordAttemptOrderByWithRelationInput = {
 
 export type UserWordAttemptWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  userId_wordId_trialId?: Prisma.UserWordAttemptUserIdWordIdTrialIdCompoundUniqueInput
   AND?: Prisma.UserWordAttemptWhereInput | Prisma.UserWordAttemptWhereInput[]
   OR?: Prisma.UserWordAttemptWhereInput[]
   NOT?: Prisma.UserWordAttemptWhereInput | Prisma.UserWordAttemptWhereInput[]
@@ -306,6 +316,7 @@ export type UserWordAttemptWhereUniqueInput = Prisma.AtLeast<{
   wordId?: Prisma.StringFilter<"UserWordAttempt"> | string
   sessionId?: Prisma.StringNullableFilter<"UserWordAttempt"> | string | null
   quizResultId?: Prisma.StringNullableFilter<"UserWordAttempt"> | string | null
+  trialId?: Prisma.StringNullableFilter<"UserWordAttempt"> | string | null
   level?: Prisma.StringFilter<"UserWordAttempt"> | string
   unit?: Prisma.IntNullableFilter<"UserWordAttempt"> | number | null
   activityType?: Prisma.StringFilter<"UserWordAttempt"> | string
@@ -317,7 +328,7 @@ export type UserWordAttemptWhereUniqueInput = Prisma.AtLeast<{
   word?: Prisma.XOR<Prisma.VocabWordScalarRelationFilter, Prisma.VocabWordWhereInput>
   session?: Prisma.XOR<Prisma.LearningSessionNullableScalarRelationFilter, Prisma.LearningSessionWhereInput> | null
   quizResult?: Prisma.XOR<Prisma.QuizResultNullableScalarRelationFilter, Prisma.QuizResultWhereInput> | null
-}, "id">
+}, "id" | "userId_wordId_trialId">
 
 export type UserWordAttemptOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -325,6 +336,7 @@ export type UserWordAttemptOrderByWithAggregationInput = {
   wordId?: Prisma.SortOrder
   sessionId?: Prisma.SortOrderInput | Prisma.SortOrder
   quizResultId?: Prisma.SortOrderInput | Prisma.SortOrder
+  trialId?: Prisma.SortOrderInput | Prisma.SortOrder
   level?: Prisma.SortOrder
   unit?: Prisma.SortOrderInput | Prisma.SortOrder
   activityType?: Prisma.SortOrder
@@ -348,6 +360,7 @@ export type UserWordAttemptScalarWhereWithAggregatesInput = {
   wordId?: Prisma.StringWithAggregatesFilter<"UserWordAttempt"> | string
   sessionId?: Prisma.StringNullableWithAggregatesFilter<"UserWordAttempt"> | string | null
   quizResultId?: Prisma.StringNullableWithAggregatesFilter<"UserWordAttempt"> | string | null
+  trialId?: Prisma.StringNullableWithAggregatesFilter<"UserWordAttempt"> | string | null
   level?: Prisma.StringWithAggregatesFilter<"UserWordAttempt"> | string
   unit?: Prisma.IntNullableWithAggregatesFilter<"UserWordAttempt"> | number | null
   activityType?: Prisma.StringWithAggregatesFilter<"UserWordAttempt"> | string
@@ -359,6 +372,7 @@ export type UserWordAttemptScalarWhereWithAggregatesInput = {
 
 export type UserWordAttemptCreateInput = {
   id?: string
+  trialId?: string | null
   level: string
   unit?: number | null
   activityType: string
@@ -378,6 +392,7 @@ export type UserWordAttemptUncheckedCreateInput = {
   wordId: string
   sessionId?: string | null
   quizResultId?: string | null
+  trialId?: string | null
   level: string
   unit?: number | null
   activityType: string
@@ -389,6 +404,7 @@ export type UserWordAttemptUncheckedCreateInput = {
 
 export type UserWordAttemptUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  trialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.StringFieldUpdateOperationsInput | string
   unit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   activityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -408,6 +424,7 @@ export type UserWordAttemptUncheckedUpdateInput = {
   wordId?: Prisma.StringFieldUpdateOperationsInput | string
   sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quizResultId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.StringFieldUpdateOperationsInput | string
   unit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   activityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -423,6 +440,7 @@ export type UserWordAttemptCreateManyInput = {
   wordId: string
   sessionId?: string | null
   quizResultId?: string | null
+  trialId?: string | null
   level: string
   unit?: number | null
   activityType: string
@@ -434,6 +452,7 @@ export type UserWordAttemptCreateManyInput = {
 
 export type UserWordAttemptUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  trialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.StringFieldUpdateOperationsInput | string
   unit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   activityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -449,6 +468,7 @@ export type UserWordAttemptUncheckedUpdateManyInput = {
   wordId?: Prisma.StringFieldUpdateOperationsInput | string
   sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quizResultId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.StringFieldUpdateOperationsInput | string
   unit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   activityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -468,12 +488,19 @@ export type UserWordAttemptOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type UserWordAttemptUserIdWordIdTrialIdCompoundUniqueInput = {
+  userId: string
+  wordId: string
+  trialId: string
+}
+
 export type UserWordAttemptCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   wordId?: Prisma.SortOrder
   sessionId?: Prisma.SortOrder
   quizResultId?: Prisma.SortOrder
+  trialId?: Prisma.SortOrder
   level?: Prisma.SortOrder
   unit?: Prisma.SortOrder
   activityType?: Prisma.SortOrder
@@ -493,6 +520,7 @@ export type UserWordAttemptMaxOrderByAggregateInput = {
   wordId?: Prisma.SortOrder
   sessionId?: Prisma.SortOrder
   quizResultId?: Prisma.SortOrder
+  trialId?: Prisma.SortOrder
   level?: Prisma.SortOrder
   unit?: Prisma.SortOrder
   activityType?: Prisma.SortOrder
@@ -508,6 +536,7 @@ export type UserWordAttemptMinOrderByAggregateInput = {
   wordId?: Prisma.SortOrder
   sessionId?: Prisma.SortOrder
   quizResultId?: Prisma.SortOrder
+  trialId?: Prisma.SortOrder
   level?: Prisma.SortOrder
   unit?: Prisma.SortOrder
   activityType?: Prisma.SortOrder
@@ -691,6 +720,7 @@ export type UserWordAttemptUncheckedUpdateManyWithoutQuizResultNestedInput = {
 
 export type UserWordAttemptCreateWithoutWordInput = {
   id?: string
+  trialId?: string | null
   level: string
   unit?: number | null
   activityType: string
@@ -708,6 +738,7 @@ export type UserWordAttemptUncheckedCreateWithoutWordInput = {
   userId: string
   sessionId?: string | null
   quizResultId?: string | null
+  trialId?: string | null
   level: string
   unit?: number | null
   activityType: string
@@ -751,6 +782,7 @@ export type UserWordAttemptScalarWhereInput = {
   wordId?: Prisma.StringFilter<"UserWordAttempt"> | string
   sessionId?: Prisma.StringNullableFilter<"UserWordAttempt"> | string | null
   quizResultId?: Prisma.StringNullableFilter<"UserWordAttempt"> | string | null
+  trialId?: Prisma.StringNullableFilter<"UserWordAttempt"> | string | null
   level?: Prisma.StringFilter<"UserWordAttempt"> | string
   unit?: Prisma.IntNullableFilter<"UserWordAttempt"> | number | null
   activityType?: Prisma.StringFilter<"UserWordAttempt"> | string
@@ -762,6 +794,7 @@ export type UserWordAttemptScalarWhereInput = {
 
 export type UserWordAttemptCreateWithoutUserInput = {
   id?: string
+  trialId?: string | null
   level: string
   unit?: number | null
   activityType: string
@@ -779,6 +812,7 @@ export type UserWordAttemptUncheckedCreateWithoutUserInput = {
   wordId: string
   sessionId?: string | null
   quizResultId?: string | null
+  trialId?: string | null
   level: string
   unit?: number | null
   activityType: string
@@ -815,6 +849,7 @@ export type UserWordAttemptUpdateManyWithWhereWithoutUserInput = {
 
 export type UserWordAttemptCreateWithoutSessionInput = {
   id?: string
+  trialId?: string | null
   level: string
   unit?: number | null
   activityType: string
@@ -832,6 +867,7 @@ export type UserWordAttemptUncheckedCreateWithoutSessionInput = {
   userId: string
   wordId: string
   quizResultId?: string | null
+  trialId?: string | null
   level: string
   unit?: number | null
   activityType: string
@@ -868,6 +904,7 @@ export type UserWordAttemptUpdateManyWithWhereWithoutSessionInput = {
 
 export type UserWordAttemptCreateWithoutQuizResultInput = {
   id?: string
+  trialId?: string | null
   level: string
   unit?: number | null
   activityType: string
@@ -885,6 +922,7 @@ export type UserWordAttemptUncheckedCreateWithoutQuizResultInput = {
   userId: string
   wordId: string
   sessionId?: string | null
+  trialId?: string | null
   level: string
   unit?: number | null
   activityType: string
@@ -924,6 +962,7 @@ export type UserWordAttemptCreateManyWordInput = {
   userId: string
   sessionId?: string | null
   quizResultId?: string | null
+  trialId?: string | null
   level: string
   unit?: number | null
   activityType: string
@@ -935,6 +974,7 @@ export type UserWordAttemptCreateManyWordInput = {
 
 export type UserWordAttemptUpdateWithoutWordInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  trialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.StringFieldUpdateOperationsInput | string
   unit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   activityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -952,6 +992,7 @@ export type UserWordAttemptUncheckedUpdateWithoutWordInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quizResultId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.StringFieldUpdateOperationsInput | string
   unit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   activityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -966,6 +1007,7 @@ export type UserWordAttemptUncheckedUpdateManyWithoutWordInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quizResultId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.StringFieldUpdateOperationsInput | string
   unit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   activityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -980,6 +1022,7 @@ export type UserWordAttemptCreateManyUserInput = {
   wordId: string
   sessionId?: string | null
   quizResultId?: string | null
+  trialId?: string | null
   level: string
   unit?: number | null
   activityType: string
@@ -991,6 +1034,7 @@ export type UserWordAttemptCreateManyUserInput = {
 
 export type UserWordAttemptUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  trialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.StringFieldUpdateOperationsInput | string
   unit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   activityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1008,6 +1052,7 @@ export type UserWordAttemptUncheckedUpdateWithoutUserInput = {
   wordId?: Prisma.StringFieldUpdateOperationsInput | string
   sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quizResultId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.StringFieldUpdateOperationsInput | string
   unit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   activityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1022,6 +1067,7 @@ export type UserWordAttemptUncheckedUpdateManyWithoutUserInput = {
   wordId?: Prisma.StringFieldUpdateOperationsInput | string
   sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quizResultId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.StringFieldUpdateOperationsInput | string
   unit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   activityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1036,6 +1082,7 @@ export type UserWordAttemptCreateManySessionInput = {
   userId: string
   wordId: string
   quizResultId?: string | null
+  trialId?: string | null
   level: string
   unit?: number | null
   activityType: string
@@ -1047,6 +1094,7 @@ export type UserWordAttemptCreateManySessionInput = {
 
 export type UserWordAttemptUpdateWithoutSessionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  trialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.StringFieldUpdateOperationsInput | string
   unit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   activityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1064,6 +1112,7 @@ export type UserWordAttemptUncheckedUpdateWithoutSessionInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   wordId?: Prisma.StringFieldUpdateOperationsInput | string
   quizResultId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.StringFieldUpdateOperationsInput | string
   unit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   activityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1078,6 +1127,7 @@ export type UserWordAttemptUncheckedUpdateManyWithoutSessionInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   wordId?: Prisma.StringFieldUpdateOperationsInput | string
   quizResultId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.StringFieldUpdateOperationsInput | string
   unit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   activityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1092,6 +1142,7 @@ export type UserWordAttemptCreateManyQuizResultInput = {
   userId: string
   wordId: string
   sessionId?: string | null
+  trialId?: string | null
   level: string
   unit?: number | null
   activityType: string
@@ -1103,6 +1154,7 @@ export type UserWordAttemptCreateManyQuizResultInput = {
 
 export type UserWordAttemptUpdateWithoutQuizResultInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  trialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.StringFieldUpdateOperationsInput | string
   unit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   activityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1120,6 +1172,7 @@ export type UserWordAttemptUncheckedUpdateWithoutQuizResultInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   wordId?: Prisma.StringFieldUpdateOperationsInput | string
   sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.StringFieldUpdateOperationsInput | string
   unit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   activityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1134,6 +1187,7 @@ export type UserWordAttemptUncheckedUpdateManyWithoutQuizResultInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   wordId?: Prisma.StringFieldUpdateOperationsInput | string
   sessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trialId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   level?: Prisma.StringFieldUpdateOperationsInput | string
   unit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   activityType?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1151,6 +1205,7 @@ export type UserWordAttemptSelect<ExtArgs extends runtime.Types.Extensions.Inter
   wordId?: boolean
   sessionId?: boolean
   quizResultId?: boolean
+  trialId?: boolean
   level?: boolean
   unit?: boolean
   activityType?: boolean
@@ -1170,6 +1225,7 @@ export type UserWordAttemptSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   wordId?: boolean
   sessionId?: boolean
   quizResultId?: boolean
+  trialId?: boolean
   level?: boolean
   unit?: boolean
   activityType?: boolean
@@ -1189,6 +1245,7 @@ export type UserWordAttemptSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   wordId?: boolean
   sessionId?: boolean
   quizResultId?: boolean
+  trialId?: boolean
   level?: boolean
   unit?: boolean
   activityType?: boolean
@@ -1208,6 +1265,7 @@ export type UserWordAttemptSelectScalar = {
   wordId?: boolean
   sessionId?: boolean
   quizResultId?: boolean
+  trialId?: boolean
   level?: boolean
   unit?: boolean
   activityType?: boolean
@@ -1217,7 +1275,7 @@ export type UserWordAttemptSelectScalar = {
   createdAt?: boolean
 }
 
-export type UserWordAttemptOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "wordId" | "sessionId" | "quizResultId" | "level" | "unit" | "activityType" | "result" | "answer" | "correctAnswer" | "createdAt", ExtArgs["result"]["userWordAttempt"]>
+export type UserWordAttemptOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "wordId" | "sessionId" | "quizResultId" | "trialId" | "level" | "unit" | "activityType" | "result" | "answer" | "correctAnswer" | "createdAt", ExtArgs["result"]["userWordAttempt"]>
 export type UserWordAttemptInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   word?: boolean | Prisma.VocabWordDefaultArgs<ExtArgs>
@@ -1251,6 +1309,7 @@ export type $UserWordAttemptPayload<ExtArgs extends runtime.Types.Extensions.Int
     wordId: string
     sessionId: string | null
     quizResultId: string | null
+    trialId: string | null
     level: string
     unit: number | null
     activityType: string
@@ -1690,6 +1749,7 @@ export interface UserWordAttemptFieldRefs {
   readonly wordId: Prisma.FieldRef<"UserWordAttempt", 'String'>
   readonly sessionId: Prisma.FieldRef<"UserWordAttempt", 'String'>
   readonly quizResultId: Prisma.FieldRef<"UserWordAttempt", 'String'>
+  readonly trialId: Prisma.FieldRef<"UserWordAttempt", 'String'>
   readonly level: Prisma.FieldRef<"UserWordAttempt", 'String'>
   readonly unit: Prisma.FieldRef<"UserWordAttempt", 'Int'>
   readonly activityType: Prisma.FieldRef<"UserWordAttempt", 'String'>

@@ -5,11 +5,17 @@ const _env = getEnv();
 
 const MODELS = [
   "VocabWord",
+  "ThaiLetter",
   "AdminUser",
   "User",
   "MagicLinkToken",
+  "PracticeTrial",
+  "TrialRateLimit",
+  "MixedSession",
+  "UnitCheckpoint",
   "LearningSession",
   "QuizResult",
+  "CompletionLedger",
   "UserUnitProgress",
   "UserWordProgress",
   "UserWordAttempt",

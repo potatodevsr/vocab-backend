@@ -1,0 +1,12 @@
+-- Per-part-of-speech meanings and examples, as JSON.
+--
+-- 260 of the 3,295 seeded words carry more than one part of speech in `partOfSpeech`
+-- (`across` is `"prep., adv."`), and their senses differ enough that one example sentence
+-- teaches only half the word: "she walked across the street" (prep.) and "the shop is
+-- across the street" (adv.) are the two things a learner has to be able to tell apart.
+--
+-- Shape: `[{ "pos": "prep.", "meaningTh": "…", "exampleEn": "…", "exampleTh": "…" }]`,
+-- one entry per part of speech, in the order they appear in `partOfSpeech`. Entry 0 is
+-- mirrored into `exampleEn`/`exampleTh` by the admin form, so everything that reads a
+-- single example keeps working. Existing rows start empty and fall back to those columns.
+ALTER TABLE "VocabWord" ADD COLUMN "posUsages" TEXT NOT NULL DEFAULT '[]';

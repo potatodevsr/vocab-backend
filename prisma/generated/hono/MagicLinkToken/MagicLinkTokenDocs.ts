@@ -99,6 +99,18 @@ export const MODEL_FIELDS: FieldMeta[] = [
     isUnique: false,
     relationFromFields: ["userId"],
   },
+  {
+    name: "pendingTrialId",
+    kind: "scalar",
+    type: "String",
+    isList: false,
+    isRequired: false,
+    hasDefaultValue: false,
+    isUpdatedAt: false,
+    documentation: null,
+    isId: false,
+    isUnique: false,
+  },
 ];
 
 export const MODEL_ENUMS: EnumMeta[] = [];
@@ -114,6 +126,7 @@ const EXAMPLE_VALUES: Record<string, unknown> = {
   expiresAt: "2025-01-01T00:00:00.000Z",
   usedAt: "2025-01-01T00:00:00.000Z",
   createdAt: "2025-01-01T00:00:00.000Z",
+  pendingTrialId: "example",
 };
 
 const MODEL_CONTEXT: DocsModelContext = {

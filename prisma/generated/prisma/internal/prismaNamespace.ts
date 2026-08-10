@@ -80,12 +80,12 @@ export type PrismaVersion = {
 }
 
 /**
- * Prisma Client JS version: 7.8.0
- * Query Engine version: 3c6e192761c0362d496ed980de936e2f3cebcd3a
+ * Prisma Client JS version: 7.9.0
+ * Query Engine version: e922089b7d7502aff4249d5da3420f6fa55fc6ad
  */
 export const prismaVersion: PrismaVersion = {
-  client: "7.8.0",
-  engine: "3c6e192761c0362d496ed980de936e2f3cebcd3a"
+  client: "7.9.0",
+  engine: "e922089b7d7502aff4249d5da3420f6fa55fc6ad"
 }
 
 /**
@@ -156,6 +156,19 @@ export type Subset<T, U> = {
 };
 
 /**
+ * Resolved type of the argument passed to the `PrismaClient` constructor.
+ *
+ * When called without a narrower options type (the common case), this resolves
+ * to `PrismaClientOptions` directly, which produces a clear TypeScript error
+ * message (`not assignable to parameter of type 'PrismaClientOptions'`) when
+ * the argument is missing or incomplete. When the user supplies a narrower
+ * options type (e.g. via a literal), it falls back to `Subset` to keep
+ * filtering out unknown properties.
+ */
+export type PrismaClientConstructorArgs<Options extends PrismaClientOptions> =
+  [PrismaClientOptions] extends [Options] ? PrismaClientOptions : Subset<Options, PrismaClientOptions>;
+
+/**
  * SelectSubset
  * @desc From `T` pick properties that exist in `U`. Simple version of Intersection.
  * Additionally, it validates, if both select and include are present. If the case, it errors.
@@ -187,7 +200,7 @@ type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
 export type XOR<T, U> =
   T extends object ?
   U extends object ?
-    (Without<T, U> & U) | (Without<U, T> & T)
+    ((Without<T, U> & U) | (Without<U, T> & T)) & object
   : U : T
 
 
@@ -385,11 +398,17 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   VocabWord: 'VocabWord',
+  ThaiLetter: 'ThaiLetter',
   AdminUser: 'AdminUser',
   User: 'User',
   MagicLinkToken: 'MagicLinkToken',
+  PracticeTrial: 'PracticeTrial',
+  TrialRateLimit: 'TrialRateLimit',
+  MixedSession: 'MixedSession',
+  UnitCheckpoint: 'UnitCheckpoint',
   LearningSession: 'LearningSession',
   QuizResult: 'QuizResult',
+  CompletionLedger: 'CompletionLedger',
   UserUnitProgress: 'UserUnitProgress',
   UserWordProgress: 'UserWordProgress',
   UserWordAttempt: 'UserWordAttempt'
@@ -408,7 +427,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "vocabWord" | "adminUser" | "user" | "magicLinkToken" | "learningSession" | "quizResult" | "userUnitProgress" | "userWordProgress" | "userWordAttempt"
+    modelProps: "vocabWord" | "thaiLetter" | "adminUser" | "user" | "magicLinkToken" | "practiceTrial" | "trialRateLimit" | "mixedSession" | "unitCheckpoint" | "learningSession" | "quizResult" | "completionLedger" | "userUnitProgress" | "userWordProgress" | "userWordAttempt"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -483,6 +502,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.VocabWordCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.VocabWordCountAggregateOutputType> | number
+        }
+      }
+    }
+    ThaiLetter: {
+      payload: Prisma.$ThaiLetterPayload<ExtArgs>
+      fields: Prisma.ThaiLetterFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ThaiLetterFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThaiLetterPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ThaiLetterFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThaiLetterPayload>
+        }
+        findFirst: {
+          args: Prisma.ThaiLetterFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThaiLetterPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ThaiLetterFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThaiLetterPayload>
+        }
+        findMany: {
+          args: Prisma.ThaiLetterFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThaiLetterPayload>[]
+        }
+        create: {
+          args: Prisma.ThaiLetterCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThaiLetterPayload>
+        }
+        createMany: {
+          args: Prisma.ThaiLetterCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ThaiLetterCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThaiLetterPayload>[]
+        }
+        delete: {
+          args: Prisma.ThaiLetterDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThaiLetterPayload>
+        }
+        update: {
+          args: Prisma.ThaiLetterUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThaiLetterPayload>
+        }
+        deleteMany: {
+          args: Prisma.ThaiLetterDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ThaiLetterUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ThaiLetterUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThaiLetterPayload>[]
+        }
+        upsert: {
+          args: Prisma.ThaiLetterUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ThaiLetterPayload>
+        }
+        aggregate: {
+          args: Prisma.ThaiLetterAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateThaiLetter>
+        }
+        groupBy: {
+          args: Prisma.ThaiLetterGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ThaiLetterGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ThaiLetterCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ThaiLetterCountAggregateOutputType> | number
         }
       }
     }
@@ -708,6 +801,302 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    PracticeTrial: {
+      payload: Prisma.$PracticeTrialPayload<ExtArgs>
+      fields: Prisma.PracticeTrialFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PracticeTrialFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PracticeTrialPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PracticeTrialFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PracticeTrialPayload>
+        }
+        findFirst: {
+          args: Prisma.PracticeTrialFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PracticeTrialPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PracticeTrialFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PracticeTrialPayload>
+        }
+        findMany: {
+          args: Prisma.PracticeTrialFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PracticeTrialPayload>[]
+        }
+        create: {
+          args: Prisma.PracticeTrialCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PracticeTrialPayload>
+        }
+        createMany: {
+          args: Prisma.PracticeTrialCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PracticeTrialCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PracticeTrialPayload>[]
+        }
+        delete: {
+          args: Prisma.PracticeTrialDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PracticeTrialPayload>
+        }
+        update: {
+          args: Prisma.PracticeTrialUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PracticeTrialPayload>
+        }
+        deleteMany: {
+          args: Prisma.PracticeTrialDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PracticeTrialUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PracticeTrialUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PracticeTrialPayload>[]
+        }
+        upsert: {
+          args: Prisma.PracticeTrialUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PracticeTrialPayload>
+        }
+        aggregate: {
+          args: Prisma.PracticeTrialAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePracticeTrial>
+        }
+        groupBy: {
+          args: Prisma.PracticeTrialGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PracticeTrialGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PracticeTrialCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PracticeTrialCountAggregateOutputType> | number
+        }
+      }
+    }
+    TrialRateLimit: {
+      payload: Prisma.$TrialRateLimitPayload<ExtArgs>
+      fields: Prisma.TrialRateLimitFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TrialRateLimitFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRateLimitPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TrialRateLimitFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRateLimitPayload>
+        }
+        findFirst: {
+          args: Prisma.TrialRateLimitFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRateLimitPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TrialRateLimitFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRateLimitPayload>
+        }
+        findMany: {
+          args: Prisma.TrialRateLimitFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRateLimitPayload>[]
+        }
+        create: {
+          args: Prisma.TrialRateLimitCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRateLimitPayload>
+        }
+        createMany: {
+          args: Prisma.TrialRateLimitCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TrialRateLimitCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRateLimitPayload>[]
+        }
+        delete: {
+          args: Prisma.TrialRateLimitDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRateLimitPayload>
+        }
+        update: {
+          args: Prisma.TrialRateLimitUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRateLimitPayload>
+        }
+        deleteMany: {
+          args: Prisma.TrialRateLimitDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TrialRateLimitUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TrialRateLimitUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRateLimitPayload>[]
+        }
+        upsert: {
+          args: Prisma.TrialRateLimitUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRateLimitPayload>
+        }
+        aggregate: {
+          args: Prisma.TrialRateLimitAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTrialRateLimit>
+        }
+        groupBy: {
+          args: Prisma.TrialRateLimitGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TrialRateLimitGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TrialRateLimitCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TrialRateLimitCountAggregateOutputType> | number
+        }
+      }
+    }
+    MixedSession: {
+      payload: Prisma.$MixedSessionPayload<ExtArgs>
+      fields: Prisma.MixedSessionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MixedSessionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MixedSessionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MixedSessionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MixedSessionPayload>
+        }
+        findFirst: {
+          args: Prisma.MixedSessionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MixedSessionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MixedSessionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MixedSessionPayload>
+        }
+        findMany: {
+          args: Prisma.MixedSessionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MixedSessionPayload>[]
+        }
+        create: {
+          args: Prisma.MixedSessionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MixedSessionPayload>
+        }
+        createMany: {
+          args: Prisma.MixedSessionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MixedSessionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MixedSessionPayload>[]
+        }
+        delete: {
+          args: Prisma.MixedSessionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MixedSessionPayload>
+        }
+        update: {
+          args: Prisma.MixedSessionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MixedSessionPayload>
+        }
+        deleteMany: {
+          args: Prisma.MixedSessionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MixedSessionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MixedSessionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MixedSessionPayload>[]
+        }
+        upsert: {
+          args: Prisma.MixedSessionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MixedSessionPayload>
+        }
+        aggregate: {
+          args: Prisma.MixedSessionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMixedSession>
+        }
+        groupBy: {
+          args: Prisma.MixedSessionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MixedSessionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MixedSessionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MixedSessionCountAggregateOutputType> | number
+        }
+      }
+    }
+    UnitCheckpoint: {
+      payload: Prisma.$UnitCheckpointPayload<ExtArgs>
+      fields: Prisma.UnitCheckpointFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UnitCheckpointFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitCheckpointPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UnitCheckpointFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitCheckpointPayload>
+        }
+        findFirst: {
+          args: Prisma.UnitCheckpointFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitCheckpointPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UnitCheckpointFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitCheckpointPayload>
+        }
+        findMany: {
+          args: Prisma.UnitCheckpointFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitCheckpointPayload>[]
+        }
+        create: {
+          args: Prisma.UnitCheckpointCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitCheckpointPayload>
+        }
+        createMany: {
+          args: Prisma.UnitCheckpointCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.UnitCheckpointCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitCheckpointPayload>[]
+        }
+        delete: {
+          args: Prisma.UnitCheckpointDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitCheckpointPayload>
+        }
+        update: {
+          args: Prisma.UnitCheckpointUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitCheckpointPayload>
+        }
+        deleteMany: {
+          args: Prisma.UnitCheckpointDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UnitCheckpointUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.UnitCheckpointUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitCheckpointPayload>[]
+        }
+        upsert: {
+          args: Prisma.UnitCheckpointUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UnitCheckpointPayload>
+        }
+        aggregate: {
+          args: Prisma.UnitCheckpointAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUnitCheckpoint>
+        }
+        groupBy: {
+          args: Prisma.UnitCheckpointGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UnitCheckpointGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UnitCheckpointCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UnitCheckpointCountAggregateOutputType> | number
+        }
+      }
+    }
     LearningSession: {
       payload: Prisma.$LearningSessionPayload<ExtArgs>
       fields: Prisma.LearningSessionFieldRefs
@@ -853,6 +1242,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.QuizResultCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.QuizResultCountAggregateOutputType> | number
+        }
+      }
+    }
+    CompletionLedger: {
+      payload: Prisma.$CompletionLedgerPayload<ExtArgs>
+      fields: Prisma.CompletionLedgerFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CompletionLedgerFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CompletionLedgerPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CompletionLedgerFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CompletionLedgerPayload>
+        }
+        findFirst: {
+          args: Prisma.CompletionLedgerFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CompletionLedgerPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CompletionLedgerFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CompletionLedgerPayload>
+        }
+        findMany: {
+          args: Prisma.CompletionLedgerFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CompletionLedgerPayload>[]
+        }
+        create: {
+          args: Prisma.CompletionLedgerCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CompletionLedgerPayload>
+        }
+        createMany: {
+          args: Prisma.CompletionLedgerCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CompletionLedgerCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CompletionLedgerPayload>[]
+        }
+        delete: {
+          args: Prisma.CompletionLedgerDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CompletionLedgerPayload>
+        }
+        update: {
+          args: Prisma.CompletionLedgerUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CompletionLedgerPayload>
+        }
+        deleteMany: {
+          args: Prisma.CompletionLedgerDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CompletionLedgerUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CompletionLedgerUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CompletionLedgerPayload>[]
+        }
+        upsert: {
+          args: Prisma.CompletionLedgerUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CompletionLedgerPayload>
+        }
+        aggregate: {
+          args: Prisma.CompletionLedgerAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCompletionLedger>
+        }
+        groupBy: {
+          args: Prisma.CompletionLedgerGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CompletionLedgerGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CompletionLedgerCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CompletionLedgerCountAggregateOutputType> | number
         }
       }
     }
@@ -1130,9 +1593,13 @@ export const VocabWordScalarFieldEnum = {
   partOfSpeech: 'partOfSpeech',
   meaningTh: 'meaningTh',
   pronunciationTh: 'pronunciationTh',
+  meaningThReading: 'meaningThReading',
+  meaningThRoman: 'meaningThRoman',
   ipa: 'ipa',
   exampleEn: 'exampleEn',
   exampleTh: 'exampleTh',
+  posUsages: 'posUsages',
+  letterBreakdown: 'letterBreakdown',
   notes: 'notes',
   status: 'status',
   createdAt: 'createdAt',
@@ -1140,6 +1607,24 @@ export const VocabWordScalarFieldEnum = {
 } as const
 
 export type VocabWordScalarFieldEnum = (typeof VocabWordScalarFieldEnum)[keyof typeof VocabWordScalarFieldEnum]
+
+
+export const ThaiLetterScalarFieldEnum = {
+  id: 'id',
+  kind: 'kind',
+  ordinal: 'ordinal',
+  char: 'char',
+  name: 'name',
+  roman: 'roman',
+  sound: 'sound',
+  soundFinal: 'soundFinal',
+  vowelLength: 'vowelLength',
+  clip: 'clip',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ThaiLetterScalarFieldEnum = (typeof ThaiLetterScalarFieldEnum)[keyof typeof ThaiLetterScalarFieldEnum]
 
 
 export const AdminUserScalarFieldEnum = {
@@ -1160,6 +1645,8 @@ export const UserScalarFieldEnum = {
   password: 'password',
   firstName: 'firstName',
   lastName: 'lastName',
+  timezone: 'timezone',
+  weeklyGoalDays: 'weeklyGoalDays',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1173,10 +1660,79 @@ export const MagicLinkTokenScalarFieldEnum = {
   userId: 'userId',
   expiresAt: 'expiresAt',
   usedAt: 'usedAt',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  pendingTrialId: 'pendingTrialId'
 } as const
 
 export type MagicLinkTokenScalarFieldEnum = (typeof MagicLinkTokenScalarFieldEnum)[keyof typeof MagicLinkTokenScalarFieldEnum]
+
+
+export const PracticeTrialScalarFieldEnum = {
+  id: 'id',
+  level: 'level',
+  unit: 'unit',
+  wordIds: 'wordIds',
+  poolIds: 'poolIds',
+  answers: 'answers',
+  correctCount: 'correctCount',
+  completedAt: 'completedAt',
+  claimedAt: 'claimedAt',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PracticeTrialScalarFieldEnum = (typeof PracticeTrialScalarFieldEnum)[keyof typeof PracticeTrialScalarFieldEnum]
+
+
+export const TrialRateLimitScalarFieldEnum = {
+  id: 'id',
+  count: 'count',
+  createdAt: 'createdAt'
+} as const
+
+export type TrialRateLimitScalarFieldEnum = (typeof TrialRateLimitScalarFieldEnum)[keyof typeof TrialRateLimitScalarFieldEnum]
+
+
+export const MixedSessionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  level: 'level',
+  unit: 'unit',
+  mode: 'mode',
+  wordIds: 'wordIds',
+  itemTypes: 'itemTypes',
+  poolIds: 'poolIds',
+  dueWordIds: 'dueWordIds',
+  answers: 'answers',
+  correctCount: 'correctCount',
+  completedAt: 'completedAt',
+  rewardAppliedAt: 'rewardAppliedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MixedSessionScalarFieldEnum = (typeof MixedSessionScalarFieldEnum)[keyof typeof MixedSessionScalarFieldEnum]
+
+
+export const UnitCheckpointScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  level: 'level',
+  unit: 'unit',
+  wordIds: 'wordIds',
+  itemTypes: 'itemTypes',
+  poolIds: 'poolIds',
+  answers: 'answers',
+  correctCount: 'correctCount',
+  completedAt: 'completedAt',
+  passed: 'passed',
+  awarded: 'awarded',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UnitCheckpointScalarFieldEnum = (typeof UnitCheckpointScalarFieldEnum)[keyof typeof UnitCheckpointScalarFieldEnum]
 
 
 export const LearningSessionScalarFieldEnum = {
@@ -1216,6 +1772,17 @@ export const QuizResultScalarFieldEnum = {
 export type QuizResultScalarFieldEnum = (typeof QuizResultScalarFieldEnum)[keyof typeof QuizResultScalarFieldEnum]
 
 
+export const CompletionLedgerScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  kind: 'kind',
+  scope: 'scope',
+  createdAt: 'createdAt'
+} as const
+
+export type CompletionLedgerScalarFieldEnum = (typeof CompletionLedgerScalarFieldEnum)[keyof typeof CompletionLedgerScalarFieldEnum]
+
+
 export const UserUnitProgressScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -1253,6 +1820,9 @@ export const UserWordProgressScalarFieldEnum = {
   lastIncorrectAt: 'lastIncorrectAt',
   nextReviewAt: 'nextReviewAt',
   masteredAt: 'masteredAt',
+  trialClaimId: 'trialClaimId',
+  lastSessionRewardId: 'lastSessionRewardId',
+  lastQuizId: 'lastQuizId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1266,6 +1836,7 @@ export const UserWordAttemptScalarFieldEnum = {
   wordId: 'wordId',
   sessionId: 'sessionId',
   quizResultId: 'quizResultId',
+  trialId: 'trialId',
   level: 'level',
   unit: 'unit',
   activityType: 'activityType',
@@ -1322,6 +1893,13 @@ export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel
 
 
 /**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+/**
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -1337,19 +1915,10 @@ export type BatchPayload = {
 export const defineExtension = runtime.Extensions.defineExtension as unknown as runtime.Types.Extensions.ExtendsHook<"define", TypeMapCb, runtime.Types.Extensions.DefaultArgs>
 export type DefaultPrismaClient = PrismaClient
 export type ErrorFormat = 'pretty' | 'colorless' | 'minimal'
-export type PrismaClientOptions = ({
-  /**
-   * Instance of a Driver Adapter, e.g., like one provided by `@prisma/adapter-pg`.
-   */
-  adapter: runtime.SqlDriverAdapterFactory
-  accelerateUrl?: never
-} | {
-  /**
-   * Prisma Accelerate URL allowing the client to connect through Accelerate instead of a direct database.
-   */
-  accelerateUrl: string
-  adapter?: never
-}) & {
+/**
+ * Options common to all variants of `PrismaClientOptions`, regardless of whether you connect to your database through a driver adapter or through Prisma Accelerate.
+ */
+export interface PrismaClientBaseOptions {
   /**
    * @default "colorless"
    */
@@ -1436,13 +2005,69 @@ export type PrismaClientOptions = ({
    */
   queryPlanCacheMaxSize?: number
 }
+
+/**
+ * `PrismaClient` options for connecting to your database through Prisma Accelerate instead of a driver adapter.
+ * 
+ * Learn more: https://pris.ly/d/accelerate
+ */
+export interface PrismaClientOptionsWithAccelerateUrl extends PrismaClientBaseOptions {
+  /**
+   * The Prisma Accelerate connection URL. Use this option to connect to your database through Prisma Accelerate instead of using a driver adapter to connect directly.
+   * 
+   * Learn more: https://pris.ly/d/accelerate
+   */
+  accelerateUrl: string
+  adapter?: never
+}
+
+/**
+ * `PrismaClient` options for connecting to your database through a driver adapter. This is the common case in Prisma 7.
+ * 
+ * Learn more: https://pris.ly/d/driver-adapters
+ */
+export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions {
+  /**
+   * A driver adapter that PrismaClient uses to connect to your database, such as the ones provided by `@prisma/adapter-pg`, `@prisma/adapter-libsql`, `@prisma/adapter-planetscale`, etc.
+   * 
+   * A driver adapter is **required** unless you connect to your database through Prisma Accelerate (in which case use `accelerateUrl` instead).
+   * 
+   * Learn more: https://pris.ly/d/driver-adapters
+   * 
+   * @example
+   * ```ts
+   * import { PrismaPg } from '@prisma/adapter-pg'
+   * import { PrismaClient } from './generated/prisma/client'
+   * 
+   * const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
+   * const prisma = new PrismaClient({ adapter })
+   * ```
+   */
+  adapter: runtime.SqlDriverAdapterFactory
+  accelerateUrl?: never
+}
+
+/**
+ * Options passed to the `PrismaClient` constructor.
+ * 
+ * A driver adapter (or, alternatively, a Prisma Accelerate URL) is **required**. See {@link PrismaClientOptionsWithAdapter} and {@link PrismaClientOptionsWithAccelerateUrl} for the two variants. All other properties live in {@link PrismaClientBaseOptions} and are optional.
+ * 
+ * Learn more about driver adapters: https://pris.ly/d/driver-adapters
+ */
+export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter
 export type GlobalOmitConfig = {
   vocabWord?: Prisma.VocabWordOmit
+  thaiLetter?: Prisma.ThaiLetterOmit
   adminUser?: Prisma.AdminUserOmit
   user?: Prisma.UserOmit
   magicLinkToken?: Prisma.MagicLinkTokenOmit
+  practiceTrial?: Prisma.PracticeTrialOmit
+  trialRateLimit?: Prisma.TrialRateLimitOmit
+  mixedSession?: Prisma.MixedSessionOmit
+  unitCheckpoint?: Prisma.UnitCheckpointOmit
   learningSession?: Prisma.LearningSessionOmit
   quizResult?: Prisma.QuizResultOmit
+  completionLedger?: Prisma.CompletionLedgerOmit
   userUnitProgress?: Prisma.UserUnitProgressOmit
   userWordProgress?: Prisma.UserWordProgressOmit
   userWordAttempt?: Prisma.UserWordAttemptOmit

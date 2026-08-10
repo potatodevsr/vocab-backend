@@ -9,13 +9,21 @@ import { hashPassword, verifyPassword } from "./password.js";
 import { guard } from "../prisma/generated/guard/client.js";
 import { VocabWordRouter } from "../prisma/generated/hono/VocabWord/VocabWordRouter.js";
 import { UserRouter } from "../prisma/generated/hono/User/UserRouter.js";
+import { ThaiLetterRouter } from "../prisma/generated/hono/ThaiLetter/ThaiLetterRouter.js";
 import {
     USER_SHAPES,
     VOCAB_WORD_SHAPES,
     VOCAB_WORD_UPDATE_SHAPE,
+    THAI_LETTER_SHAPES,
+    THAI_LETTER_CREATE_SHAPE,
+    THAI_LETTER_UPDATE_SHAPE,
+    THAI_LETTER_DELETE_SHAPE,
     resolveVariant,
 } from "./guard-shapes.js";
 import { progress } from "./progress.js";
+import { practice, applyTrialClaim, verifyTrialClaim, TRIAL_CLAIM_COOKIE } from "./practice.js";
+import { session } from "./session.js";
+import { checkpoint } from "./checkpoint.js";
 
 export type Bindings = {
     DB: D1Database;
@@ -124,6 +132,640 @@ const AUTH_OPENAPI = {
     },
 } as const;
 
+/**
+ * OpenAPI for the hand-written practice-trial verbs (`practice.ts`). Generated CRUD gets
+ * its schema from `prisma-generator-express`; these three routes are hand-written gameplay
+ * verbs (AGENTS.md rule 7) and so are documented by hand, same as AUTH_OPENAPI above — kept
+ * accurate here is what lets `pnpm gen:api-types` produce real client types instead of the
+ * frontend hand-rolling duplicate response shapes (repo AGENTS.md rule 2).
+ */
+const PRACTICE_OPENAPI = {
+    openapi: "3.1.0",
+    info: { title: "Vocab Learning App practice-trial API", version: "1.0.0" },
+    paths: {
+        "/practice/start": {
+            post: {
+                operationId: "practiceStart",
+                requestBody: {
+                    required: false,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    level: { type: "string", enum: ["A1", "A2", "B1", "B2"] },
+                                    unit: { type: "integer", minimum: 1 },
+                                    mode: { type: "string", enum: ["normal", "comeback", "review"] },
+                                },
+                                additionalProperties: false,
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    "200": { description: "Trial started", content: { "application/json": { schema: { $ref: "#/components/schemas/PracticeStartResult" } } } },
+                    "422": { description: "Not enough published content for a trial", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "429": { description: "Rate limited or a trial is already in progress", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                },
+            },
+        },
+        "/practice/answer": {
+            post: {
+                operationId: "practiceAnswer",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["itemIndex", "selectedOptionIndex"],
+                                properties: {
+                                    itemIndex: { type: "integer", minimum: 0 },
+                                    selectedOptionIndex: { type: "integer", minimum: 0 },
+                                },
+                                additionalProperties: false,
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    "200": { description: "Item graded", content: { "application/json": { schema: { $ref: "#/components/schemas/PracticeAnswerResult" } } } },
+                    "400": { description: "Missing fields, out of range, or out of order", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "404": { description: "Trial not found or expired", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "409": { description: "Could not record answer, please retry", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                },
+            },
+        },
+        "/practice/claim": {
+            post: {
+                operationId: "practiceClaim",
+                responses: {
+                    "200": { description: "Trial claimed into the signed-in account (idempotent)", content: { "application/json": { schema: { $ref: "#/components/schemas/PracticeClaimResult" } } } },
+                    "400": { description: "No completed trial to claim, or an invalid/expired claim", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "401": { description: "Unauthorized", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "404": { description: "Trial not found, expired, or not completed", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                },
+            },
+        },
+    },
+    components: {
+        schemas: {
+            ApiMessage: { type: "object", required: ["message"], properties: { message: { type: "string" } }, additionalProperties: false },
+            // Never a word id or slug — see practice.ts's promptFace/optionFace commentary.
+            PracticePrompt: { type: "object", required: ["displayWord", "partOfSpeech", "pronunciationTh"], properties: { displayWord: { type: "string" }, partOfSpeech: { type: "string" }, pronunciationTh: { type: "string" } }, additionalProperties: false },
+            PracticeOption: { type: "object", required: ["meaningTh", "partOfSpeech"], properties: { meaningTh: { type: "string" }, partOfSpeech: { type: "string" } }, additionalProperties: false },
+            PracticeItem: {
+                type: "object",
+                required: ["index", "prompt", "options"],
+                properties: {
+                    index: { type: "integer" },
+                    prompt: { $ref: "#/components/schemas/PracticePrompt" },
+                    options: { type: "array", items: { $ref: "#/components/schemas/PracticeOption" } },
+                },
+                additionalProperties: false,
+            },
+            PracticeStartResult: {
+                type: "object",
+                required: ["trialId", "itemCount", "items"],
+                properties: {
+                    trialId: { type: "string" },
+                    itemCount: { type: "integer" },
+                    items: { type: "array", items: { $ref: "#/components/schemas/PracticeItem" } },
+                },
+                additionalProperties: false,
+            },
+            PracticeAnswerResult: {
+                type: "object",
+                required: ["itemIndex", "correct", "correctOptionIndex", "done", "duplicate"],
+                properties: {
+                    itemIndex: { type: "integer" },
+                    correct: { type: "boolean" },
+                    correctOptionIndex: { type: "integer" },
+                    done: { type: "boolean" },
+                    duplicate: { type: "boolean" },
+                    // Only present once `done` is true — the trial's own honest tally, never
+                    // a client-reported score (LEARNER-LIFECYCLE.md §3.2).
+                    correctCount: { type: "integer" },
+                    total: { type: "integer" },
+                },
+                additionalProperties: false,
+            },
+            PracticeClaimResult: {
+                type: "object",
+                required: ["ok", "duplicate", "correctCount", "total"],
+                properties: {
+                    ok: { const: true },
+                    duplicate: { type: "boolean", description: "true when this trial was already claimed by an earlier, idempotent call" },
+                    correctCount: { type: "integer" },
+                    total: { type: "integer" },
+                },
+                additionalProperties: false,
+            },
+        },
+    },
+} as const;
+
+/**
+ * OpenAPI for the merged eight-item mixed session and the Today card
+ * (`session.ts`, `progress.ts`'s `/progress/today`, `/progress/goal` and
+ * `/progress/export`) — hand-written gameplay verbs, documented by hand like
+ * PRACTICE_OPENAPI above.
+ */
+const SESSION_OPENAPI = {
+    openapi: "3.1.0",
+    info: { title: "Vocab Learning App mixed-session API", version: "1.0.0" },
+    paths: {
+        "/progress/session/start": {
+            post: {
+                operationId: "sessionStart",
+                requestBody: {
+                    required: false,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    level: { type: "string", enum: ["A1", "A2", "B1", "B2"] },
+                                    unit: { type: "integer", minimum: 1 },
+                                },
+                                additionalProperties: false,
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    "200": { description: "Session started", content: { "application/json": { schema: { $ref: "#/components/schemas/SessionStartResult" } } } },
+                    "401": { description: "Unauthorized", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "422": { description: "Not enough published content for a session", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                },
+            },
+        },
+        "/progress/session/answer": {
+            post: {
+                operationId: "sessionAnswer",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["sessionId", "itemIndex"],
+                                properties: {
+                                    sessionId: { type: "string" },
+                                    itemIndex: { type: "integer", minimum: 0 },
+                                    selectedOptionIndex: { type: "integer" },
+                                    spelling: { type: "string" },
+                                },
+                                additionalProperties: false,
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    "200": { description: "Item graded", content: { "application/json": { schema: { $ref: "#/components/schemas/SessionAnswerResult" } } } },
+                    "400": { description: "Missing fields, out of range, or out of order", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "401": { description: "Unauthorized", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "404": { description: "Session not found", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "409": { description: "Could not record answer, please retry", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                },
+            },
+        },
+        "/progress/session/{id}": {
+            get: {
+                operationId: "sessionStatus",
+                parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+                responses: {
+                    "200": { description: "Session status", content: { "application/json": { schema: { $ref: "#/components/schemas/SessionStatusResult" } } } },
+                    "401": { description: "Unauthorized", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "404": { description: "Not found", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                },
+            },
+        },
+        "/progress/today": {
+            get: {
+                operationId: "getToday",
+                responses: {
+                    "200": { description: "Today card summary", content: { "application/json": { schema: { $ref: "#/components/schemas/TodaySummary" } } } },
+                    "401": { description: "Unauthorized", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                },
+            },
+        },
+        "/progress/goal": {
+            post: {
+                operationId: "setWeeklyGoal",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["days"],
+                                properties: { days: { type: "integer", minimum: 1, maximum: 7 } },
+                                additionalProperties: false,
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    "200": { description: "Weekly goal set", content: { "application/json": { schema: { $ref: "#/components/schemas/SetGoalResult" } } } },
+                    "400": { description: "days out of range", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "401": { description: "Unauthorized", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "403": { description: "Weekly goal not yet eligible", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                },
+            },
+        },
+        "/progress/export": {
+            get: {
+                operationId: "exportProgress",
+                parameters: [
+                    {
+                        name: "format",
+                        in: "query",
+                        required: false,
+                        schema: { type: "string", enum: ["json", "csv"], default: "json" },
+                    },
+                ],
+                responses: {
+                    "200": {
+                        description: "The caller's own data export (GDPR-style takeout), as JSON or CSV",
+                        content: {
+                            "application/json": { schema: { $ref: "#/components/schemas/ProgressExport" } },
+                            "text/csv": { schema: { type: "string" } },
+                        },
+                    },
+                    "400": { description: "format must be json or csv", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "401": { description: "Unauthorized", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                },
+            },
+        },
+    },
+    components: {
+        schemas: {
+            SessionPromptFace: {
+                type: "object",
+                properties: {
+                    displayWord: { type: "string" },
+                    meaningTh: { type: "string" },
+                    partOfSpeech: { type: "string" },
+                    pronunciationTh: { type: "string" },
+                },
+                additionalProperties: false,
+            },
+            SessionItem: {
+                type: "object",
+                required: ["index", "type", "prompt"],
+                properties: {
+                    index: { type: "integer" },
+                    type: { type: "string", enum: ["choose-meaning", "choose-word", "spelling", "match-pairs", "speed-round"] },
+                    prompt: { $ref: "#/components/schemas/SessionPromptFace" },
+                    options: { type: "array", items: { $ref: "#/components/schemas/SessionPromptFace" } },
+                },
+                additionalProperties: false,
+            },
+            SessionStartResult: {
+                type: "object",
+                required: ["sessionId", "level", "unit", "mode", "itemCount", "dueCount", "items"],
+                properties: {
+                    sessionId: { type: "string", nullable: true },
+                    level: { type: "string" },
+                    unit: { type: "integer", nullable: true },
+                    mode: { type: "string", enum: ["normal", "comeback", "review"] },
+                    itemCount: { type: "integer" },
+                    dueCount: { type: "integer" },
+                    items: { type: "array", items: { $ref: "#/components/schemas/SessionItem" } },
+                },
+                additionalProperties: false,
+            },
+            SessionAnswerResult: {
+                type: "object",
+                required: ["itemIndex", "correct", "done", "duplicate"],
+                properties: {
+                    itemIndex: { type: "integer" },
+                    correct: { type: "boolean" },
+                    done: { type: "boolean" },
+                    duplicate: { type: "boolean" },
+                    correctSpelling: { type: "string" },
+                    correctCount: { type: "integer" },
+                    total: { type: "integer" },
+                },
+                additionalProperties: false,
+            },
+            SessionStatusResult: {
+                type: "object",
+                required: ["sessionId", "level", "unit", "answeredCount", "total", "correctCount", "done"],
+                properties: {
+                    sessionId: { type: "string" },
+                    level: { type: "string" },
+                    unit: { type: "integer", nullable: true },
+                    answeredCount: { type: "integer" },
+                    total: { type: "integer" },
+                    correctCount: { type: "integer" },
+                    done: { type: "boolean" },
+                },
+                additionalProperties: false,
+            },
+            CollectionLevel: {
+                type: "object",
+                required: ["level", "total", "strong", "mastered"],
+                properties: {
+                    level: { type: "string" },
+                    total: { type: "integer" },
+                    strong: { type: "integer" },
+                    mastered: { type: "integer" },
+                },
+                additionalProperties: false,
+            },
+            TodaySummary: {
+                type: "object",
+                required: ["dueCount", "inProgressSession", "absenceDays", "lifecycleState", "recommendedAction", "nextUnit", "defaultLevel", "weeklyGoal", "collection"],
+                properties: {
+                    dueCount: { type: "integer" },
+                    absenceDays: { type: "integer", nullable: true, description: "Whole local days since the most recent completed session/quiz, or null if none ever completed" },
+                    lifecycleState: { type: "string", enum: ["active", "at-risk", "returning", "level-complete", "course-complete", "maintenance"], description: "LEARNER-LIFECYCLE.md §2 state: absence-derived, overridden by completion milestones" },
+                    recommendedAction: { type: "string", enum: ["start", "resume", "comeback", "review", "next-level", "maintenance"], description: "The single home CTA derived from lifecycle state, open session and due reviews" },
+                    inProgressSession: {
+                        nullable: true,
+                        type: "object",
+                        required: ["id", "level", "unit", "createdAt"],
+                        properties: {
+                            id: { type: "string" },
+                            level: { type: "string" },
+                            unit: { type: "integer", nullable: true },
+                            createdAt: { type: "string" },
+                        },
+                        additionalProperties: false,
+                    },
+                    nextUnit: { type: "integer", nullable: true },
+                    defaultLevel: { type: "string" },
+                    weeklyGoal: {
+                        type: "object",
+                        required: ["goalDays", "eligibleToSetGoal", "activeDaysThisWeek", "weekStart"],
+                        properties: {
+                            goalDays: { type: "integer", nullable: true },
+                            eligibleToSetGoal: { type: "boolean" },
+                            activeDaysThisWeek: { type: "integer" },
+                            weekStart: { type: "string" },
+                        },
+                        additionalProperties: false,
+                    },
+                    collection: {
+                        type: "object",
+                        required: ["courseLevel", "levels", "totalStrong", "totalMastered"],
+                        properties: {
+                            courseLevel: { type: "string" },
+                            levels: { type: "array", items: { $ref: "#/components/schemas/CollectionLevel" } },
+                            totalStrong: { type: "integer" },
+                            totalMastered: { type: "integer" },
+                        },
+                        additionalProperties: false,
+                    },
+                },
+                additionalProperties: false,
+            },
+            SetGoalResult: {
+                type: "object",
+                required: ["ok", "goalDays"],
+                properties: {
+                    ok: { const: true },
+                    goalDays: { type: "integer" },
+                },
+                additionalProperties: false,
+            },
+            ProgressExportWord: {
+                type: "object",
+                required: ["displayWord", "level", "unit", "mastery", "lastSeenAt", "nextReviewAt", "correctCount", "incorrectCount"],
+                properties: {
+                    displayWord: { type: "string" },
+                    level: { type: "string" },
+                    unit: { type: "integer", nullable: true },
+                    mastery: { type: "integer" },
+                    lastSeenAt: { type: "string", nullable: true },
+                    nextReviewAt: { type: "string", nullable: true },
+                    correctCount: { type: "integer" },
+                    incorrectCount: { type: "integer" },
+                },
+                additionalProperties: false,
+            },
+            ProgressExport: {
+                type: "object",
+                required: ["exportedAt", "learner", "summary", "words"],
+                properties: {
+                    exportedAt: { type: "string" },
+                    learner: {
+                        type: "object",
+                        required: ["email", "username", "timezone"],
+                        properties: {
+                            email: { type: "string" },
+                            username: { type: "string" },
+                            timezone: { type: "string", nullable: true },
+                        },
+                        additionalProperties: false,
+                    },
+                    summary: {
+                        type: "object",
+                        required: ["total", "strong", "mastered"],
+                        properties: {
+                            total: { type: "integer" },
+                            strong: { type: "integer" },
+                            mastered: { type: "integer" },
+                        },
+                        additionalProperties: false,
+                    },
+                    words: { type: "array", items: { $ref: "#/components/schemas/ProgressExportWord" } },
+                },
+                additionalProperties: false,
+            },
+        },
+    },
+} as const;
+
+/**
+ * OpenAPI for the end-of-unit checkpoint gate (`checkpoint.ts`) — a hand-written gameplay
+ * verb like PRACTICE_OPENAPI and SESSION_OPENAPI above, so documented by hand. The item
+ * faces are deliberately answer-key-free: a `prompt`/`option` face never carries a word id
+ * or slug, a `spelling` item's prompt is only the Thai meaning (never the target word), and
+ * no "correct option index" is ever transmitted — the schemas mirror that exactly.
+ */
+const CHECKPOINT_OPENAPI = {
+    openapi: "3.1.0",
+    info: { title: "Vocab Learning App checkpoint API", version: "1.0.0" },
+    paths: {
+        "/progress/checkpoint/start": {
+            post: {
+                operationId: "checkpointStart",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["level", "unit"],
+                                properties: {
+                                    level: { type: "string", enum: ["A1", "A2", "B1", "B2"] },
+                                    unit: { type: "integer", minimum: 1 },
+                                },
+                                additionalProperties: false,
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    "200": { description: "Checkpoint started or resumed", content: { "application/json": { schema: { $ref: "#/components/schemas/CheckpointStartResult" } } } },
+                    "400": { description: "level or unit missing or out of range", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "401": { description: "Unauthorized", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "422": { description: "Not enough learned words in this unit for a checkpoint yet", content: { "application/json": { schema: { $ref: "#/components/schemas/CheckpointNotReady" } } } },
+                },
+            },
+        },
+        "/progress/checkpoint/answer": {
+            post: {
+                operationId: "checkpointAnswer",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["checkpointId", "itemIndex"],
+                                properties: {
+                                    checkpointId: { type: "string" },
+                                    itemIndex: { type: "integer", minimum: 0 },
+                                    selectedOptionIndex: { type: "integer", minimum: 0 },
+                                    spelling: { type: "string" },
+                                },
+                                additionalProperties: false,
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    "200": { description: "Item graded", content: { "application/json": { schema: { $ref: "#/components/schemas/CheckpointAnswerResult" } } } },
+                    "400": { description: "Missing fields, out of range, or out of order", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "401": { description: "Unauthorized", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "404": { description: "Checkpoint not found", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "409": { description: "Could not record answer, please retry", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                },
+            },
+        },
+        "/progress/checkpoint/{id}": {
+            get: {
+                operationId: "checkpointStatus",
+                parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+                responses: {
+                    "200": { description: "Checkpoint status", content: { "application/json": { schema: { $ref: "#/components/schemas/CheckpointStatusResult" } } } },
+                    "401": { description: "Unauthorized", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                    "404": { description: "Not found", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiMessage" } } } },
+                },
+            },
+        },
+    },
+    components: {
+        schemas: {
+            ApiMessage: { type: "object", required: ["message"], properties: { message: { type: "string" } }, additionalProperties: false },
+            // Present only on the 422 from /start — the learner needs this many more mastered
+            // words before the unit can be gated.
+            CheckpointNotReady: { type: "object", required: ["message", "recoveryCount"], properties: { message: { type: "string" }, recoveryCount: { type: "integer" } }, additionalProperties: false },
+            // Every property optional: which appear depends on the item's direction and type.
+            // A `choose-meaning` prompt carries displayWord/partOfSpeech/pronunciationTh and its
+            // options carry meaningTh/partOfSpeech; `choose-word` is the mirror; a `spelling`
+            // prompt carries meaningTh alone. Never a word id or slug (checkpoint.ts).
+            CheckpointPromptFace: {
+                type: "object",
+                properties: {
+                    displayWord: { type: "string" },
+                    meaningTh: { type: "string" },
+                    partOfSpeech: { type: "string" },
+                    pronunciationTh: { type: "string" },
+                },
+                additionalProperties: false,
+            },
+            CheckpointItem: {
+                type: "object",
+                required: ["index", "type", "prompt"],
+                properties: {
+                    index: { type: "integer" },
+                    type: { type: "string", enum: ["choose-meaning", "choose-word", "spelling"] },
+                    prompt: { $ref: "#/components/schemas/CheckpointPromptFace" },
+                    // Absent on a `spelling` item, which renders a text field instead.
+                    options: { type: "array", items: { $ref: "#/components/schemas/CheckpointPromptFace" } },
+                },
+                additionalProperties: false,
+            },
+            CheckpointStartResult: {
+                type: "object",
+                required: ["checkpointId", "level", "unit", "itemCount", "answeredCount", "items"],
+                properties: {
+                    checkpointId: { type: "string" },
+                    level: { type: "string" },
+                    unit: { type: "integer" },
+                    itemCount: { type: "integer" },
+                    answeredCount: { type: "integer" },
+                    items: { type: "array", items: { $ref: "#/components/schemas/CheckpointItem" } },
+                },
+                additionalProperties: false,
+            },
+            CheckpointAnswerResult: {
+                type: "object",
+                required: ["itemIndex", "correct", "done", "duplicate"],
+                properties: {
+                    itemIndex: { type: "integer" },
+                    correct: { type: "boolean" },
+                    done: { type: "boolean" },
+                    duplicate: { type: "boolean" },
+                    // Only present on a `spelling` item whose target word was found.
+                    correctSpelling: { type: "string" },
+                    // The block below is present only once `done` is true — the checkpoint's own
+                    // honest tally and settled gate decision, never a client-reported score.
+                    correctCount: { type: "integer" },
+                    total: { type: "integer" },
+                    passed: { type: "boolean" },
+                    awarded: { type: "boolean" },
+                    recoveryCount: { type: "integer" },
+                },
+                additionalProperties: false,
+            },
+            CheckpointStatusResult: {
+                type: "object",
+                required: ["checkpointId", "level", "unit", "answeredCount", "itemCount", "correctCount", "done", "passed", "awarded", "recoveryCount", "items"],
+                properties: {
+                    checkpointId: { type: "string" },
+                    level: { type: "string" },
+                    unit: { type: "integer" },
+                    answeredCount: { type: "integer" },
+                    itemCount: { type: "integer" },
+                    correctCount: { type: "integer" },
+                    done: { type: "boolean" },
+                    passed: { type: "boolean" },
+                    awarded: { type: "boolean" },
+                    recoveryCount: { type: "integer" },
+                    items: { type: "array", items: { $ref: "#/components/schemas/CheckpointItem" } },
+                },
+                additionalProperties: false,
+            },
+        },
+    },
+} as const;
+
+/**
+ * Merges AUTH_OPENAPI, PRACTICE_OPENAPI, SESSION_OPENAPI and CHECKPOINT_OPENAPI into one
+ * document so `pnpm gen:api-types` runs `openapi-typescript` once, against one URL, and
+ * `lib/api-types.ts` carries every hand-written verb's real response shape rather than a
+ * hand-duplicated guess.
+ */
+const OPENAPI = {
+    openapi: "3.1.0" as const,
+    info: { title: "Vocab Learning App API", version: "1.0.0" },
+    paths: { ...AUTH_OPENAPI.paths, ...PRACTICE_OPENAPI.paths, ...SESSION_OPENAPI.paths, ...CHECKPOINT_OPENAPI.paths },
+    components: {
+        schemas: {
+            ...AUTH_OPENAPI.components.schemas,
+            ...PRACTICE_OPENAPI.components.schemas,
+            ...SESSION_OPENAPI.components.schemas,
+            ...CHECKPOINT_OPENAPI.components.schemas,
+        },
+    },
+};
+
 const secretOf = (c: { env: Bindings }) =>
     new TextEncoder().encode(c.env.JWT_SECRET);
 
@@ -149,6 +791,25 @@ const randomToken = () => {
 
 const hashToken = async (token: string) =>
     bytesToHex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token))));
+
+/**
+ * Browsers scope cookies by host and path, not by port. Local development can therefore
+ * leave two `user_token` cookies from unrelated apps on localhost (for example one
+ * host-only cookie and one `Domain=localhost` cookie). Hono's `getCookie` returns only
+ * one value, whose ordering is browser-dependent, so a stale token could mask the fresh
+ * token that magic-link verification had just issued. Preserve every candidate and let
+ * signature verification decide which, if any, is this app's session.
+ */
+const cookieValues = (cookieHeader: string | undefined, name: string): string[] => {
+    if (!cookieHeader) return [];
+    const prefix = `${name}=`;
+    return cookieHeader
+        .split(";")
+        .map((part) => part.trim())
+        .filter((part) => part.startsWith(prefix))
+        .map((part) => part.slice(prefix.length))
+        .filter(Boolean);
+};
 
 const setUserSession = async (
     c: Parameters<typeof setCookie>[0] & { env: Bindings; req: { url: string } },
@@ -237,7 +898,7 @@ app.use("*", async (c, next) => {
     c.set("prisma", getPrisma(c.env.DB) as never);
     c.set("role", "anonymous");
 
-    const userToken = getCookie(c, USER_TOKEN);
+    const userTokens = cookieValues(c.req.header("Cookie"), USER_TOKEN);
     const adminToken = getCookie(c, ADMIN_TOKEN);
 
     if (adminToken) {
@@ -247,15 +908,19 @@ app.use("*", async (c, next) => {
         } catch {
             // fall through as anonymous
         }
-    } else if (userToken) {
-        try {
-            const { payload } = await jwtVerify(userToken, secretOf(c));
-            if (payload.role === "user" && typeof payload.userId === "string") {
-                c.set("role", "user");
-                c.set("userId", payload.userId);
+    } else {
+        for (const userToken of userTokens) {
+            try {
+                const { payload } = await jwtVerify(userToken, secretOf(c));
+                if (payload.role === "user" && typeof payload.userId === "string") {
+                    c.set("role", "user");
+                    c.set("userId", payload.userId);
+                    break;
+                }
+            } catch {
+                // Try the next same-name cookie. A different localhost app may have
+                // issued this candidate with another signing key.
             }
-        } catch {
-            // fall through as anonymous
         }
     }
 
@@ -274,6 +939,9 @@ const requireUser = async (c: { get: (k: "role") => string; json: Function }, ne
 
 app.get("/health", (c) => c.json({ ok: true }));
 app.get("/auth/openapi.json", (c) => c.json(AUTH_OPENAPI));
+app.get("/practice/openapi.json", (c) => c.json(PRACTICE_OPENAPI));
+// The one document `pnpm gen:api-types` actually points at (package.json).
+app.get("/openapi.json", (c) => c.json(OPENAPI));
 
 // ---------------------------------------------------------------- admin auth
 
@@ -318,13 +986,35 @@ app.get("/auth/me", async (c) => {
 
 // ----------------------------------------------------------------- user auth
 
+/**
+ * Captured silently from `Intl.DateTimeFormat().resolvedOptions().timeZone`
+ * (LEARNER-LIFECYCLE.md §3.4) — never a form field, so this only ever validates a value
+ * the browser itself produced. `Intl.DateTimeFormat` throws `RangeError` for anything that
+ * isn't a real IANA zone, which is the whole check: no hand-maintained zone list to drift
+ * out of date. `Asia/Bangkok` is the default for the primary (Thai) audience when the
+ * field is absent or fails validation, per §9 decision 10.
+ */
+const DEFAULT_TIMEZONE = "Asia/Bangkok";
+const resolveTimezone = (value: unknown): string => {
+    if (typeof value !== "string" || value.length === 0 || value.length > 100) {
+        return DEFAULT_TIMEZONE;
+    }
+    try {
+        new Intl.DateTimeFormat(undefined, { timeZone: value });
+        return value;
+    } catch {
+        return DEFAULT_TIMEZONE;
+    }
+};
+
 app.post("/user/register", async (c) => {
-    const { email, username, password, firstName, lastName } = await c.req.json<{
+    const { email, username, password, firstName, lastName, timezone } = await c.req.json<{
         email?: string;
         username?: string;
         password?: string;
         firstName?: string;
         lastName?: string;
+        timezone?: string;
     }>();
 
     if (!email || !username || !password || !firstName || !lastName) {
@@ -348,6 +1038,7 @@ app.post("/user/register", async (c) => {
             password: await hashPassword(password),
             firstName,
             lastName,
+            timezone: resolveTimezone(timezone),
         },
         select: {
             id: true,
@@ -427,6 +1118,15 @@ app.post("/user/magic-link/request", async (c) => {
 
         const token = randomToken();
         const safeFrom = from?.startsWith("/") && !from.startsWith("//") ? from : `/${safeLocale}`;
+        // Snapshot *this browser's* pending trial onto the request now, not onto the
+        // cookie jar that verifies it (LEARNER-LIFECYCLE.md §3.3) — LINE's in-app browser
+        // handing off to the system browser lands `/auth/verify` in a different jar than
+        // the one that held it. The claim cookie is verified right here and only the bare
+        // trial id is kept — never the signed bearer token itself.
+        const requesterClaimCookie = getCookie(c, TRIAL_CLAIM_COOKIE);
+        const pendingTrialId = requesterClaimCookie
+            ? await verifyTrialClaim(c, requesterClaimCookie)
+            : null;
         const origin = (c.env.APP_URL ?? c.env.FRONTEND_URL ?? new URL(c.req.url).origin).replace(/\/$/, "");
         const link = new URL(`${origin}/${safeLocale}/auth/verify`);
         link.searchParams.set("token", token);
@@ -443,6 +1143,7 @@ app.post("/user/magic-link/request", async (c) => {
             data: {
                 tokenHash: await hashToken(token),
                 userId: user.id,
+                pendingTrialId,
                 expiresAt: new Date(
                     Date.now() +
                     (testMode && c.req.header("x-magic-link-test-expired") === "true"
@@ -514,11 +1215,21 @@ app.post("/user/magic-link/verify", async (c) => {
     }
 
     // Conditional update makes concurrent redemption single-use without a transaction.
-    const consumed = await c.get("prisma").$executeRaw`
-        UPDATE MagicLinkToken
-        SET usedAt = ${new Date()}
-        WHERE id = ${record.id} AND usedAt IS NULL
-    `;
+    let consumed = 0;
+    try {
+        consumed = await c.get("prisma").$executeRaw`
+            UPDATE MagicLinkToken
+            SET usedAt = ${new Date()}
+            WHERE id = ${record.id} AND usedAt IS NULL
+        `;
+    } catch {
+        // D1 may reject the losing writer when two redemptions reach this conditional
+        // update simultaneously. That contender did not consume the token, so it has the
+        // same public meaning as a zero-row update: the one-time link is no longer valid.
+        // Returning the stable auth error also keeps a harmless redemption race from
+        // terminating the local Worker and cascading into unrelated request failures.
+        consumed = 0;
+    }
     if (consumed !== 1) {
         return c.json(
             magicLinkError("INVALID_OR_EXPIRED_MAGIC_LINK", "This sign-in link is invalid or expired"),
@@ -527,6 +1238,14 @@ app.post("/user/magic-link/verify", async (c) => {
     }
 
     await setUserSession(c as never, record.user);
+
+    // Recover a trial bound at request time (§3.3) even though this browser never held
+    // the claim cookie itself — that's the whole point of binding to the token instead of
+    // the requester's cookie jar.
+    if (record.pendingTrialId) {
+        await applyTrialClaim(c, record.user.id, record.pendingTrialId);
+    }
+
     return c.json(record.user);
 });
 
@@ -560,6 +1279,9 @@ app.get("/user/me", async (c) => {
 // --------------------------------------------------------- gameplay verbs
 
 app.route("/", progress);
+app.route("/", practice);
+app.route("/", session);
+app.route("/", checkpoint);
 
 // ------------------------------------------------------------ generated CRUD
 
@@ -577,6 +1299,35 @@ app.route(
         },
         guard: { resolveVariant },
         pagination: { defaultLimit: 50, maxLimit: 100 },
+    } as never),
+);
+
+// The alphabet is read by anonymous learners (the reference page and the letter breakdown
+// under a word) and curated by an admin, who may add, edit and remove rows — a course may
+// want a mark this list does not carry, or may not want one it does.
+//
+// `updateMany`/`deleteMany` stay off. Both are unbounded by nature, and the entire table is
+// 102 rows: one mistyped `where` would take the alphabet with it. Per-row writes make the
+// blast radius of any single call exactly one letter.
+app.route(
+    "/",
+    ThaiLetterRouter<Env>({
+        findMany: { shape: THAI_LETTER_SHAPES },
+        findManyPaginated: { shape: THAI_LETTER_SHAPES },
+        create: {
+            before: [requireAdmin as never],
+            shape: THAI_LETTER_CREATE_SHAPE,
+        },
+        update: {
+            before: [requireAdmin as never],
+            shape: THAI_LETTER_UPDATE_SHAPE,
+        },
+        delete: {
+            before: [requireAdmin as never],
+            shape: THAI_LETTER_DELETE_SHAPE,
+        },
+        guard: { resolveVariant },
+        pagination: { defaultLimit: 120, maxLimit: 120 },
     } as never),
 );
 

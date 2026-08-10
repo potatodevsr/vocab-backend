@@ -9,11 +9,17 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/VocabWord.js'
+export type * from './models/ThaiLetter.js'
 export type * from './models/AdminUser.js'
 export type * from './models/User.js'
 export type * from './models/MagicLinkToken.js'
+export type * from './models/PracticeTrial.js'
+export type * from './models/TrialRateLimit.js'
+export type * from './models/MixedSession.js'
+export type * from './models/UnitCheckpoint.js'
 export type * from './models/LearningSession.js'
 export type * from './models/QuizResult.js'
+export type * from './models/CompletionLedger.js'
 export type * from './models/UserUnitProgress.js'
 export type * from './models/UserWordProgress.js'
 export type * from './models/UserWordAttempt.js'

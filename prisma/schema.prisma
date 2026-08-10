@@ -39,10 +39,38 @@ model VocabWord {
     sense            String?
     partOfSpeech     String
     meaningTh        String             @default("")
+    // How the *English* word sounds, written in Thai script — for a Thai learner reading
+    // English. `about` -> `เออะ บ๊าว ถึ`.
     pronunciationTh  String             @default("")
+    // The mirror image, for a foreign learner reading Thai: how `meaningTh` itself is
+    // read. `วัฒนธรรม` -> `วัด-ทะ-นะ-ทำ` (Thai script) and `Wat-tha-na-tham` (Latin).
+    // Two columns, not one, so each can be searched, styled and read aloud on its own.
+    meaningThReading String             @default("")
+    meaningThRoman   String             @default("")
     ipa              String             @default("")
     exampleEn        String             @default("")
     exampleTh        String             @default("")
+    // One meaning and one example pair *per part of speech*, as JSON:
+    // `[{ "pos": "prep.", "meaningTh": "…", "exampleEn": "…", "exampleTh": "…" }]`.
+    // `partOfSpeech` is a list for 260 words (`across` is `"prep., adv."`), and the two
+    // senses are different things a learner has to tell apart — "walk across the street"
+    // vs "the shop is across the street". One `exampleEn` column can only show one of
+    // them. JSON rather than a child table because it is never queried or joined on: it
+    // is written whole by the admin form and read whole by the word page.
+    // Entry 0 is mirrored into `exampleEn`/`exampleTh` so single-example consumers
+    // (unit cards, page metadata) keep working unchanged.
+    posUsages        String             @default("[]")
+    // A hand-corrected letter breakdown for `meaningTh`, as JSON:
+    // `[{ "text": "แ‑ะ", "letterId": "sound-sara-ae" }]`.
+    //
+    // Empty is the normal case and the better one: the breakdown is derived from the text
+    // (lib/thai-letters.ts), which is why it cannot drop a character the way a hand-typed
+    // list does — the first hand-written breakdown in this project lost `น หนู` from
+    // `วัฒนธรรม`. But derivation has to guess where a syllable ends, and Thai does not
+    // write that boundary: `แนะ` is `น` + `แ‑ะ`, and no rule reads every word correctly.
+    // This column is the escape hatch for the words it gets wrong, per word, and nothing
+    // more. A filled value wins; an empty one derives.
+    letterBreakdown  String             @default("")
     notes            String             @default("")
     status           String             @default("draft")
     createdAt        DateTime           @default(now())
@@ -56,6 +84,56 @@ model VocabWord {
     @@index([slug])
     @@index([sourceOrder])
     @@index([status])
+}
+
+/**
+ * The Thai writing system, as curated content.
+ *
+ * Rows ship in `migrations/0011_thai_letter.sql`, compiled from `data/thai-letters.mjs`, so
+ * every environment starts identical without a seeding step — then `/admin/letters` edits
+ * the romanisations in place. Content, not configuration: the alphabet is fixed, but what a
+ * learner who cannot read Thai script is *told* each mark is called is a wording decision,
+ * and wording decisions belong to whoever curates the course, not to a deploy.
+ *
+ * `kind` discriminates four lists that answer different questions — `consonant` (44),
+ * `vowelSign` (22 written marks), `tone` (4), and `vowelSound` (the traditional 32 vowel
+ * *sounds*). Only the first three can label a per-character breakdown: `เ‑ีย` is one sound
+ * written across three characters, so a button pointing at `เ` can honestly name the mark
+ * and nothing more. `vowelSound` exists for the reference table a learner reads on its own.
+ *
+ * `roman` and `sound` are separate on purpose. `roman` is the romanised *name* and is what
+ * a button shows (`sara i` / `sara ii`); `sound` is the strict RTGS value, which drops vowel
+ * length and would collapse both to `i`. `vowelLength` keeps that distinction as data rather
+ * than smuggling it into the spelling.
+ */
+model ThaiLetter {
+    // Seeded rows carry a readable slug (`ko-kai`, `sara-e`) because those double as audio
+    // object keys. A row an admin adds has no such name to derive from at insert time, so
+    // the default covers it — the curator names the clip separately.
+    id          String   @id @default(cuid())
+    kind        String
+    /** Position within `kind`, in the order the list is traditionally taught. */
+    ordinal     Int
+    char        String
+    /** How it is read aloud in Thai: "ก ไก่", "สระเอ", "ไม้เอก". */
+    name        String
+    /** The romanised name — what a non-Thai reader sees under the button. */
+    roman       String   @default("")
+    /** RTGS value in initial position, or the vowel's sound. Empty for อ and the marks. */
+    sound       String   @default("")
+    /** RTGS value in final position. Consonants only, and empty for those that never close a syllable. */
+    soundFinal  String   @default("")
+    /** `short` | `long`, for `vowelSound` rows only. */
+    vowelLength String   @default("")
+    /** Audio object key, resolved under the audio prefix. Defaults to `id`. */
+    clip        String   @default("")
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    // A character is unique *within* its kind, not globally: `ฤ` is both a written sign and
+    // one of the 32 vowels, and they are separate rows a curator may word differently.
+    @@unique([kind, char])
+    @@index([kind, ordinal])
 }
 
 model AdminUser {
@@ -73,6 +151,12 @@ model User {
     password         String
     firstName        String             @default("")
     lastName         String             @default("")
+    // Captured silently from Intl.DateTimeFormat().resolvedOptions().timeZone at
+    // registration (LEARNER-LIFECYCLE.md §3.4), editable in profile, never a form field.
+    timezone         String?
+    // Asked only after the second completed session (§3.4/§4.2), not before — null means
+    // "not asked yet", distinct from a learner explicitly choosing every day.
+    weeklyGoalDays   Int?
     createdAt        DateTime           @default(now())
     updatedAt        DateTime           @updatedAt
     learningSessions LearningSession[]
@@ -81,6 +165,9 @@ model User {
     wordProgresses   UserWordProgress[]
     wordAttempts     UserWordAttempt[]
     magicLinkTokens  MagicLinkToken[]
+    mixedSessions    MixedSession[]
+    completions      CompletionLedger[]
+    unitCheckpoints  UnitCheckpoint[]
 }
 
 model MagicLinkToken {
@@ -92,10 +179,144 @@ model MagicLinkToken {
     createdAt DateTime @default(now())
     user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+    // The PracticeTrial id owned by *this browser* at the moment it called
+    // `requestMagicLink` — the trial claim cookie is verified right there and only the bare
+    // id is kept, never the signed bearer token itself (LEARNER-LIFECYCLE.md §3.3).
+    // Verifying the link in a different cookie jar (LINE's in-app browser handing off to
+    // the system browser) recovers the trial from this column alone — no bearer trial
+    // claim ever rides in the URL, a referrer header, or browser history.
+    pendingTrialId String?
+
     @@index([userId, createdAt])
     @@index([expiresAt])
 }
 
+/**
+ * The anonymous practice trial (LEARNER-LIFECYCLE.md §3.2): five graded items served and
+ * answered before any account exists. `wordIds` is the serving order — the target of item
+ * N is `wordIds[N]` — and `poolIds` is the fixed candidate pool (id + partOfSpeech only)
+ * distractors are drawn from; both are persisted so `/practice/answer` and the claim path
+ * can re-derive the exact same per-item shuffle the client was shown without ever storing
+ * or re-sending a "correct option" field the client could read. `answers` is a JSON array
+ * of booleans, one per answered item so far, which is what makes `/practice/answer`
+ * idempotent: replaying an already-answered index returns the stored verdict instead of
+ * re-grading.
+ */
+model PracticeTrial {
+    id           String    @id @default(cuid())
+    level        String?
+    unit         Int?
+    wordIds      String
+    poolIds      String
+    answers      String    @default("[]")
+    correctCount Int       @default(0)
+    completedAt  DateTime?
+    claimedAt    DateTime?
+    expiresAt    DateTime
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
+
+    @@index([expiresAt])
+}
+
+/**
+ * Per-IP throttle for `/practice/start`, so an anonymous client can't be told "a trial is
+ * already in progress" and simply clear its cookie to mint another. `id` is
+ * `${sha256(ip)}:${windowStartMs}`; the insert-or-increment below is one atomic SQLite
+ * statement, so it needs no transaction to be race-safe.
+ */
+model TrialRateLimit {
+    id        String   @id
+    count     Int      @default(1)
+    createdAt DateTime @default(now())
+}
+
+
+/**
+ * The merged eight-item mixed session that replaces lesson→quiz
+ * (LEARNER-LIFECYCLE.md §0, §3.5, §8 L2). Same server-authoritative shape as
+ * `PracticeTrial`: `wordIds[i]` is the target of item `i`, `poolIds` is the fixed
+ * candidate pool distractors are drawn from, and both are persisted so
+ * `/progress/session/answer` can re-derive the exact shuffle the client was shown without
+ * ever sending a "correct option" field to the client. `itemTypes[i]` picks the variant
+ * (choose-meaning, choose-word, spelling, match-pairs, speed-round) for item `i`, chosen
+ * server-side at `/progress/session/start` so the client cannot bias its own mix.
+ * `dueWordIds` records which targets were due reviews (vs new/random) purely for the
+ * completion summary — grading never depends on it.
+ *
+ * "At most one open session per learner" is enforced by a partial unique index —
+ * `CREATE UNIQUE INDEX ... ON MixedSession(userId) WHERE completedAt IS NULL` — added in
+ * `migrations/0008_mixed_session.sql`. Prisma's `@@unique` cannot express a `WHERE`
+ * clause, so this constraint is real in the database but invisible here; do not assume
+ * `@@index([userId, completedAt])` below is doing that job.
+ */
+model MixedSession {
+    id              String    @id @default(cuid())
+    userId          String
+    level           String
+    unit            Int?
+    // Which flavour of session this is (backend/src/session.ts): "normal" (the eight-item
+    // default), "comeback" (a shorter, confidence-first set for a returning learner), or
+    // "review" (only currently-due words). Persisted so `/progress/session/start` resumes an
+    // open session only when the requested mode matches, and never serves one mode's items
+    // as if they were another's.
+    mode            String    @default("normal")
+    wordIds         String
+    itemTypes       String
+    poolIds         String
+    dueWordIds      String    @default("[]")
+    answers         String    @default("[]")
+    correctCount    Int       @default(0)
+    completedAt     DateTime?
+    rewardAppliedAt DateTime?
+    createdAt       DateTime  @default(now())
+    updatedAt       DateTime  @updatedAt
+
+    user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([userId, completedAt])
+    @@index([userId, createdAt])
+}
+
+/**
+ * The end-of-unit checkpoint: a graded gate a learner must pass to be credited with the
+ * unit. Same server-authoritative shape as `MixedSession` and `PracticeTrial` —
+ * `wordIds[i]` is the target of item `i`, `itemTypes[i]` picks that item's variant, and
+ * `poolIds` is the fixed candidate pool distractors are drawn from — all persisted so the
+ * answer path can re-derive the exact shuffle the client was shown without ever sending a
+ * "correct option" field. `answers` is the JSON array of per-item verdicts recorded so far.
+ * `passed` is null until the checkpoint is completed (`completedAt` set), then the boolean
+ * gate result; `awarded` guards the one-time completion reward so a crash-and-retry cannot
+ * double-credit the unit.
+ *
+ * "At most one open checkpoint per learner per unit" is enforced by a partial unique index —
+ * `CREATE UNIQUE INDEX ... ON UnitCheckpoint(userId, level, unit) WHERE completedAt IS NULL`
+ * — added in `migrations/0014_unit_checkpoint.sql`. Prisma's `@@unique` cannot express a
+ * `WHERE` clause, so this constraint is real in the database but invisible here; do not
+ * assume `@@index([userId, level, unit])` below is doing that job.
+ */
+model UnitCheckpoint {
+    id           String    @id @default(cuid())
+    userId       String
+    level        String
+    unit         Int
+    wordIds      String
+    itemTypes    String
+    poolIds      String
+    answers      String    @default("[]")
+    correctCount Int       @default(0)
+    completedAt  DateTime?
+    passed       Boolean?
+    awarded      Boolean   @default(false)
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
+
+    user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([userId, level, unit])
+}
 
 model LearningSession {
     id             String    @id @default(cuid())
@@ -143,6 +364,36 @@ model QuizResult {
     @@index([userId, level, unit])
 }
 
+/**
+ * Exactly-once completion of a unit, level, course or collection.
+ *
+ * A completion is worth a one-time reward (XP, a badge, an unlock), so it must fire once and
+ * only once even under the crash-and-retry, no-transactions reality of D1 (backend/AGENTS.md
+ * "Worker constraints"). The guarantee lives in the database, not in application logic: the
+ * `@@unique([userId, kind, scope])` below compiles to a UNIQUE INDEX in
+ * `migrations/0012_completion_ledger.sql`, so a genuine concurrent double-award — two
+ * requests both deciding the same unit just finished — can insert at most one row no matter
+ * how they interleave. The verb inserts the ledger row first and treats the unique-constraint
+ * violation as "already granted": whoever loses the race applies no reward.
+ *
+ * `kind` discriminates the four completable things — "unit", "level", "course",
+ * "collection" — and `scope` is the identifier of the specific one within its kind (a level
+ * name like "a1", a unit key, a collection id). The pair is unique per user, never globally:
+ * two learners completing the same unit are two rows.
+ */
+model CompletionLedger {
+    id        String   @id @default(cuid())
+    userId    String
+    kind      String
+    scope     String
+    createdAt DateTime @default(now())
+
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, kind, scope])
+    @@index([userId])
+}
+
 model UserUnitProgress {
     id               String   @id @default(cuid())
     userId           String
@@ -182,6 +433,27 @@ model UserWordProgress {
     lastIncorrectAt DateTime?
     nextReviewAt    DateTime?
     masteredAt      DateTime?
+    // The PracticeTrial id whose reward is reflected in this row's counters/mastery, if
+    // the most recent write to them came from a trial claim. This is the reward's actual
+    // idempotency marker (backend/src/practice.ts, applyTrialClaim): the counters and this
+    // column are mutated together in one atomic UPSERT keyed on `(userId, wordId)`, guarded
+    // by `WHERE trialClaimId IS NULL OR trialClaimId != <this trial>`. A retry after a
+    // crash either lands the same atomic write (crash was before it) or is a no-op because
+    // the guard already fails (crash was after it) — never a double-applied mastery bump.
+    // NULL for rows never touched by a trial claim.
+    trialClaimId    String?
+    // Same idempotency mechanism as trialClaimId, for the merged mixed session
+    // (backend/src/session.ts, applySessionReward): the MixedSession id whose reward is
+    // reflected in this row's counters/mastery, mutated atomically together with them in
+    // one UPSERT guarded by `WHERE lastSessionRewardId IS NULL OR != <this session>`. A
+    // crash or a legitimate concurrent retry can call applySessionReward more than once
+    // for the same session without ever double-applying — the WHERE clause makes the
+    // second (or Nth) call's write for an already-guarded word a no-op. NULL for rows
+    // never touched by a session reward.
+    lastSessionRewardId String?
+    // Same idempotency mechanism again, for the legacy `/progress/quiz` verb
+    // (backend/src/progress.ts) — the quizId whose reward is reflected in this row.
+    lastQuizId      String?
     createdAt       DateTime  @default(now())
     updatedAt       DateTime  @updatedAt
 
@@ -202,6 +474,16 @@ model UserWordAttempt {
     wordId        String
     sessionId     String?
     quizResultId  String?
+    // Set only for activityType "trial": an audit record of a trial's per-word result,
+    // written best-effort *after* the reward itself is safely applied to
+    // UserWordProgress.trialClaimId. It is not the reward's idempotency gate — inserting
+    // this row before the reward write was the earlier, unsafe design: a crash between the
+    // two left the ledger claiming a reward that was never actually granted, with no way
+    // for a retry to tell the difference. A retry now heals a missing row here without
+    // touching the reward at all. NULL for every non-trial attempt, and SQLite treats each
+    // NULL as distinct, so the constraint never collides across ordinary session/quiz
+    // attempts.
+    trialId       String?
     level         String
     unit          Int?
     activityType  String
@@ -215,8 +497,10 @@ model UserWordAttempt {
     session       LearningSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
     quizResult    QuizResult?      @relation(fields: [quizResultId], references: [id], onDelete: SetNull)
 
+    @@unique([userId, wordId, trialId])
     @@index([userId])
     @@index([wordId])
+    @@index([trialId])
     @@index([sessionId])
     @@index([quizResultId])
     @@index([activityType])

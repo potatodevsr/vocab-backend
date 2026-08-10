@@ -67,6 +67,9 @@ export type UserWordProgressMinAggregateOutputType = {
   lastIncorrectAt: Date | null
   nextReviewAt: Date | null
   masteredAt: Date | null
+  trialClaimId: string | null
+  lastSessionRewardId: string | null
+  lastQuizId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -90,6 +93,9 @@ export type UserWordProgressMaxAggregateOutputType = {
   lastIncorrectAt: Date | null
   nextReviewAt: Date | null
   masteredAt: Date | null
+  trialClaimId: string | null
+  lastSessionRewardId: string | null
+  lastQuizId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -113,6 +119,9 @@ export type UserWordProgressCountAggregateOutputType = {
   lastIncorrectAt: number
   nextReviewAt: number
   masteredAt: number
+  trialClaimId: number
+  lastSessionRewardId: number
+  lastQuizId: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -160,6 +169,9 @@ export type UserWordProgressMinAggregateInputType = {
   lastIncorrectAt?: true
   nextReviewAt?: true
   masteredAt?: true
+  trialClaimId?: true
+  lastSessionRewardId?: true
+  lastQuizId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -183,6 +195,9 @@ export type UserWordProgressMaxAggregateInputType = {
   lastIncorrectAt?: true
   nextReviewAt?: true
   masteredAt?: true
+  trialClaimId?: true
+  lastSessionRewardId?: true
+  lastQuizId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -206,6 +221,9 @@ export type UserWordProgressCountAggregateInputType = {
   lastIncorrectAt?: true
   nextReviewAt?: true
   masteredAt?: true
+  trialClaimId?: true
+  lastSessionRewardId?: true
+  lastQuizId?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -316,6 +334,9 @@ export type UserWordProgressGroupByOutputType = {
   lastIncorrectAt: Date | null
   nextReviewAt: Date | null
   masteredAt: Date | null
+  trialClaimId: string | null
+  lastSessionRewardId: string | null
+  lastQuizId: string | null
   createdAt: Date
   updatedAt: Date
   _count: UserWordProgressCountAggregateOutputType | null
@@ -362,6 +383,9 @@ export type UserWordProgressWhereInput = {
   lastIncorrectAt?: Prisma.DateTimeNullableFilter<"UserWordProgress"> | Date | string | null
   nextReviewAt?: Prisma.DateTimeNullableFilter<"UserWordProgress"> | Date | string | null
   masteredAt?: Prisma.DateTimeNullableFilter<"UserWordProgress"> | Date | string | null
+  trialClaimId?: Prisma.StringNullableFilter<"UserWordProgress"> | string | null
+  lastSessionRewardId?: Prisma.StringNullableFilter<"UserWordProgress"> | string | null
+  lastQuizId?: Prisma.StringNullableFilter<"UserWordProgress"> | string | null
   createdAt?: Prisma.DateTimeFilter<"UserWordProgress"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"UserWordProgress"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -387,6 +411,9 @@ export type UserWordProgressOrderByWithRelationInput = {
   lastIncorrectAt?: Prisma.SortOrderInput | Prisma.SortOrder
   nextReviewAt?: Prisma.SortOrderInput | Prisma.SortOrder
   masteredAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  trialClaimId?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastSessionRewardId?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastQuizId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -416,6 +443,9 @@ export type UserWordProgressWhereUniqueInput = Prisma.AtLeast<{
   lastIncorrectAt?: Prisma.DateTimeNullableFilter<"UserWordProgress"> | Date | string | null
   nextReviewAt?: Prisma.DateTimeNullableFilter<"UserWordProgress"> | Date | string | null
   masteredAt?: Prisma.DateTimeNullableFilter<"UserWordProgress"> | Date | string | null
+  trialClaimId?: Prisma.StringNullableFilter<"UserWordProgress"> | string | null
+  lastSessionRewardId?: Prisma.StringNullableFilter<"UserWordProgress"> | string | null
+  lastQuizId?: Prisma.StringNullableFilter<"UserWordProgress"> | string | null
   createdAt?: Prisma.DateTimeFilter<"UserWordProgress"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"UserWordProgress"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -441,6 +471,9 @@ export type UserWordProgressOrderByWithAggregationInput = {
   lastIncorrectAt?: Prisma.SortOrderInput | Prisma.SortOrder
   nextReviewAt?: Prisma.SortOrderInput | Prisma.SortOrder
   masteredAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  trialClaimId?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastSessionRewardId?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastQuizId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.UserWordProgressCountOrderByAggregateInput
@@ -472,6 +505,9 @@ export type UserWordProgressScalarWhereWithAggregatesInput = {
   lastIncorrectAt?: Prisma.DateTimeNullableWithAggregatesFilter<"UserWordProgress"> | Date | string | null
   nextReviewAt?: Prisma.DateTimeNullableWithAggregatesFilter<"UserWordProgress"> | Date | string | null
   masteredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"UserWordProgress"> | Date | string | null
+  trialClaimId?: Prisma.StringNullableWithAggregatesFilter<"UserWordProgress"> | string | null
+  lastSessionRewardId?: Prisma.StringNullableWithAggregatesFilter<"UserWordProgress"> | string | null
+  lastQuizId?: Prisma.StringNullableWithAggregatesFilter<"UserWordProgress"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"UserWordProgress"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"UserWordProgress"> | Date | string
 }
@@ -493,6 +529,9 @@ export type UserWordProgressCreateInput = {
   lastIncorrectAt?: Date | string | null
   nextReviewAt?: Date | string | null
   masteredAt?: Date | string | null
+  trialClaimId?: string | null
+  lastSessionRewardId?: string | null
+  lastQuizId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutWordProgressesInput
@@ -518,6 +557,9 @@ export type UserWordProgressUncheckedCreateInput = {
   lastIncorrectAt?: Date | string | null
   nextReviewAt?: Date | string | null
   masteredAt?: Date | string | null
+  trialClaimId?: string | null
+  lastSessionRewardId?: string | null
+  lastQuizId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -539,6 +581,9 @@ export type UserWordProgressUpdateInput = {
   lastIncorrectAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   nextReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   masteredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  trialClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastSessionRewardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastQuizId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutWordProgressesNestedInput
@@ -564,6 +609,9 @@ export type UserWordProgressUncheckedUpdateInput = {
   lastIncorrectAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   nextReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   masteredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  trialClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastSessionRewardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastQuizId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -587,6 +635,9 @@ export type UserWordProgressCreateManyInput = {
   lastIncorrectAt?: Date | string | null
   nextReviewAt?: Date | string | null
   masteredAt?: Date | string | null
+  trialClaimId?: string | null
+  lastSessionRewardId?: string | null
+  lastQuizId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -608,6 +659,9 @@ export type UserWordProgressUpdateManyMutationInput = {
   lastIncorrectAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   nextReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   masteredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  trialClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastSessionRewardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastQuizId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -631,6 +685,9 @@ export type UserWordProgressUncheckedUpdateManyInput = {
   lastIncorrectAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   nextReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   masteredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  trialClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastSessionRewardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastQuizId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -669,6 +726,9 @@ export type UserWordProgressCountOrderByAggregateInput = {
   lastIncorrectAt?: Prisma.SortOrder
   nextReviewAt?: Prisma.SortOrder
   masteredAt?: Prisma.SortOrder
+  trialClaimId?: Prisma.SortOrder
+  lastSessionRewardId?: Prisma.SortOrder
+  lastQuizId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -703,6 +763,9 @@ export type UserWordProgressMaxOrderByAggregateInput = {
   lastIncorrectAt?: Prisma.SortOrder
   nextReviewAt?: Prisma.SortOrder
   masteredAt?: Prisma.SortOrder
+  trialClaimId?: Prisma.SortOrder
+  lastSessionRewardId?: Prisma.SortOrder
+  lastQuizId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -726,6 +789,9 @@ export type UserWordProgressMinOrderByAggregateInput = {
   lastIncorrectAt?: Prisma.SortOrder
   nextReviewAt?: Prisma.SortOrder
   masteredAt?: Prisma.SortOrder
+  trialClaimId?: Prisma.SortOrder
+  lastSessionRewardId?: Prisma.SortOrder
+  lastQuizId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -842,6 +908,9 @@ export type UserWordProgressCreateWithoutWordInput = {
   lastIncorrectAt?: Date | string | null
   nextReviewAt?: Date | string | null
   masteredAt?: Date | string | null
+  trialClaimId?: string | null
+  lastSessionRewardId?: string | null
+  lastQuizId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutWordProgressesInput
@@ -865,6 +934,9 @@ export type UserWordProgressUncheckedCreateWithoutWordInput = {
   lastIncorrectAt?: Date | string | null
   nextReviewAt?: Date | string | null
   masteredAt?: Date | string | null
+  trialClaimId?: string | null
+  lastSessionRewardId?: string | null
+  lastQuizId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -916,6 +988,9 @@ export type UserWordProgressScalarWhereInput = {
   lastIncorrectAt?: Prisma.DateTimeNullableFilter<"UserWordProgress"> | Date | string | null
   nextReviewAt?: Prisma.DateTimeNullableFilter<"UserWordProgress"> | Date | string | null
   masteredAt?: Prisma.DateTimeNullableFilter<"UserWordProgress"> | Date | string | null
+  trialClaimId?: Prisma.StringNullableFilter<"UserWordProgress"> | string | null
+  lastSessionRewardId?: Prisma.StringNullableFilter<"UserWordProgress"> | string | null
+  lastQuizId?: Prisma.StringNullableFilter<"UserWordProgress"> | string | null
   createdAt?: Prisma.DateTimeFilter<"UserWordProgress"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"UserWordProgress"> | Date | string
 }
@@ -937,6 +1012,9 @@ export type UserWordProgressCreateWithoutUserInput = {
   lastIncorrectAt?: Date | string | null
   nextReviewAt?: Date | string | null
   masteredAt?: Date | string | null
+  trialClaimId?: string | null
+  lastSessionRewardId?: string | null
+  lastQuizId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   word: Prisma.VocabWordCreateNestedOneWithoutWordProgressesInput
@@ -960,6 +1038,9 @@ export type UserWordProgressUncheckedCreateWithoutUserInput = {
   lastIncorrectAt?: Date | string | null
   nextReviewAt?: Date | string | null
   masteredAt?: Date | string | null
+  trialClaimId?: string | null
+  lastSessionRewardId?: string | null
+  lastQuizId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1007,6 +1088,9 @@ export type UserWordProgressCreateManyWordInput = {
   lastIncorrectAt?: Date | string | null
   nextReviewAt?: Date | string | null
   masteredAt?: Date | string | null
+  trialClaimId?: string | null
+  lastSessionRewardId?: string | null
+  lastQuizId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1028,6 +1112,9 @@ export type UserWordProgressUpdateWithoutWordInput = {
   lastIncorrectAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   nextReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   masteredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  trialClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastSessionRewardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastQuizId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutWordProgressesNestedInput
@@ -1051,6 +1138,9 @@ export type UserWordProgressUncheckedUpdateWithoutWordInput = {
   lastIncorrectAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   nextReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   masteredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  trialClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastSessionRewardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastQuizId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1073,6 +1163,9 @@ export type UserWordProgressUncheckedUpdateManyWithoutWordInput = {
   lastIncorrectAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   nextReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   masteredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  trialClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastSessionRewardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastQuizId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1095,6 +1188,9 @@ export type UserWordProgressCreateManyUserInput = {
   lastIncorrectAt?: Date | string | null
   nextReviewAt?: Date | string | null
   masteredAt?: Date | string | null
+  trialClaimId?: string | null
+  lastSessionRewardId?: string | null
+  lastQuizId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1116,6 +1212,9 @@ export type UserWordProgressUpdateWithoutUserInput = {
   lastIncorrectAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   nextReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   masteredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  trialClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastSessionRewardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastQuizId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   word?: Prisma.VocabWordUpdateOneRequiredWithoutWordProgressesNestedInput
@@ -1139,6 +1238,9 @@ export type UserWordProgressUncheckedUpdateWithoutUserInput = {
   lastIncorrectAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   nextReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   masteredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  trialClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastSessionRewardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastQuizId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1161,6 +1263,9 @@ export type UserWordProgressUncheckedUpdateManyWithoutUserInput = {
   lastIncorrectAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   nextReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   masteredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  trialClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastSessionRewardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastQuizId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1186,6 +1291,9 @@ export type UserWordProgressSelect<ExtArgs extends runtime.Types.Extensions.Inte
   lastIncorrectAt?: boolean
   nextReviewAt?: boolean
   masteredAt?: boolean
+  trialClaimId?: boolean
+  lastSessionRewardId?: boolean
+  lastQuizId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1211,6 +1319,9 @@ export type UserWordProgressSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   lastIncorrectAt?: boolean
   nextReviewAt?: boolean
   masteredAt?: boolean
+  trialClaimId?: boolean
+  lastSessionRewardId?: boolean
+  lastQuizId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1236,6 +1347,9 @@ export type UserWordProgressSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   lastIncorrectAt?: boolean
   nextReviewAt?: boolean
   masteredAt?: boolean
+  trialClaimId?: boolean
+  lastSessionRewardId?: boolean
+  lastQuizId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1261,11 +1375,14 @@ export type UserWordProgressSelectScalar = {
   lastIncorrectAt?: boolean
   nextReviewAt?: boolean
   masteredAt?: boolean
+  trialClaimId?: boolean
+  lastSessionRewardId?: boolean
+  lastQuizId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserWordProgressOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "wordId" | "level" | "unit" | "status" | "mastery" | "seenCount" | "knownCount" | "reviewCount" | "correctCount" | "incorrectCount" | "streak" | "lastSeenAt" | "lastCorrectAt" | "lastIncorrectAt" | "nextReviewAt" | "masteredAt" | "createdAt" | "updatedAt", ExtArgs["result"]["userWordProgress"]>
+export type UserWordProgressOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "wordId" | "level" | "unit" | "status" | "mastery" | "seenCount" | "knownCount" | "reviewCount" | "correctCount" | "incorrectCount" | "streak" | "lastSeenAt" | "lastCorrectAt" | "lastIncorrectAt" | "nextReviewAt" | "masteredAt" | "trialClaimId" | "lastSessionRewardId" | "lastQuizId" | "createdAt" | "updatedAt", ExtArgs["result"]["userWordProgress"]>
 export type UserWordProgressInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   word?: boolean | Prisma.VocabWordDefaultArgs<ExtArgs>
@@ -1304,6 +1421,9 @@ export type $UserWordProgressPayload<ExtArgs extends runtime.Types.Extensions.In
     lastIncorrectAt: Date | null
     nextReviewAt: Date | null
     masteredAt: Date | null
+    trialClaimId: string | null
+    lastSessionRewardId: string | null
+    lastQuizId: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["userWordProgress"]>
@@ -1749,6 +1869,9 @@ export interface UserWordProgressFieldRefs {
   readonly lastIncorrectAt: Prisma.FieldRef<"UserWordProgress", 'DateTime'>
   readonly nextReviewAt: Prisma.FieldRef<"UserWordProgress", 'DateTime'>
   readonly masteredAt: Prisma.FieldRef<"UserWordProgress", 'DateTime'>
+  readonly trialClaimId: Prisma.FieldRef<"UserWordProgress", 'String'>
+  readonly lastSessionRewardId: Prisma.FieldRef<"UserWordProgress", 'String'>
+  readonly lastQuizId: Prisma.FieldRef<"UserWordProgress", 'String'>
   readonly createdAt: Prisma.FieldRef<"UserWordProgress", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"UserWordProgress", 'DateTime'>
 }
