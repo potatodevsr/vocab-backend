@@ -2,6 +2,11 @@
 /.env
 /node_modules
 
+# Local secrets for `wrangler dev` and the e2e suite. Wrangler never uploads this file,
+# but nothing stopped `git add -A` from committing it — and it is where a real
+# GOOGLE_CLIENT_SECRET goes once Google sign-in is configured locally.
+/.dev.vars
+
 # Local databases — never commit data
 /dev.backup-before-merge-pos.db
 /dev.db
