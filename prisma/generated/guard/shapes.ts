@@ -221,6 +221,48 @@ export type MagicLinkTokenDeleteShapeInput<TCtx = unknown> = ShapeInput<MagicLin
 export type MagicLinkTokenDeleteManyShape = OperationShape<TM, 'MagicLinkToken', 'deleteMany', 1, UM>
 export type MagicLinkTokenDeleteManyShapeInput<TCtx = unknown> = ShapeInput<MagicLinkTokenDeleteManyShape, TCtx>
 
+export type PendingSignupSelect = TypedProjection<TM, 'PendingSignup', 1, UM>
+export type PendingSignupProjection = PendingSignupSelect
+export type PendingSignupInclude = TypedInclude<TM, 'PendingSignup', 1, UM>
+export type PendingSignupCountSelect = TypedCountSelect<TM, 'PendingSignup'>
+export type PendingSignupGuardShape = TypedGuardShape<TM, 'PendingSignup', 1, UM>
+export type PendingSignupFindManyShape = OperationShape<TM, 'PendingSignup', 'findMany', 1, UM>
+export type PendingSignupFindManyShapeInput<TCtx = unknown> = ShapeInput<PendingSignupFindManyShape, TCtx>
+export type PendingSignupFindFirstShape = OperationShape<TM, 'PendingSignup', 'findFirst', 1, UM>
+export type PendingSignupFindFirstShapeInput<TCtx = unknown> = ShapeInput<PendingSignupFindFirstShape, TCtx>
+export type PendingSignupFindFirstOrThrowShape = OperationShape<TM, 'PendingSignup', 'findFirstOrThrow', 1, UM>
+export type PendingSignupFindFirstOrThrowShapeInput<TCtx = unknown> = ShapeInput<PendingSignupFindFirstOrThrowShape, TCtx>
+export type PendingSignupFindUniqueShape = OperationShape<TM, 'PendingSignup', 'findUnique', 1, UM>
+export type PendingSignupFindUniqueShapeInput<TCtx = unknown> = ShapeInput<PendingSignupFindUniqueShape, TCtx>
+export type PendingSignupFindUniqueOrThrowShape = OperationShape<TM, 'PendingSignup', 'findUniqueOrThrow', 1, UM>
+export type PendingSignupFindUniqueOrThrowShapeInput<TCtx = unknown> = ShapeInput<PendingSignupFindUniqueOrThrowShape, TCtx>
+export type PendingSignupFindManyPaginatedShape = OperationShape<TM, 'PendingSignup', 'findManyPaginated', 1, UM>
+export type PendingSignupFindManyPaginatedShapeInput<TCtx = unknown> = ShapeInput<PendingSignupFindManyPaginatedShape, TCtx>
+export type PendingSignupCountShape = OperationShape<TM, 'PendingSignup', 'count', 1, UM>
+export type PendingSignupCountShapeInput<TCtx = unknown> = ShapeInput<PendingSignupCountShape, TCtx>
+export type PendingSignupAggregateShape = OperationShape<TM, 'PendingSignup', 'aggregate', 1, UM>
+export type PendingSignupAggregateShapeInput<TCtx = unknown> = ShapeInput<PendingSignupAggregateShape, TCtx>
+export type PendingSignupGroupByShape = OperationShape<TM, 'PendingSignup', 'groupBy', 1, UM>
+export type PendingSignupGroupByShapeInput<TCtx = unknown> = ShapeInput<PendingSignupGroupByShape, TCtx>
+export type PendingSignupCreateShape = OperationShape<TM, 'PendingSignup', 'create', 1, UM>
+export type PendingSignupCreateShapeInput<TCtx = unknown> = ShapeInput<PendingSignupCreateShape, TCtx>
+export type PendingSignupCreateManyShape = OperationShape<TM, 'PendingSignup', 'createMany', 1, UM>
+export type PendingSignupCreateManyShapeInput<TCtx = unknown> = ShapeInput<PendingSignupCreateManyShape, TCtx>
+export type PendingSignupCreateManyAndReturnShape = OperationShape<TM, 'PendingSignup', 'createManyAndReturn', 1, UM>
+export type PendingSignupCreateManyAndReturnShapeInput<TCtx = unknown> = ShapeInput<PendingSignupCreateManyAndReturnShape, TCtx>
+export type PendingSignupUpdateShape = OperationShape<TM, 'PendingSignup', 'update', 1, UM>
+export type PendingSignupUpdateShapeInput<TCtx = unknown> = ShapeInput<PendingSignupUpdateShape, TCtx>
+export type PendingSignupUpdateManyShape = OperationShape<TM, 'PendingSignup', 'updateMany', 1, UM>
+export type PendingSignupUpdateManyShapeInput<TCtx = unknown> = ShapeInput<PendingSignupUpdateManyShape, TCtx>
+export type PendingSignupUpdateManyAndReturnShape = OperationShape<TM, 'PendingSignup', 'updateManyAndReturn', 1, UM>
+export type PendingSignupUpdateManyAndReturnShapeInput<TCtx = unknown> = ShapeInput<PendingSignupUpdateManyAndReturnShape, TCtx>
+export type PendingSignupUpsertShape = OperationShape<TM, 'PendingSignup', 'upsert', 1, UM>
+export type PendingSignupUpsertShapeInput<TCtx = unknown> = ShapeInput<PendingSignupUpsertShape, TCtx>
+export type PendingSignupDeleteShape = OperationShape<TM, 'PendingSignup', 'delete', 1, UM>
+export type PendingSignupDeleteShapeInput<TCtx = unknown> = ShapeInput<PendingSignupDeleteShape, TCtx>
+export type PendingSignupDeleteManyShape = OperationShape<TM, 'PendingSignup', 'deleteMany', 1, UM>
+export type PendingSignupDeleteManyShapeInput<TCtx = unknown> = ShapeInput<PendingSignupDeleteManyShape, TCtx>
+
 export type PracticeTrialSelect = TypedProjection<TM, 'PracticeTrial', 1, UM>
 export type PracticeTrialProjection = PracticeTrialSelect
 export type PracticeTrialInclude = TypedInclude<TM, 'PracticeTrial', 1, UM>

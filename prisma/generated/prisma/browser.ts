@@ -61,6 +61,21 @@ export type User = Prisma.UserModel
  */
 export type MagicLinkToken = Prisma.MagicLinkTokenModel
 /**
+ * Model PendingSignup
+ * *
+ *  * A sign-up link, for an address that has no account yet.
+ *  *
+ *  * Deliberately a separate table from MagicLinkToken rather than a nullable `userId` on
+ *  * it: relaxing that column would mean rebuilding a table five foreign keys point at,
+ *  * without a transaction to make it atomic (see the note on `User.password`). Adding a
+ *  * table is the one shape of schema change D1 does safely.
+ *  *
+ *  * The account is created when the link is *verified*, never when it is requested — minting
+ *  * a User for every address typed into the form would fill the table with unverified rows
+ *  * and would leak, through "username taken", which addresses someone had tried.
+ */
+export type PendingSignup = Prisma.PendingSignupModel
+/**
  * Model PracticeTrial
  * *
  *  * The anonymous practice trial (LEARNER-LIFECYCLE.md §3.2): five graded items served and

@@ -56,6 +56,7 @@ export const ModelName = {
   AdminUser: 'AdminUser',
   User: 'User',
   MagicLinkToken: 'MagicLinkToken',
+  PendingSignup: 'PendingSignup',
   PracticeTrial: 'PracticeTrial',
   TrialRateLimit: 'TrialRateLimit',
   MixedSession: 'MixedSession',
@@ -147,6 +148,7 @@ export const UserScalarFieldEnum = {
   email: 'email',
   username: 'username',
   password: 'password',
+  googleId: 'googleId',
   firstName: 'firstName',
   lastName: 'lastName',
   timezone: 'timezone',
@@ -169,6 +171,19 @@ export const MagicLinkTokenScalarFieldEnum = {
 } as const
 
 export type MagicLinkTokenScalarFieldEnum = (typeof MagicLinkTokenScalarFieldEnum)[keyof typeof MagicLinkTokenScalarFieldEnum]
+
+
+export const PendingSignupScalarFieldEnum = {
+  id: 'id',
+  tokenHash: 'tokenHash',
+  email: 'email',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  createdAt: 'createdAt',
+  pendingTrialId: 'pendingTrialId'
+} as const
+
+export type PendingSignupScalarFieldEnum = (typeof PendingSignupScalarFieldEnum)[keyof typeof PendingSignupScalarFieldEnum]
 
 
 export const PracticeTrialScalarFieldEnum = {

@@ -9,6 +9,7 @@ const MODELS = [
   "AdminUser",
   "User",
   "MagicLinkToken",
+  "PendingSignup",
   "PracticeTrial",
   "TrialRateLimit",
   "MixedSession",

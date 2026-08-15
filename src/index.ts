@@ -23,6 +23,12 @@ import {
 import { progress } from "./progress.js";
 import { practice, applyTrialClaim, verifyTrialClaim, TRIAL_CLAIM_COOKIE } from "./practice.js";
 import { session } from "./session.js";
+import {
+    startGoogleAuth,
+    exchangeGoogleCode,
+    clearOAuthCookies,
+    returnPathFrom,
+} from "./google-auth.js";
 import { checkpoint } from "./checkpoint.js";
 
 export type Bindings = {
@@ -39,6 +45,15 @@ export type Bindings = {
     RESEND_API_KEY?: string;
     MAGIC_LINK_FROM?: string;
     MAGIC_LINK_DEV_MODE?: string;
+    /** From the Google Cloud OAuth client. Absent means Google sign-in answers 503. */
+    GOOGLE_CLIENT_ID?: string;
+    GOOGLE_CLIENT_SECRET?: string;
+    /**
+     * Stubs *only* the network round trip to accounts.google.com, so the e2e suite can
+     * exercise the callback against a real Worker and a real database. Never set in
+     * production; the stub identity arrives in a request header, not from the public.
+     */
+    GOOGLE_AUTH_DEV_MODE?: string;
 };
 
 export type Variables = {
@@ -50,6 +65,12 @@ export type Variables = {
 type Env = { Bindings: Bindings; Variables: Variables };
 
 const USER_TOKEN = "user_token";
+
+/**
+ * Non-`httpOnly`, non-secret: mirrors the presence of `USER_TOKEN` so the browser can
+ * tell signed-in from signed-out without a round trip. Never trusted for authorisation.
+ */
+const USER_SESSION_HINT = "signed_in";
 const ADMIN_TOKEN = "admin_token";
 const USER_TTL_DAYS = 30;
 const ADMIN_TTL_DAYS = 7;
@@ -789,6 +810,36 @@ const randomToken = () => {
     return bytesToHex(bytes);
 };
 
+/**
+ * A username for an account created without a form — magic-link sign-up and Google both
+ * arrive with an email and no chosen handle.
+ *
+ * Derived from the address's local part so it is recognisable, stripped to the character
+ * set the rest of the app already assumes, and suffixed until it is free. After a couple
+ * of collisions it stops counting and takes a random suffix: probing `name1`, `name2`, …
+ * one query at a time is a slow way to discover which handles exist.
+ */
+const deriveUsername = async (
+    prisma: { user: { findUnique: (args: never) => Promise<unknown> } },
+    email: string,
+) => {
+    const base =
+        (email.split("@")[0] ?? "")
+            .toLowerCase()
+            .replace(/[^a-z0-9_]/g, "")
+            .slice(0, 20) || "learner";
+
+    for (const candidate of [base, `${base}1`, `${base}2`]) {
+        const taken = await prisma.user.findUnique({
+            where: { username: candidate },
+            select: { id: true },
+        } as never);
+        if (!taken) return candidate;
+    }
+
+    return `${base.slice(0, 12)}${randomToken().slice(0, 8)}`;
+};
+
 const hashToken = async (token: string) =>
     bytesToHex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token))));
 
@@ -823,6 +874,25 @@ const setUserSession = async (
 
     setCookie(c, USER_TOKEN, token, {
         httpOnly: true,
+        secure: c.req.url.startsWith("https"),
+        sameSite: "Lax",
+        path: "/",
+        maxAge: USER_TTL_DAYS * 24 * 60 * 60,
+    });
+
+    /**
+     * A readable companion to the token above. It carries no identity and grants no
+     * access — it says only "a session cookie exists", which is precisely the question
+     * the browser cannot otherwise answer about an `httpOnly` cookie.
+     *
+     * Without it the app bar had to ask the server on every page load, so every
+     * logged-out visit made a `GET /api/user/me` that returned 401 — a Worker
+     * invocation, a D1 read and a console error per pageview, to learn something the
+     * request already knew. Anything that matters is still decided by `user_token`
+     * server-side; forging this one buys an attacker a different-looking navbar.
+     */
+    setCookie(c, USER_SESSION_HINT, "1", {
+        httpOnly: false,
         secure: c.req.url.startsWith("https"),
         sameSite: "Lax",
         path: "/",
@@ -1017,7 +1087,9 @@ app.post("/user/register", async (c) => {
         timezone?: string;
     }>();
 
-    if (!email || !username || !password || !firstName || !lastName) {
+    // Name is not required to learn vocabulary. It stays accepted, because the profile
+    // still shows it, but demanding it was two fields of friction in front of the product.
+    if (!email || !username || !password) {
         return c.json({ message: "กรุณากรอกข้อมูลให้ครบ" }, 400);
     }
 
@@ -1036,8 +1108,10 @@ app.post("/user/register", async (c) => {
             email,
             username,
             password: await hashPassword(password),
-            firstName,
-            lastName,
+            // The column is non-null with a "" default; an omitted name stores that
+            // rather than failing the insert.
+            firstName: firstName ?? "",
+            lastName: lastName ?? "",
             timezone: resolveTimezone(timezone),
         },
         select: {
@@ -1064,7 +1138,11 @@ app.post("/user/login", async (c) => {
 
     const user = await c.get("prisma").user.findUnique({ where: { email } });
 
-    if (!user || !(await verifyPassword(password, user.password))) {
+    // An account created by Google or a magic link stores '' rather than a hash (see
+    // `User.password`). Refuse it here, before any comparison: '' is not a hash any
+    // verifier should be asked to parse, and the answer must not differ from a wrong
+    // password or it would reveal how an account was created.
+    if (!user || !user.password || !(await verifyPassword(password, user.password))) {
         return c.json({ message: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" }, 401);
     }
 
@@ -1102,16 +1180,32 @@ app.post("/user/magic-link/request", async (c) => {
     });
     let devMagicLink: string | undefined;
 
-    if (user) {
-        const latest = await c.get("prisma").magicLinkToken.findFirst({
-            where: { userId: user.id },
-            orderBy: { createdAt: "desc" },
-            select: { createdAt: true },
-        });
+    {
+        // A link is issued whether or not the address has an account. The two cases differ
+        // only in which table records it: an existing learner gets a MagicLinkToken, a new
+        // address gets a PendingSignup that becomes an account when the link is verified.
+        //
+        // The response is identical either way — still an unconditional 202 — so this adds
+        // no way to ask the API whether an address is registered.
+        const bypassCooldown =
+            testMode && c.req.header("x-magic-link-test-bypass-cooldown") === "true";
+
+        const latest = user
+            ? await c.get("prisma").magicLinkToken.findFirst({
+                  where: { userId: user.id },
+                  orderBy: { createdAt: "desc" },
+                  select: { createdAt: true },
+              })
+            : await c.get("prisma").pendingSignup.findFirst({
+                  where: { email: normalizedEmail },
+                  orderBy: { createdAt: "desc" },
+                  select: { createdAt: true },
+              });
+
         if (
             latest &&
             latest.createdAt.getTime() > Date.now() - MAGIC_LINK_COOLDOWN_MS &&
-            !(testMode && c.req.header("x-magic-link-test-bypass-cooldown") === "true")
+            !bypassCooldown
         ) {
             return c.json({ ok: true }, 202);
         }
@@ -1132,26 +1226,35 @@ app.post("/user/magic-link/request", async (c) => {
         link.searchParams.set("token", token);
         link.searchParams.set("from", safeFrom);
 
+        const tokenHash = await hashToken(token);
+        const expiresAt = new Date(
+            Date.now() +
+            (testMode && c.req.header("x-magic-link-test-expired") === "true"
+                ? -1
+                : MAGIC_LINK_TTL_MINUTES * 60_000),
+        );
+
         // A newly requested link supersedes older unredeemed links. Each statement is
         // independently safe on D1; no transaction semantics are assumed.
-        await c.get("prisma").$executeRaw`
-            UPDATE MagicLinkToken
-            SET usedAt = ${new Date()}
-            WHERE userId = ${user.id} AND usedAt IS NULL
-        `;
-        await c.get("prisma").magicLinkToken.create({
-            data: {
-                tokenHash: await hashToken(token),
-                userId: user.id,
-                pendingTrialId,
-                expiresAt: new Date(
-                    Date.now() +
-                    (testMode && c.req.header("x-magic-link-test-expired") === "true"
-                        ? -1
-                        : MAGIC_LINK_TTL_MINUTES * 60_000),
-                ),
-            },
-        });
+        if (user) {
+            await c.get("prisma").$executeRaw`
+                UPDATE MagicLinkToken
+                SET usedAt = ${new Date()}
+                WHERE userId = ${user.id} AND usedAt IS NULL
+            `;
+            await c.get("prisma").magicLinkToken.create({
+                data: { tokenHash, userId: user.id, pendingTrialId, expiresAt },
+            });
+        } else {
+            await c.get("prisma").$executeRaw`
+                UPDATE PendingSignup
+                SET usedAt = ${new Date()}
+                WHERE email = ${normalizedEmail} AND usedAt IS NULL
+            `;
+            await c.get("prisma").pendingSignup.create({
+                data: { tokenHash, email: normalizedEmail, pendingTrialId, expiresAt },
+            });
+        }
 
         if (testMode) {
             if (testDelivery === "failure") {
@@ -1202,12 +1305,72 @@ app.post("/user/magic-link/verify", async (c) => {
         );
     }
 
+    const tokenHash = await hashToken(token);
+    const usable = <T extends { usedAt: Date | null; expiresAt: Date }>(
+        row: T | null,
+    ): row is T => !!row && !row.usedAt && row.expiresAt > new Date();
+
     const record = await c.get("prisma").magicLinkToken.findUnique({
-        where: { tokenHash: await hashToken(token) },
+        where: { tokenHash },
         include: { user: { select: { id: true, username: true, email: true } } },
     });
 
-    if (!record || record.usedAt || record.expiresAt <= new Date()) {
+    if (!usable(record)) {
+        // Not a sign-in link for an existing account. It may be a sign-up link, which
+        // carries an address rather than a user because the account does not exist yet.
+        const pending = await c.get("prisma").pendingSignup.findUnique({ where: { tokenHash } });
+
+        if (usable(pending)) {
+            // Redeem a sign-up link: the address is proven, so the account is created now.
+            // Consumption uses the same conditional update as a sign-in link — the only way
+            // to make a one-time token single-use without transactions — and it runs
+            // *before* the account is created, so a double-redeemed link cannot produce two.
+            let claimed = 0;
+            try {
+                claimed = await c.get("prisma").$executeRaw`
+                    UPDATE PendingSignup
+                    SET usedAt = ${new Date()}
+                    WHERE id = ${pending.id} AND usedAt IS NULL
+                `;
+            } catch {
+                claimed = 0;
+            }
+            if (claimed !== 1) {
+                return c.json(
+                    magicLinkError("INVALID_OR_EXPIRED_MAGIC_LINK", "This sign-in link is invalid or expired"),
+                    400,
+                );
+            }
+
+            // The address may have gained an account between request and redemption — a
+            // password sign-up, or a Google sign-in on the same address. Adopt it rather
+            // than failing: this link proved the address, which is what linking requires.
+            const existing = await c.get("prisma").user.findUnique({
+                where: { email: pending.email },
+                select: { id: true, username: true, email: true },
+            });
+
+            const created =
+                existing ??
+                (await c.get("prisma").user.create({
+                    data: {
+                        email: pending.email,
+                        username: await deriveUsername(c.get("prisma") as never, pending.email),
+                        // No password: this account signs in by link. See `User.password`.
+                        password: "",
+                    },
+                    select: { id: true, username: true, email: true },
+                }));
+
+            await setUserSession(c as never, created);
+
+            if (pending.pendingTrialId) {
+                await applyTrialClaim(c, created.id, pending.pendingTrialId);
+            }
+
+            return c.json(created);
+        }
+
         return c.json(
             magicLinkError("INVALID_OR_EXPIRED_MAGIC_LINK", "This sign-in link is invalid or expired"),
             400,
@@ -1249,8 +1412,85 @@ app.post("/user/magic-link/verify", async (c) => {
     return c.json(record.user);
 });
 
+app.get("/user/google/start", async (c) => startGoogleAuth(c as never));
+
+app.get("/user/google/callback", async (c) => {
+    const locale = c.req.query("locale") === "th" ? "th" : "en";
+    const returnPath = returnPathFrom(c);
+    const origin = (c.env.APP_URL ?? c.env.FRONTEND_URL ?? new URL(c.req.url).origin).replace(/\/$/, "");
+    const failure = `${origin}/${locale}/auth/login?error=google`;
+
+    const identity = await exchangeGoogleCode(c as never);
+    clearOAuthCookies(c);
+
+    if (!identity) return c.redirect(failure, 302);
+
+    // An unverified Google address must never be allowed to adopt an existing account:
+    // that is the whole attack — register the victim's address at an identity provider
+    // that does not check it, then sign in as them. Verified is the precondition for
+    // linking, so refuse rather than silently creating a second account.
+    if (!identity.emailVerified) return c.redirect(failure, 302);
+
+    const prisma = c.get("prisma");
+
+    // `sub` first: it is the only stable handle. Email can be reassigned by a workspace
+    // admin, and matching on it alone would hand the new owner the old owner's progress.
+    let user = await prisma.user.findUnique({
+        where: { googleId: identity.sub },
+        select: { id: true, username: true, email: true },
+    });
+
+    if (!user) {
+        const byEmail = await prisma.user.findUnique({
+            where: { email: identity.email },
+            select: { id: true, username: true, email: true, googleId: true },
+        });
+
+        if (byEmail && !byEmail.googleId) {
+            // Same verified address, no Google link yet — adopt the existing account so a
+            // learner who signed up by password or link keeps their progress.
+            await prisma.user.update({
+                where: { id: byEmail.id },
+                data: { googleId: identity.sub },
+            });
+            user = { id: byEmail.id, username: byEmail.username, email: byEmail.email };
+        } else if (!byEmail) {
+            user = await prisma.user.create({
+                data: {
+                    email: identity.email,
+                    username: await deriveUsername(prisma as never, identity.email),
+                    googleId: identity.sub,
+                    firstName: identity.firstName,
+                    lastName: identity.lastName,
+                    // No password: this account signs in with Google. See `User.password`.
+                    password: "",
+                },
+                select: { id: true, username: true, email: true },
+            });
+        } else {
+            // The address already carries a *different* Google account. Nothing safe to do.
+            return c.redirect(failure, 302);
+        }
+    }
+
+    await setUserSession(c as never, user);
+
+    // Same trial hand-off the magic link performs — a learner who practised before signing
+    // in keeps that work.
+    const claimCookie = getCookie(c, TRIAL_CLAIM_COOKIE);
+    if (claimCookie) {
+        const trialId = await verifyTrialClaim(c, claimCookie);
+        if (trialId) await applyTrialClaim(c, user.id, trialId);
+    }
+
+    const safeReturn = returnPath.startsWith("/") && !returnPath.startsWith("//") ? returnPath : `/${locale}`;
+    return c.redirect(`${origin}${safeReturn}`, 302);
+});
+
 app.post("/user/logout", (c) => {
     deleteCookie(c, USER_TOKEN, { path: "/" });
+    // Both, or the bar keeps claiming a session that no longer exists.
+    deleteCookie(c, USER_SESSION_HINT, { path: "/" });
     return c.json({ ok: true });
 });
 

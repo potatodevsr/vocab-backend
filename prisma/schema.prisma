@@ -148,7 +148,20 @@ model User {
     id               String             @id @default(cuid())
     email            String             @unique
     username         String             @unique
-    password         String
+    // Empty for accounts that have never set one — a learner who arrived through Google
+    // or a magic link has no password, and demanding one would be the friction those
+    // routes exist to remove.
+    //
+    // Empty string rather than NULL is forced by the database, not chosen: SQLite cannot
+    // relax a NOT NULL column in place, the rebuild that would is a drop-and-rename
+    // across five foreign keys, and D1 has no transaction to make that atomic. So the
+    // sentinel lives here and `POST /user/login` refuses an account whose password is
+    // empty before it ever reaches a hash comparison.
+    password         String             @default("")
+    // Google's `sub` claim — stable for the life of the account and, unlike email, never
+    // reassigned. Matching on this rather than email is what stops a recycled address
+    // from inheriting someone else's progress.
+    googleId         String?            @unique
     firstName        String             @default("")
     lastName         String             @default("")
     // Captured silently from Intl.DateTimeFormat().resolvedOptions().timeZone at
@@ -188,6 +201,34 @@ model MagicLinkToken {
     pendingTrialId String?
 
     @@index([userId, createdAt])
+    @@index([expiresAt])
+}
+
+/**
+ * A sign-up link, for an address that has no account yet.
+ *
+ * Deliberately a separate table from MagicLinkToken rather than a nullable `userId` on
+ * it: relaxing that column would mean rebuilding a table five foreign keys point at,
+ * without a transaction to make it atomic (see the note on `User.password`). Adding a
+ * table is the one shape of schema change D1 does safely.
+ *
+ * The account is created when the link is *verified*, never when it is requested — minting
+ * a User for every address typed into the form would fill the table with unverified rows
+ * and would leak, through "username taken", which addresses someone had tried.
+ */
+model PendingSignup {
+    id        String   @id @default(cuid())
+    tokenHash String   @unique
+    email     String
+    expiresAt DateTime
+    usedAt    DateTime?
+    createdAt DateTime @default(now())
+
+    /** Same trial hand-off as MagicLinkToken.pendingTrialId — the bare id, never the bearer. */
+    pendingTrialId String?
+
+    // The resend cooldown has no user to key on, so it is enforced on the address.
+    @@index([email, createdAt])
     @@index([expiresAt])
 }
 

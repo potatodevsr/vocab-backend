@@ -402,6 +402,7 @@ export const ModelName = {
   AdminUser: 'AdminUser',
   User: 'User',
   MagicLinkToken: 'MagicLinkToken',
+  PendingSignup: 'PendingSignup',
   PracticeTrial: 'PracticeTrial',
   TrialRateLimit: 'TrialRateLimit',
   MixedSession: 'MixedSession',
@@ -427,7 +428,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "vocabWord" | "thaiLetter" | "adminUser" | "user" | "magicLinkToken" | "practiceTrial" | "trialRateLimit" | "mixedSession" | "unitCheckpoint" | "learningSession" | "quizResult" | "completionLedger" | "userUnitProgress" | "userWordProgress" | "userWordAttempt"
+    modelProps: "vocabWord" | "thaiLetter" | "adminUser" | "user" | "magicLinkToken" | "pendingSignup" | "practiceTrial" | "trialRateLimit" | "mixedSession" | "unitCheckpoint" | "learningSession" | "quizResult" | "completionLedger" | "userUnitProgress" | "userWordProgress" | "userWordAttempt"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -798,6 +799,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.MagicLinkTokenCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.MagicLinkTokenCountAggregateOutputType> | number
+        }
+      }
+    }
+    PendingSignup: {
+      payload: Prisma.$PendingSignupPayload<ExtArgs>
+      fields: Prisma.PendingSignupFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PendingSignupFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingSignupPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PendingSignupFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingSignupPayload>
+        }
+        findFirst: {
+          args: Prisma.PendingSignupFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingSignupPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PendingSignupFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingSignupPayload>
+        }
+        findMany: {
+          args: Prisma.PendingSignupFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingSignupPayload>[]
+        }
+        create: {
+          args: Prisma.PendingSignupCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingSignupPayload>
+        }
+        createMany: {
+          args: Prisma.PendingSignupCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PendingSignupCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingSignupPayload>[]
+        }
+        delete: {
+          args: Prisma.PendingSignupDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingSignupPayload>
+        }
+        update: {
+          args: Prisma.PendingSignupUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingSignupPayload>
+        }
+        deleteMany: {
+          args: Prisma.PendingSignupDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PendingSignupUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PendingSignupUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingSignupPayload>[]
+        }
+        upsert: {
+          args: Prisma.PendingSignupUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingSignupPayload>
+        }
+        aggregate: {
+          args: Prisma.PendingSignupAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePendingSignup>
+        }
+        groupBy: {
+          args: Prisma.PendingSignupGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PendingSignupGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PendingSignupCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PendingSignupCountAggregateOutputType> | number
         }
       }
     }
@@ -1643,6 +1718,7 @@ export const UserScalarFieldEnum = {
   email: 'email',
   username: 'username',
   password: 'password',
+  googleId: 'googleId',
   firstName: 'firstName',
   lastName: 'lastName',
   timezone: 'timezone',
@@ -1665,6 +1741,19 @@ export const MagicLinkTokenScalarFieldEnum = {
 } as const
 
 export type MagicLinkTokenScalarFieldEnum = (typeof MagicLinkTokenScalarFieldEnum)[keyof typeof MagicLinkTokenScalarFieldEnum]
+
+
+export const PendingSignupScalarFieldEnum = {
+  id: 'id',
+  tokenHash: 'tokenHash',
+  email: 'email',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  createdAt: 'createdAt',
+  pendingTrialId: 'pendingTrialId'
+} as const
+
+export type PendingSignupScalarFieldEnum = (typeof PendingSignupScalarFieldEnum)[keyof typeof PendingSignupScalarFieldEnum]
 
 
 export const PracticeTrialScalarFieldEnum = {
@@ -2061,6 +2150,7 @@ export type GlobalOmitConfig = {
   adminUser?: Prisma.AdminUserOmit
   user?: Prisma.UserOmit
   magicLinkToken?: Prisma.MagicLinkTokenOmit
+  pendingSignup?: Prisma.PendingSignupOmit
   practiceTrial?: Prisma.PracticeTrialOmit
   trialRateLimit?: Prisma.TrialRateLimitOmit
   mixedSession?: Prisma.MixedSessionOmit
