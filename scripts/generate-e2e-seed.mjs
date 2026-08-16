@@ -5,7 +5,8 @@
 // Determinism is the point: same rows, same ids, same order, every run — including a
 // fixed PBKDF2 salt for the admin, so the file is byte-identical between regenerations.
 
-const ITERATIONS = 210_000;
+// Must match src/password.ts — the Workers runtime caps PBKDF2 at 100,000 iterations.
+const ITERATIONS = 100_000;
 const FIXED_SALT = new Uint8Array([
     226, 12, 91, 44, 178, 3, 240, 155, 17, 88, 201, 66, 129, 34, 7, 190,
 ]);

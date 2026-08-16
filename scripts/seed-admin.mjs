@@ -4,7 +4,7 @@
 // have produced a working login:
 //
 //   1. It hashed with `bcryptjs`. The API verifies PBKDF2 (`src/password.ts`, format
-//      `pbkdf2$210000$<salt>$<hash>`), so a bcrypt hash never matches — and bcryptjs is
+//      `pbkdf2$100000$<salt>$<hash>`), so a bcrypt hash never matches — and bcryptjs is
 //      banned outright by AGENTS.md rule 4 because it is Node-native and CPU-hostile on
 //      a Worker.
 //   2. It wrote to `file:./dev.db` through better-sqlite3 — the pre-D1 Prisma path. The
@@ -27,7 +27,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const REMOTE = process.argv.includes("--remote");
 
 // Must match src/password.ts exactly — these constants are the hash format.
-const ITERATIONS = 210_000;
+// Must match src/password.ts — the Workers runtime caps PBKDF2 at 100,000 iterations.
+const ITERATIONS = 100_000;
 const KEY_LENGTH = 32;
 const SALT_LENGTH = 16;
 
