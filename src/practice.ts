@@ -217,6 +217,11 @@ const hashIp = async (ip: string) =>
  * the whole e2e suite against itself.
  */
 const checkStartRateLimit = async (c: Ctx): Promise<boolean> => {
+    // Current Wrangler versions synthesize cf-connecting-ip even under --local, making
+    // all browser contexts one caller. The isolated e2e Worker opts out explicitly;
+    // production never receives this binding and still enforces the edge-IP throttle.
+    if (c.env.E2E_MODE === "true") return true;
+
     const ip = c.req.header("cf-connecting-ip");
     if (!ip) return true;
 

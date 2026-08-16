@@ -45,6 +45,8 @@ export type Bindings = {
     RESEND_API_KEY?: string;
     MAGIC_LINK_FROM?: string;
     MAGIC_LINK_DEV_MODE?: string;
+    /** Test harness only: prevents every browser test sharing Wrangler's loopback IP bucket. */
+    E2E_MODE?: string;
     /** From the Google Cloud OAuth client. Absent means Google sign-in answers 503. */
     GOOGLE_CLIENT_ID?: string;
     GOOGLE_CLIENT_SECRET?: string;
