@@ -1,0 +1,99 @@
+name: CI
+
+# The API repo had no CI at all, which is the more dangerous of the two gaps: this is the
+# half that owns the schema, the guard shapes and every gameplay verb, and it is consumed
+# through a submodule pointer that a green web build says nothing about.
+#
+# What can be checked here without a database or an account:
+#   * the schema and the generated client/routers/guard actually generate
+#   * the committed generated output matches the schema (a stale router is a silent lie)
+#   * every migration file is applied by a fresh `wrangler d1 migrations apply --local`
+#   * the OpenAPI document the web repo generates its types from can actually be served
+#
+# The behaviour tests live in the web repo, because that is where the browser is; this job
+# is the contract check that stops a schema change from reaching it broken.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: api-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Enable pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # `DATABASE_URL` is required by prisma.config.ts and unused by the sqlite generator —
+      # the value only has to exist.
+      - name: Generate Prisma client, routers and guard
+        run: pnpm db:generate
+        env:
+          DATABASE_URL: file:./dev.db
+
+      # The generated tree is committed. If regenerating changes it, the committed routers
+      # describe a schema that no longer exists, and the web repo's types are generated
+      # from that lie.
+      - name: Fail if the committed generated output is stale
+        run: |
+          if ! git diff --quiet -- prisma/generated; then
+            echo "::error::prisma/generated is out of date — run 'pnpm db:generate' and commit the result"
+            git --no-pager diff --stat -- prisma/generated
+            exit 1
+          fi
+
+      # Every migration, in order, against a throwaway local D1. This is what catches a
+      # migration that references a column an earlier one never created.
+      - name: Apply every migration to a fresh local D1
+        run: pnpm exec wrangler d1 migrations apply vocab --local --persist-to .wrangler/ci-state
+
+      - name: Load the deterministic seed
+        run: |
+          pnpm db:seed:e2e
+          pnpm exec wrangler d1 execute vocab --local --persist-to .wrangler/ci-state --file=seed/e2e.sql
+
+      # Boots the real Worker and asks it for the document the web repo generates its
+      # client types from. A Worker that cannot serve this cannot be deployed against.
+      - name: Serve the OpenAPI contract
+        run: |
+          pnpm exec wrangler dev --local --persist-to .wrangler/ci-state --port 4300 \
+            --var FRONTEND_URL:http://localhost:3000 \
+            --var APP_URL:http://localhost:3000 \
+            --var E2E_MODE:true &
+          for attempt in $(seq 1 40); do
+            if curl --fail --silent http://localhost:4300/health > /dev/null; then break; fi
+            sleep 3
+          done
+          curl --fail --silent http://localhost:4300/health
+          curl --fail --silent http://localhost:4300/openapi.json > /tmp/openapi.json
+          node -e "
+            const doc = require('/tmp/openapi.json');
+            const paths = Object.keys(doc.paths ?? {});
+            if (paths.length === 0) throw new Error('OpenAPI document has no paths');
+            console.log(paths.length + ' documented paths');
+          "

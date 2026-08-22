@@ -70,7 +70,21 @@ const MULTI_POS = {
  *                       "not enough ready words" branch stays covered.
  * Unit 3 (order 41-45): draft — must never reach a learner. Proves the guard shape's
  *                       forced `status = published` filter actually holds.
+ *
+ * Review state rides on top of that and is independent of it (see `reviewState` in
+ * prisma/schema.prisma). Two words carry it:
+ *
+ *   word22 — flagged, read-only. Proves a doubted row still renders for a learner and
+ *            still leaves the search index.
+ *   word23 — flagged, and the one the admin review queue is allowed to approve. A write
+ *            fixture, so no read-only test may assert on its review state.
  */
+const AUDIO_WORDS = new Set([1, 5]);
+
+const FLAGGED = {
+    22: ["latin-in-thai"],
+    23: ["meaning-dupe", "length-outlier"],
+};
 const words = [];
 
 for (let index = 0; index < 45; index += 1) {
@@ -109,6 +123,20 @@ for (let index = 0; index < 45; index += 1) {
         posUsages: JSON.stringify(multi?.usages ?? []),
         notes: "",
         status: isDraft ? "draft" : "published",
+        reviewState: FLAGGED[order] ? "flagged" : "unreviewed",
+        reviewFlags: JSON.stringify(FLAGGED[order] ?? []),
+        // Two rows carry audio, and the rest deliberately do not — a play button where
+        // there is a clip, nothing at all where there is not, never a button that 404s.
+        //
+        //   word1 — the word page and unit list.
+        //   word5 — the fifth item of a fresh unit-1 session, which is the schedule slot
+        //           `listen-choose` occupies (backend/src/session.ts). Without a clip
+        //           there that item silently falls back to `choose-meaning`, and the
+        //           listening path would never be exercised.
+        audioKeyEn: AUDIO_WORDS.has(order)
+            ? `audio/en/e2e-a1-${String(order).padStart(4, "0")}.mp3`
+            : "",
+        audioKeyExample: "",
     });
 }
 
@@ -131,7 +159,7 @@ const lines = [
 
 for (const w of words) {
     lines.push(
-        `INSERT INTO VocabWord (id, sourceKey, sourceOrder, sourceName, sourceTitle, level, unit, word, displayWord, slug, homograph, sense, partOfSpeech, meaningTh, pronunciationTh, meaningThReading, meaningThRoman, ipa, exampleEn, exampleTh, posUsages, notes, status, createdAt, updatedAt) VALUES (` +
+        `INSERT INTO VocabWord (id, sourceKey, sourceOrder, sourceName, sourceTitle, level, unit, word, displayWord, slug, homograph, sense, partOfSpeech, meaningTh, pronunciationTh, meaningThReading, meaningThRoman, ipa, exampleEn, exampleTh, posUsages, notes, status, reviewState, reviewFlags, audioKeyEn, audioKeyExample, createdAt, updatedAt) VALUES (` +
             [
                 sql(w.id),
                 sql(w.sourceKey),
@@ -156,6 +184,10 @@ for (const w of words) {
                 sql(w.posUsages),
                 sql(w.notes),
                 sql(w.status),
+                sql(w.reviewState),
+                sql(w.reviewFlags),
+                sql(w.audioKeyEn),
+                sql(w.audioKeyExample),
                 sql(STAMP),
                 sql(STAMP),
             ].join(", ") +

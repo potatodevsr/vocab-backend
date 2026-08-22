@@ -578,6 +578,13 @@ const STRONG_MASTERY = 2;
  */
 const BANGKOK_OFFSET_MS = 7 * 60 * 60 * 1000;
 
+/**
+ * The goal a learner is measured against before they have chosen one (SPEC §5.4.3: "5 of 7
+ * days", adjustable to 3 or 7). Used only for the weekly streak — the goal *prompt* still
+ * waits for two completed sessions before asking.
+ */
+const DEFAULT_WEEKLY_GOAL_DAYS = 5;
+
 const startOfWeekBangkok = (now: Date) => {
     const bangkokNow = new Date(now.getTime() + BANGKOK_OFFSET_MS);
     const d = new Date(
@@ -697,9 +704,16 @@ progress.get("/progress/today", async (c) => {
         }),
         // One row per (userId, calendar day) would be a stored counter, which SPEC.md
         // §5.4.3 explicitly avoids — this derives active days straight from ledger rows.
+        //
+        // 120 days rather than this week: the same rows carry both the weekly goal and the
+        // two streaks, and a second query for the streaks would be a second definition of
+        // "an active day" waiting to disagree with the first. `+7 hours` is the Bangkok
+        // day boundary the weekly goal already uses.
         prisma.$queryRaw<{ day: string }[]>`
-            SELECT DISTINCT date(createdAt) as day FROM MixedSession
-            WHERE userId = ${userId} AND completedAt IS NOT NULL AND createdAt >= ${weekStart}
+            SELECT DISTINCT date(datetime(completedAt, '+7 hours')) as day FROM MixedSession
+            WHERE userId = ${userId} AND completedAt IS NOT NULL
+              AND completedAt >= datetime('now', '-120 days')
+            ORDER BY day DESC
         `,
         collectionMeter(prisma, userId),
         prisma.mixedSession.count({ where: { userId, completedAt: { not: null } } }),
@@ -747,6 +761,45 @@ progress.get("/progress/today", async (c) => {
         dueCount,
     );
 
+    /**
+     * Both streaks, from the one activity list.
+     *
+     * The weekly streak counts back over whole Bangkok weeks, each of which has to meet the
+     * learner's own goal (default 5 of 7 — SPEC §5.4.3). The current week is only allowed
+     * to *extend* the streak, never to break it: it is still in progress, and a Tuesday
+     * cannot be judged on a Monday.
+     */
+    const activeDayList = activeDays.map((row: { day: string }) => row.day);
+    const bangkokDayKey = (date: Date) =>
+        new Date(date.getTime() + BANGKOK_OFFSET_MS).toISOString().slice(0, 10);
+
+    const todayKey = bangkokDayKey(now);
+    const yesterdayKey = bangkokDayKey(new Date(now.getTime() - 24 * 60 * 60 * 1000));
+    const dailyStreak = streaksFrom(activeDayList, todayKey, yesterdayKey);
+
+    const goalDays = user?.weeklyGoalDays ?? DEFAULT_WEEKLY_GOAL_DAYS;
+    const activeDaysThisWeek = activeDayList.filter(
+        (day: string) => day >= bangkokDayKey(weekStart),
+    );
+
+    let weeklyStreak = 0;
+    for (let back = 0; back < 26; back += 1) {
+        const start = new Date(weekStart.getTime() - back * 7 * 24 * 60 * 60 * 1000);
+        const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const inWeek = activeDayList.filter(
+            (day: string) => day >= bangkokDayKey(start) && day < bangkokDayKey(end),
+        ).length;
+
+        if (inWeek >= goalDays) {
+            weeklyStreak += 1;
+            continue;
+        }
+
+        // The current week is still open — a short week now is not a broken streak yet.
+        if (back === 0) continue;
+        break;
+    }
+
     return c.json({
         dueCount,
         inProgressSession,
@@ -765,12 +818,50 @@ progress.get("/progress/today", async (c) => {
             // The weekly-goal prompt only appears client-side after the second completed
             // session (§3.4); this flag lets the Today card know it may ask.
             eligibleToSetGoal: sessionsCompleted >= 2,
-            activeDaysThisWeek: activeDays.length,
+            activeDaysThisWeek: activeDaysThisWeek.length,
             weekStart: weekStart.toISOString(),
+        },
+        streak: {
+            /** Consecutive active days, ending today or yesterday (SPEC §5.4.3). */
+            days: dailyStreak,
+            /** Consecutive weeks meeting the goal — the headline number for this audience. */
+            weeks: weeklyStreak,
+            /** Whether today already counts, so the UI can say "keep it" rather than "you have". */
+            activeToday: activeDayList.includes(todayKey),
         },
         collection: collectionByLevel,
     });
 });
+
+/**
+ * Daily and weekly streaks, derived from the session ledger.
+ *
+ * SPEC §5.4.3 makes the **weekly** streak the headline and the daily one secondary, for
+ * this audience specifically: a daily streak punishes one bad Tuesday, and the learners
+ * here are working adults. Both are computed on read from the same distinct-active-days
+ * query the weekly goal already uses — no counter column, nothing to repair after a
+ * deploy, and no nightly job to get the rollover wrong.
+ *
+ * "Today not yet practised" does **not** break the daily streak. A streak that resets at
+ * midnight before the learner has had their evening is a threat, not a memory aid
+ * (LEARNER-LIFECYCLE.md §1.2): the count runs back from today when today is active, and
+ * from yesterday otherwise, so it only breaks once a whole day has genuinely been missed.
+ */
+const streaksFrom = (activeDays: string[], today: string, yesterday: string) => {
+    const days = new Set(activeDays);
+
+    let daily = 0;
+    let cursor = days.has(today) ? today : days.has(yesterday) ? yesterday : null;
+
+    while (cursor && days.has(cursor)) {
+        daily += 1;
+        const [year, month, day] = cursor.split("-").map(Number);
+        const previous = new Date(Date.UTC(year, month - 1, day - 1));
+        cursor = previous.toISOString().slice(0, 10);
+    }
+
+    return daily;
+};
 
 const collectionMeter = async (prisma: Variables["prisma"], userId: string) => {
     const perLevel = await Promise.all(
@@ -831,6 +922,48 @@ const EXPORT_WORD_COLUMNS = [
  * and CSV shapes are hand-picked field lists, not a row dump. `format=json` (default) or
  * `format=csv`; anything else is a 400.
  */
+/**
+ * Day-by-day activity, for the progress page's calendar.
+ *
+ * Derived on read from the session ledger — like the weekly goal (SPEC.md §5.4.3), and for
+ * the same reason: a stored per-day counter is a second source of truth that drifts the
+ * first time a write is interrupted, and D1 has no transaction to prevent that.
+ *
+ * Days are Bangkok days, matching `startOfWeekBangkok`: a learner's calendar must not
+ * disagree with the week their goal is measured against.
+ */
+progress.get("/progress/history", async (c) => {
+    const userId = requireUserId(c);
+    if (!userId) return c.json({ message: "Unauthorized" }, 401);
+
+    const requested = Number(c.req.query("days") ?? "84");
+    // Twelve weeks by default, a year at most: the calendar is a grid on a phone, and an
+    // unbounded range is an unbounded scan of one learner's whole history.
+    const days = Number.isFinite(requested) ? Math.min(Math.max(Math.trunc(requested), 7), 365) : 84;
+
+    const prisma = c.get("prisma");
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const rows = await prisma.$queryRaw<{ day: string; sessions: number; items: number }[]>`
+        SELECT date(datetime(completedAt, '+7 hours')) AS day,
+               COUNT(*) AS sessions,
+               COALESCE(SUM(json_array_length(answers)), 0) AS items
+        FROM MixedSession
+        WHERE userId = ${userId} AND completedAt IS NOT NULL AND completedAt >= ${since}
+        GROUP BY day
+        ORDER BY day
+    `;
+
+    return c.json({
+        days,
+        entries: rows.map((row) => ({
+            day: row.day,
+            sessions: Number(row.sessions),
+            items: Number(row.items),
+        })),
+    });
+});
+
 progress.get("/progress/export", async (c) => {
     const userId = requireUserId(c);
     if (!userId) return c.json({ message: "Unauthorized" }, 401);

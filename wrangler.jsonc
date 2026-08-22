@@ -16,6 +16,41 @@
       "migrations_dir": "migrations"
     }
   ],
+  // Pre-generated speech (SPEC §5.6). `wrangler dev --local` simulates this bucket in
+  // .wrangler/state, so development and the e2e suite exercise the same serving path as
+  // production without touching the account.
+  //
+  // Deliberately no `preview_bucket_name`: wrangler applies it in *local* dev too, so the
+  // binding resolved to `vocab-audio-preview` while `wrangler r2 object put --local` wrote
+  // to `vocab-audio`, and every local request 404'd against an object that was plainly
+  // there. Nothing writes to the bucket on a request path anyway — only the admin-gated
+  // generation route does — so one name for every environment is the honest configuration.
+  "r2_buckets": [
+    {
+      "binding": "AUDIO",
+      "bucket_name": "vocab-audio"
+    }
+  ],
+  // Text-to-speech for the generation script only. Nothing on a learner request path
+  // calls this — synthesising per request would bill for the same sentence thousands of
+  // times and put a model call in the middle of a lesson.
+  //
+  // `remote: true` is required for the binding to exist at all under `wrangler dev`:
+  // without it local dev reports `env.AI  AI  not supported` and `c.env.AI` is undefined,
+  // so the generation route answers 503 and the pipeline cannot be exercised outside a
+  // deploy. Workers AI has no local simulator — the call always goes to Cloudflare — so
+  // this is a statement of fact rather than a choice, and it is why generation is an
+  // admin-gated batch job instead of anything on a learner's request path.
+  "ai": {
+    "binding": "AI",
+    "remote": true
+  },
+  // Hourly, because the send time is the learner's local hour and the zones this app
+  // serves are not all on the hour together. The pass is cheap: it reads only opted-in
+  // learners (indexed) and does nothing for the ones whose hour it is not.
+  "triggers": {
+    "crons": ["0 * * * *"]
+  },
   "vars": {
     // JWT_SECRET is deliberately NOT here. A plaintext var and a secret of the same name
     // collide: `wrangler deploy` would upload the committed value as a plaintext binding

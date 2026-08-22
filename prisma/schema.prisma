@@ -24,12 +24,54 @@ datasource db {
     provider = "sqlite"
 }
 
+/**
+ * A word list a learner can study — the Oxford 3000 today, an exam list or a themed pack
+ * tomorrow.
+ *
+ * This exists so that "add TOEIC vocabulary" is an import rather than a refactor. Before
+ * it, the corpus was implicitly one list: `VocabWord.sourceName` said which list a row came
+ * from, but nothing could enumerate the lists, nothing could scope a session to one, and a
+ * second list would silently interleave itself into every learner's A1 unit 1.
+ *
+ * `isFree` is the entitlement seam and nothing more. Every list ships free today
+ * (`docs/SPEC.md` open question 2 is unanswered), and the check lives in one place
+ * (`canStudyList` in src/wordlists.ts) so that answering it later is a change to that
+ * function rather than an audit of every read.
+ */
+model Wordlist {
+    // The stable key, and the same value `VocabWord.sourceName` carries: `oxford-3000`.
+    id          String      @id
+    title       String
+    titleTh     String      @default("")
+    description String      @default("")
+    descriptionTh String    @default("")
+    // Display order in the picker. The course list comes first; packs follow.
+    ordinal     Int         @default(0)
+    isFree      Boolean     @default(true)
+    // Hidden lists exist for imports in progress — rows can be loaded and proofread
+    // before any learner is offered them.
+    isPublished Boolean     @default(false)
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+
+    words       VocabWord[]
+
+    @@index([isPublished, ordinal])
+}
+
 model VocabWord {
     id               String             @id
     sourceKey        String             @unique
     sourceOrder      Int
     sourceName       String
     sourceTitle      String
+    /**
+     * Which list this word belongs to. Backfilled from `sourceName` when the table was
+     * introduced, and the two stay in step: `sourceName`/`sourceTitle` describe where the
+     * row came from, `wordlistId` decides who is offered it.
+     */
+    wordlistId       String      @default("oxford-3000")
+    wordlist         Wordlist    @relation(fields: [wordlistId], references: [id])
     level            String
     unit             Int?
     word             String
@@ -72,6 +114,33 @@ model VocabWord {
     // more. A filled value wins; an empty one derives.
     letterBreakdown  String             @default("")
     notes            String             @default("")
+    // Pre-generated speech, as R2 object keys (`audio/en/{id}.mp3`). Empty means "not
+    // generated yet", which is the only state the UI has to branch on: a word without a
+    // key renders no play button rather than a broken one. Browser `speechSynthesis` was
+    // the placeholder these replace — inconsistent voices, no Thai coverage worth using,
+    // and unusable in a listening question because the item has to be identical for every
+    // learner who is graded on it.
+    audioKeyEn       String             @default("")
+    audioKeyExample  String             @default("")
+    // Curation state for the Thai content, separate from `status` on purpose.
+    //
+    // `status` answers "may a learner see this row"; `reviewState` answers "has a human
+    // confirmed the Thai is right". They are independent: 2,955 rows were published from
+    // an OCR import nobody proofread, so publishing cannot imply review retroactively
+    // without lying. De-publishing them all would empty the product, so instead an
+    // unreviewed row stays visible in-app and is kept *out of the index* (web repo,
+    // lib/seo.ts) — a wrong meaning seen by one learner is a bug, the same meaning
+    // indexed 3,000 times is a reputation.
+    //
+    // "unreviewed" (imported, untouched) -> "flagged" (a heuristic found something worth
+    // a human's attention, scripts/flag-thai-quality.mjs) -> "approved" (a human said it
+    // is right). Only "approved" is indexable.
+    reviewState      String             @default("unreviewed")
+    // JSON array of the flag codes that fired, e.g. `["glyph-spacing","meaning-dupe"]`.
+    // Kept as data rather than a boolean so the review queue can be worked worst-first
+    // and so a heuristic that turns out to be noisy can be retired without a migration.
+    reviewFlags      String             @default("[]")
+    reviewedAt       DateTime?
     status           String             @default("draft")
     createdAt        DateTime           @default(now())
     updatedAt        DateTime           @updatedAt
@@ -84,6 +153,10 @@ model VocabWord {
     @@index([slug])
     @@index([sourceOrder])
     @@index([status])
+    // The review queue reads worst-first by state; without this it table-scans 3,295 rows
+    // on every page of the queue.
+    @@index([reviewState])
+    @@index([wordlistId, level, unit])
 }
 
 /**
@@ -167,9 +240,44 @@ model User {
     // Captured silently from Intl.DateTimeFormat().resolvedOptions().timeZone at
     // registration (LEARNER-LIFECYCLE.md §3.4), editable in profile, never a form field.
     timezone         String?
+    /**
+     * Which interface language this learner reads, captured the same silent way from the
+     * locale they registered under.
+     *
+     * It exists for the surfaces that have no request to infer it from: a reminder email
+     * sent by a cron, and the notification text a service worker fetches. Those were
+     * hard-coded Thai — right for most of this audience and wrong for the English-interface
+     * learner, who would get a Thai push about a course they are reading in English.
+     * Defaults to `th` because that is the primary audience, not because it is a guess.
+     */
+    locale           String             @default("th")
     // Asked only after the second completed session (§3.4/§4.2), not before — null means
     // "not asked yet", distinct from a learner explicitly choosing every day.
     weeklyGoalDays   Int?
+    /**
+     * Reminder email settings. Off unless the learner turns them on — a streak is a memory
+     * aid, not a threat (LEARNER-LIFECYCLE.md §1.2), and an unasked-for daily email is the
+     * fastest way to turn one into the other.
+     *
+     * `reminderHour` is an hour in the learner's own `timezone`, which is why the cron runs
+     * hourly and each user's local time is computed rather than stored: one UTC send time
+     * would reach Bangkok and Berlin at unrelated moments of their day.
+     *
+     * `lastReminderOn` is a local date string (`YYYY-MM-DD`), and it is the idempotency
+     * key. D1 has no transactions, so "did we already mail this person today" cannot be a
+     * read-modify-write on a timestamp — it is a compare against a date the send itself
+     * writes.
+     */
+    /**
+     * The list this learner is studying. Defaults to the Oxford 3000 course, which is what
+     * every existing learner is on, so the column is inert until a second list is
+     * published.
+     */
+    wordlistId       String             @default("oxford-3000")
+    reminderOptIn    Boolean            @default(false)
+    reminderHour     Int?
+    lastReminderOn   String?
+    lastRecapOn      String?
     createdAt        DateTime           @default(now())
     updatedAt        DateTime           @updatedAt
     learningSessions LearningSession[]
@@ -181,6 +289,40 @@ model User {
     mixedSessions    MixedSession[]
     completions      CompletionLedger[]
     unitCheckpoints  UnitCheckpoint[]
+    pushSubscriptions PushSubscription[]
+
+    // The hourly reminder cron reads only opted-in learners; without this it scans every
+    // account once an hour forever.
+    @@index([reminderOptIn])
+}
+
+/**
+ * A browser's push endpoint, so a reminder can reach an installed PWA without an inbox.
+ *
+ * One row per browser, not per learner: the same account on a phone and a laptop is two
+ * subscriptions, and revoking one must not silence the other. `endpoint` is unique because
+ * it *is* the identity — the push service issues it, and re-subscribing the same browser
+ * returns the same value.
+ *
+ * `p256dh` and `auth` are the client keys for encrypted payloads. Nothing sends a payload
+ * today (see `src/push.ts`: the notification text is fetched by the service worker, which
+ * avoids implementing aes128gcm on a Worker), and they are stored because a subscription
+ * cannot be re-keyed later — the browser hands them over once, at subscribe time.
+ */
+model PushSubscription {
+    id        String   @id @default(cuid())
+    userId    String
+    endpoint  String   @unique
+    p256dh    String
+    auth      String
+    createdAt DateTime @default(now())
+    // Set when a push service answers 404/410: the subscription is gone for good, and the
+    // row is kept only long enough for the next pass to skip it and delete it.
+    failedAt  DateTime?
+
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
 }
 
 model MagicLinkToken {

@@ -403,10 +403,6 @@ export type MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.MagicLinkTokenScalarWhereInput | Prisma.MagicLinkTokenScalarWhereInput[]
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type MagicLinkTokenCreateWithoutUserInput = {
   id?: string
   tokenHash: string

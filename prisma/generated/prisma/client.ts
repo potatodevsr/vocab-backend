@@ -28,8 +28,8 @@ export * from "./enums.js"
  * const prisma = new PrismaClient({
  *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
  * })
- * // Fetch zero or more VocabWords
- * const vocabWords = await prisma.vocabWord.findMany()
+ * // Fetch zero or more Wordlists
+ * const wordlists = await prisma.wordlist.findMany()
  * ```
  * 
  * Read more in our [docs](https://pris.ly/d/client).
@@ -38,6 +38,23 @@ export const PrismaClient = $Class.getPrismaClientClass()
 export type PrismaClient<LogOpts extends Prisma.LogLevel = never, OmitOpts extends Prisma.PrismaClientOptions["omit"] = Prisma.PrismaClientOptions["omit"], ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = $Class.PrismaClient<LogOpts, OmitOpts, ExtArgs>
 export { Prisma }
 
+/**
+ * Model Wordlist
+ * *
+ *  * A word list a learner can study — the Oxford 3000 today, an exam list or a themed pack
+ *  * tomorrow.
+ *  *
+ *  * This exists so that "add TOEIC vocabulary" is an import rather than a refactor. Before
+ *  * it, the corpus was implicitly one list: `VocabWord.sourceName` said which list a row came
+ *  * from, but nothing could enumerate the lists, nothing could scope a session to one, and a
+ *  * second list would silently interleave itself into every learner's A1 unit 1.
+ *  *
+ *  * `isFree` is the entitlement seam and nothing more. Every list ships free today
+ *  * (`docs/SPEC.md` open question 2 is unanswered), and the check lives in one place
+ *  * (`canStudyList` in src/wordlists.ts) so that answering it later is a change to that
+ *  * function rather than an audit of every read.
+ */
+export type Wordlist = Prisma.WordlistModel
 /**
  * Model VocabWord
  * 
@@ -76,6 +93,22 @@ export type AdminUser = Prisma.AdminUserModel
  * 
  */
 export type User = Prisma.UserModel
+/**
+ * Model PushSubscription
+ * *
+ *  * A browser's push endpoint, so a reminder can reach an installed PWA without an inbox.
+ *  *
+ *  * One row per browser, not per learner: the same account on a phone and a laptop is two
+ *  * subscriptions, and revoking one must not silence the other. `endpoint` is unique because
+ *  * it *is* the identity — the push service issues it, and re-subscribing the same browser
+ *  * returns the same value.
+ *  *
+ *  * `p256dh` and `auth` are the client keys for encrypted payloads. Nothing sends a payload
+ *  * today (see `src/push.ts`: the notification text is fetched by the service worker, which
+ *  * avoids implementing aes128gcm on a Worker), and they are stored because a subscription
+ *  * cannot be re-keyed later — the browser hands them over once, at subscribe time.
+ */
+export type PushSubscription = Prisma.PushSubscriptionModel
 /**
  * Model MagicLinkToken
  * 

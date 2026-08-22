@@ -81,13 +81,28 @@ before changing the schema or adding routes.
 ## Commands
 
 ```bash
-pnpm dev                  # wrangler dev --local on :4000, against .wrangler/state
+pnpm dev                  # wrangler dev on :4000, local D1/R2 + remote Workers AI
 pnpm db:generate          # prisma generate — regenerates client + routers + guard
 pnpm db:migrate:local     # wrangler d1 migrations apply vocab --local
 pnpm db:migrate:new       # prisma migrate diff -> SQL for a new migrations/ file
 pnpm db:seed:dev          # rebuild + load the real Oxford data from data/vocab_review.csv
 pnpm db:seed:e2e          # regenerate seed/e2e.sql (committed; e2e asserts on its bytes)
+
+# Content pipeline. All need a running API and ADMIN_PASSWORD, and all are resumable —
+# each only touches rows that are still empty, so an interrupted run is restarted.
+pnpm qa:thai              # flag OCR damage into the /admin/review queue
+pnpm gen:audio            # Workers AI TTS -> R2, one clip at a time
+pnpm gen:examples         # example sentences, drafted by a local Ollama model
+pnpm gen:pos-usages       # one sentence per part of speech, for the 260 multi-sense words
+pnpm import:wordlist      # CSV -> a new, unpublished list of draft words
 ```
+
+**`pnpm dev` deliberately omits `--local`.** That flag means "run locally *with remote
+bindings disabled*", and Workers AI has no local simulator: with it, `env.AI` is reported
+`not supported` and the TTS route answers 503. Without it, the default local runtime still
+serves D1 and R2 from `.wrangler/state` — only the AI binding (`remote: true`) leaves the
+machine. The e2e launcher keeps `--local` on purpose: a test gate must never reach a billed
+model.
 
 Two databases, deliberately separate: `.wrangler/state` (dev, real content) and
 `.wrangler/e2e-state` (wiped and reseeded on every e2e run). The e2e stack runs on :4100
@@ -123,6 +138,10 @@ merges them on import, so the seeded database holds **3,295 words**, and units a
 recomputed over the merged list rather than inherited (22 groups straddled a boundary).
 Measured before the change: of the 436 collapsing groups, zero disagreed on `meaningTh`
 and zero on `pronunciationTh`.
+
+Curation state lives on the row (`reviewState`, `reviewFlags`) and is **wiped by
+`pnpm db:seed:dev`**, which rebuilds `VocabWord` from the CSV. Re-run `pnpm qa:thai` after
+any reseed, or the review queue reports an empty backlog it has simply forgotten about.
 
 De-spacing is essentially done (4 rows still show `"ล ะ ท ิ ้ ง"`-style spacing).
 Character accuracy is **not** verified — `"ความสามารถึง"` (should be `ความสามารถ`) survives

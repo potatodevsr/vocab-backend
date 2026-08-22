@@ -626,10 +626,6 @@ export type NullableBoolFieldUpdateOperationsInput = {
   set?: boolean | null
 }
 
-export type BoolFieldUpdateOperationsInput = {
-  set?: boolean
-}
-
 export type UnitCheckpointCreateWithoutUserInput = {
   id?: string
   level: string

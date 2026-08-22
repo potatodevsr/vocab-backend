@@ -28,10 +28,12 @@ export type AggregateUser = {
 
 export type UserAvgAggregateOutputType = {
   weeklyGoalDays: number | null
+  reminderHour: number | null
 }
 
 export type UserSumAggregateOutputType = {
   weeklyGoalDays: number | null
+  reminderHour: number | null
 }
 
 export type UserMinAggregateOutputType = {
@@ -43,7 +45,13 @@ export type UserMinAggregateOutputType = {
   firstName: string | null
   lastName: string | null
   timezone: string | null
+  locale: string | null
   weeklyGoalDays: number | null
+  wordlistId: string | null
+  reminderOptIn: boolean | null
+  reminderHour: number | null
+  lastReminderOn: string | null
+  lastRecapOn: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -57,7 +65,13 @@ export type UserMaxAggregateOutputType = {
   firstName: string | null
   lastName: string | null
   timezone: string | null
+  locale: string | null
   weeklyGoalDays: number | null
+  wordlistId: string | null
+  reminderOptIn: boolean | null
+  reminderHour: number | null
+  lastReminderOn: string | null
+  lastRecapOn: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -71,7 +85,13 @@ export type UserCountAggregateOutputType = {
   firstName: number
   lastName: number
   timezone: number
+  locale: number
   weeklyGoalDays: number
+  wordlistId: number
+  reminderOptIn: number
+  reminderHour: number
+  lastReminderOn: number
+  lastRecapOn: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -80,10 +100,12 @@ export type UserCountAggregateOutputType = {
 
 export type UserAvgAggregateInputType = {
   weeklyGoalDays?: true
+  reminderHour?: true
 }
 
 export type UserSumAggregateInputType = {
   weeklyGoalDays?: true
+  reminderHour?: true
 }
 
 export type UserMinAggregateInputType = {
@@ -95,7 +117,13 @@ export type UserMinAggregateInputType = {
   firstName?: true
   lastName?: true
   timezone?: true
+  locale?: true
   weeklyGoalDays?: true
+  wordlistId?: true
+  reminderOptIn?: true
+  reminderHour?: true
+  lastReminderOn?: true
+  lastRecapOn?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -109,7 +137,13 @@ export type UserMaxAggregateInputType = {
   firstName?: true
   lastName?: true
   timezone?: true
+  locale?: true
   weeklyGoalDays?: true
+  wordlistId?: true
+  reminderOptIn?: true
+  reminderHour?: true
+  lastReminderOn?: true
+  lastRecapOn?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -123,7 +157,13 @@ export type UserCountAggregateInputType = {
   firstName?: true
   lastName?: true
   timezone?: true
+  locale?: true
   weeklyGoalDays?: true
+  wordlistId?: true
+  reminderOptIn?: true
+  reminderHour?: true
+  lastReminderOn?: true
+  lastRecapOn?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -224,7 +264,13 @@ export type UserGroupByOutputType = {
   firstName: string
   lastName: string
   timezone: string | null
+  locale: string
   weeklyGoalDays: number | null
+  wordlistId: string
+  reminderOptIn: boolean
+  reminderHour: number | null
+  lastReminderOn: string | null
+  lastRecapOn: string | null
   createdAt: Date
   updatedAt: Date
   _count: UserCountAggregateOutputType | null
@@ -261,7 +307,13 @@ export type UserWhereInput = {
   firstName?: Prisma.StringFilter<"User"> | string
   lastName?: Prisma.StringFilter<"User"> | string
   timezone?: Prisma.StringNullableFilter<"User"> | string | null
+  locale?: Prisma.StringFilter<"User"> | string
   weeklyGoalDays?: Prisma.IntNullableFilter<"User"> | number | null
+  wordlistId?: Prisma.StringFilter<"User"> | string
+  reminderOptIn?: Prisma.BoolFilter<"User"> | boolean
+  reminderHour?: Prisma.IntNullableFilter<"User"> | number | null
+  lastReminderOn?: Prisma.StringNullableFilter<"User"> | string | null
+  lastRecapOn?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   learningSessions?: Prisma.LearningSessionListRelationFilter
@@ -273,6 +325,7 @@ export type UserWhereInput = {
   mixedSessions?: Prisma.MixedSessionListRelationFilter
   completions?: Prisma.CompletionLedgerListRelationFilter
   unitCheckpoints?: Prisma.UnitCheckpointListRelationFilter
+  pushSubscriptions?: Prisma.PushSubscriptionListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -284,7 +337,13 @@ export type UserOrderByWithRelationInput = {
   firstName?: Prisma.SortOrder
   lastName?: Prisma.SortOrder
   timezone?: Prisma.SortOrderInput | Prisma.SortOrder
+  locale?: Prisma.SortOrder
   weeklyGoalDays?: Prisma.SortOrderInput | Prisma.SortOrder
+  wordlistId?: Prisma.SortOrder
+  reminderOptIn?: Prisma.SortOrder
+  reminderHour?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastReminderOn?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastRecapOn?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   learningSessions?: Prisma.LearningSessionOrderByRelationAggregateInput
@@ -296,6 +355,7 @@ export type UserOrderByWithRelationInput = {
   mixedSessions?: Prisma.MixedSessionOrderByRelationAggregateInput
   completions?: Prisma.CompletionLedgerOrderByRelationAggregateInput
   unitCheckpoints?: Prisma.UnitCheckpointOrderByRelationAggregateInput
+  pushSubscriptions?: Prisma.PushSubscriptionOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -310,7 +370,13 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   firstName?: Prisma.StringFilter<"User"> | string
   lastName?: Prisma.StringFilter<"User"> | string
   timezone?: Prisma.StringNullableFilter<"User"> | string | null
+  locale?: Prisma.StringFilter<"User"> | string
   weeklyGoalDays?: Prisma.IntNullableFilter<"User"> | number | null
+  wordlistId?: Prisma.StringFilter<"User"> | string
+  reminderOptIn?: Prisma.BoolFilter<"User"> | boolean
+  reminderHour?: Prisma.IntNullableFilter<"User"> | number | null
+  lastReminderOn?: Prisma.StringNullableFilter<"User"> | string | null
+  lastRecapOn?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   learningSessions?: Prisma.LearningSessionListRelationFilter
@@ -322,6 +388,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   mixedSessions?: Prisma.MixedSessionListRelationFilter
   completions?: Prisma.CompletionLedgerListRelationFilter
   unitCheckpoints?: Prisma.UnitCheckpointListRelationFilter
+  pushSubscriptions?: Prisma.PushSubscriptionListRelationFilter
 }, "id" | "email" | "username" | "googleId">
 
 export type UserOrderByWithAggregationInput = {
@@ -333,7 +400,13 @@ export type UserOrderByWithAggregationInput = {
   firstName?: Prisma.SortOrder
   lastName?: Prisma.SortOrder
   timezone?: Prisma.SortOrderInput | Prisma.SortOrder
+  locale?: Prisma.SortOrder
   weeklyGoalDays?: Prisma.SortOrderInput | Prisma.SortOrder
+  wordlistId?: Prisma.SortOrder
+  reminderOptIn?: Prisma.SortOrder
+  reminderHour?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastReminderOn?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastRecapOn?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
@@ -355,7 +428,13 @@ export type UserScalarWhereWithAggregatesInput = {
   firstName?: Prisma.StringWithAggregatesFilter<"User"> | string
   lastName?: Prisma.StringWithAggregatesFilter<"User"> | string
   timezone?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  locale?: Prisma.StringWithAggregatesFilter<"User"> | string
   weeklyGoalDays?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
+  wordlistId?: Prisma.StringWithAggregatesFilter<"User"> | string
+  reminderOptIn?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  reminderHour?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
+  lastReminderOn?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  lastRecapOn?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
@@ -369,7 +448,13 @@ export type UserCreateInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
@@ -381,6 +466,7 @@ export type UserCreateInput = {
   mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -392,7 +478,13 @@ export type UserUncheckedCreateInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
@@ -404,6 +496,7 @@ export type UserUncheckedCreateInput = {
   mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -415,7 +508,13 @@ export type UserUpdateInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
@@ -427,6 +526,7 @@ export type UserUpdateInput = {
   mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -438,7 +538,13 @@ export type UserUncheckedUpdateInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -450,6 +556,7 @@ export type UserUncheckedUpdateInput = {
   mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -461,7 +568,13 @@ export type UserCreateManyInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -475,7 +588,13 @@ export type UserUpdateManyMutationInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -489,7 +608,13 @@ export type UserUncheckedUpdateManyInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -503,13 +628,20 @@ export type UserCountOrderByAggregateInput = {
   firstName?: Prisma.SortOrder
   lastName?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
+  locale?: Prisma.SortOrder
   weeklyGoalDays?: Prisma.SortOrder
+  wordlistId?: Prisma.SortOrder
+  reminderOptIn?: Prisma.SortOrder
+  reminderHour?: Prisma.SortOrder
+  lastReminderOn?: Prisma.SortOrder
+  lastRecapOn?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type UserAvgOrderByAggregateInput = {
   weeklyGoalDays?: Prisma.SortOrder
+  reminderHour?: Prisma.SortOrder
 }
 
 export type UserMaxOrderByAggregateInput = {
@@ -521,7 +653,13 @@ export type UserMaxOrderByAggregateInput = {
   firstName?: Prisma.SortOrder
   lastName?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
+  locale?: Prisma.SortOrder
   weeklyGoalDays?: Prisma.SortOrder
+  wordlistId?: Prisma.SortOrder
+  reminderOptIn?: Prisma.SortOrder
+  reminderHour?: Prisma.SortOrder
+  lastReminderOn?: Prisma.SortOrder
+  lastRecapOn?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -535,18 +673,39 @@ export type UserMinOrderByAggregateInput = {
   firstName?: Prisma.SortOrder
   lastName?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
+  locale?: Prisma.SortOrder
   weeklyGoalDays?: Prisma.SortOrder
+  wordlistId?: Prisma.SortOrder
+  reminderOptIn?: Prisma.SortOrder
+  reminderHour?: Prisma.SortOrder
+  lastReminderOn?: Prisma.SortOrder
+  lastRecapOn?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type UserSumOrderByAggregateInput = {
   weeklyGoalDays?: Prisma.SortOrder
+  reminderHour?: Prisma.SortOrder
 }
 
 export type UserScalarRelationFilter = {
   is?: Prisma.UserWhereInput
   isNot?: Prisma.UserWhereInput
+}
+
+export type UserCreateNestedOneWithoutPushSubscriptionsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPushSubscriptionsInput, Prisma.UserUncheckedCreateWithoutPushSubscriptionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPushSubscriptionsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutPushSubscriptionsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPushSubscriptionsInput, Prisma.UserUncheckedCreateWithoutPushSubscriptionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPushSubscriptionsInput
+  upsert?: Prisma.UserUpsertWithoutPushSubscriptionsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPushSubscriptionsInput, Prisma.UserUpdateWithoutPushSubscriptionsInput>, Prisma.UserUncheckedUpdateWithoutPushSubscriptionsInput>
 }
 
 export type UserCreateNestedOneWithoutMagicLinkTokensInput = {
@@ -675,6 +834,138 @@ export type UserUpdateOneRequiredWithoutWordAttemptsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutWordAttemptsInput, Prisma.UserUpdateWithoutWordAttemptsInput>, Prisma.UserUncheckedUpdateWithoutWordAttemptsInput>
 }
 
+export type UserCreateWithoutPushSubscriptionsInput = {
+  id?: string
+  email: string
+  username: string
+  password?: string
+  googleId?: string | null
+  firstName?: string
+  lastName?: string
+  timezone?: string | null
+  locale?: string
+  weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
+  quizResults?: Prisma.QuizResultCreateNestedManyWithoutUserInput
+  unitProgresses?: Prisma.UserUnitProgressCreateNestedManyWithoutUserInput
+  wordProgresses?: Prisma.UserWordProgressCreateNestedManyWithoutUserInput
+  wordAttempts?: Prisma.UserWordAttemptCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
+  id?: string
+  email: string
+  username: string
+  password?: string
+  googleId?: string | null
+  firstName?: string
+  lastName?: string
+  timezone?: string | null
+  locale?: string
+  weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
+  quizResults?: Prisma.QuizResultUncheckedCreateNestedManyWithoutUserInput
+  unitProgresses?: Prisma.UserUnitProgressUncheckedCreateNestedManyWithoutUserInput
+  wordProgresses?: Prisma.UserWordProgressUncheckedCreateNestedManyWithoutUserInput
+  wordAttempts?: Prisma.UserWordAttemptUncheckedCreateNestedManyWithoutUserInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
+  mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
+  completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutPushSubscriptionsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutPushSubscriptionsInput, Prisma.UserUncheckedCreateWithoutPushSubscriptionsInput>
+}
+
+export type UserUpsertWithoutPushSubscriptionsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPushSubscriptionsInput, Prisma.UserUncheckedUpdateWithoutPushSubscriptionsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPushSubscriptionsInput, Prisma.UserUncheckedCreateWithoutPushSubscriptionsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutPushSubscriptionsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPushSubscriptionsInput, Prisma.UserUncheckedUpdateWithoutPushSubscriptionsInput>
+}
+
+export type UserUpdateWithoutPushSubscriptionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  googleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
+  quizResults?: Prisma.QuizResultUpdateManyWithoutUserNestedInput
+  unitProgresses?: Prisma.UserUnitProgressUpdateManyWithoutUserNestedInput
+  wordProgresses?: Prisma.UserWordProgressUpdateManyWithoutUserNestedInput
+  wordAttempts?: Prisma.UserWordAttemptUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  googleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
+  weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
+  quizResults?: Prisma.QuizResultUncheckedUpdateManyWithoutUserNestedInput
+  unitProgresses?: Prisma.UserUnitProgressUncheckedUpdateManyWithoutUserNestedInput
+  wordProgresses?: Prisma.UserWordProgressUncheckedUpdateManyWithoutUserNestedInput
+  wordAttempts?: Prisma.UserWordAttemptUncheckedUpdateManyWithoutUserNestedInput
+  magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
+  mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
+  completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
+  unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
+}
+
 export type UserCreateWithoutMagicLinkTokensInput = {
   id?: string
   email: string
@@ -684,7 +975,13 @@ export type UserCreateWithoutMagicLinkTokensInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
@@ -695,6 +992,7 @@ export type UserCreateWithoutMagicLinkTokensInput = {
   mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutMagicLinkTokensInput = {
@@ -706,7 +1004,13 @@ export type UserUncheckedCreateWithoutMagicLinkTokensInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
@@ -717,6 +1021,7 @@ export type UserUncheckedCreateWithoutMagicLinkTokensInput = {
   mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutMagicLinkTokensInput = {
@@ -744,7 +1049,13 @@ export type UserUpdateWithoutMagicLinkTokensInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
@@ -755,6 +1066,7 @@ export type UserUpdateWithoutMagicLinkTokensInput = {
   mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMagicLinkTokensInput = {
@@ -766,7 +1078,13 @@ export type UserUncheckedUpdateWithoutMagicLinkTokensInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -777,6 +1095,7 @@ export type UserUncheckedUpdateWithoutMagicLinkTokensInput = {
   mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutMixedSessionsInput = {
@@ -788,7 +1107,13 @@ export type UserCreateWithoutMixedSessionsInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
@@ -799,6 +1124,7 @@ export type UserCreateWithoutMixedSessionsInput = {
   magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutMixedSessionsInput = {
@@ -810,7 +1136,13 @@ export type UserUncheckedCreateWithoutMixedSessionsInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
@@ -821,6 +1153,7 @@ export type UserUncheckedCreateWithoutMixedSessionsInput = {
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutMixedSessionsInput = {
@@ -848,7 +1181,13 @@ export type UserUpdateWithoutMixedSessionsInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
@@ -859,6 +1198,7 @@ export type UserUpdateWithoutMixedSessionsInput = {
   magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMixedSessionsInput = {
@@ -870,7 +1210,13 @@ export type UserUncheckedUpdateWithoutMixedSessionsInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -881,6 +1227,7 @@ export type UserUncheckedUpdateWithoutMixedSessionsInput = {
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutUnitCheckpointsInput = {
@@ -892,7 +1239,13 @@ export type UserCreateWithoutUnitCheckpointsInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
@@ -903,6 +1256,7 @@ export type UserCreateWithoutUnitCheckpointsInput = {
   magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
   mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutUnitCheckpointsInput = {
@@ -914,7 +1268,13 @@ export type UserUncheckedCreateWithoutUnitCheckpointsInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
@@ -925,6 +1285,7 @@ export type UserUncheckedCreateWithoutUnitCheckpointsInput = {
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
   mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutUnitCheckpointsInput = {
@@ -952,7 +1313,13 @@ export type UserUpdateWithoutUnitCheckpointsInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
@@ -963,6 +1330,7 @@ export type UserUpdateWithoutUnitCheckpointsInput = {
   magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
   mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUnitCheckpointsInput = {
@@ -974,7 +1342,13 @@ export type UserUncheckedUpdateWithoutUnitCheckpointsInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -985,6 +1359,7 @@ export type UserUncheckedUpdateWithoutUnitCheckpointsInput = {
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
   mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutLearningSessionsInput = {
@@ -996,7 +1371,13 @@ export type UserCreateWithoutLearningSessionsInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   quizResults?: Prisma.QuizResultCreateNestedManyWithoutUserInput
@@ -1007,6 +1388,7 @@ export type UserCreateWithoutLearningSessionsInput = {
   mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutLearningSessionsInput = {
@@ -1018,7 +1400,13 @@ export type UserUncheckedCreateWithoutLearningSessionsInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   quizResults?: Prisma.QuizResultUncheckedCreateNestedManyWithoutUserInput
@@ -1029,6 +1417,7 @@ export type UserUncheckedCreateWithoutLearningSessionsInput = {
   mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutLearningSessionsInput = {
@@ -1056,7 +1445,13 @@ export type UserUpdateWithoutLearningSessionsInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   quizResults?: Prisma.QuizResultUpdateManyWithoutUserNestedInput
@@ -1067,6 +1462,7 @@ export type UserUpdateWithoutLearningSessionsInput = {
   mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLearningSessionsInput = {
@@ -1078,7 +1474,13 @@ export type UserUncheckedUpdateWithoutLearningSessionsInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   quizResults?: Prisma.QuizResultUncheckedUpdateManyWithoutUserNestedInput
@@ -1089,6 +1491,7 @@ export type UserUncheckedUpdateWithoutLearningSessionsInput = {
   mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutQuizResultsInput = {
@@ -1100,7 +1503,13 @@ export type UserCreateWithoutQuizResultsInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
@@ -1111,6 +1520,7 @@ export type UserCreateWithoutQuizResultsInput = {
   mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutQuizResultsInput = {
@@ -1122,7 +1532,13 @@ export type UserUncheckedCreateWithoutQuizResultsInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
@@ -1133,6 +1549,7 @@ export type UserUncheckedCreateWithoutQuizResultsInput = {
   mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutQuizResultsInput = {
@@ -1160,7 +1577,13 @@ export type UserUpdateWithoutQuizResultsInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
@@ -1171,6 +1594,7 @@ export type UserUpdateWithoutQuizResultsInput = {
   mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutQuizResultsInput = {
@@ -1182,7 +1606,13 @@ export type UserUncheckedUpdateWithoutQuizResultsInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -1193,6 +1623,7 @@ export type UserUncheckedUpdateWithoutQuizResultsInput = {
   mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCompletionsInput = {
@@ -1204,7 +1635,13 @@ export type UserCreateWithoutCompletionsInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
@@ -1215,6 +1652,7 @@ export type UserCreateWithoutCompletionsInput = {
   magicLinkTokens?: Prisma.MagicLinkTokenCreateNestedManyWithoutUserInput
   mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCompletionsInput = {
@@ -1226,7 +1664,13 @@ export type UserUncheckedCreateWithoutCompletionsInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
@@ -1237,6 +1681,7 @@ export type UserUncheckedCreateWithoutCompletionsInput = {
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedCreateNestedManyWithoutUserInput
   mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCompletionsInput = {
@@ -1264,7 +1709,13 @@ export type UserUpdateWithoutCompletionsInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
@@ -1275,6 +1726,7 @@ export type UserUpdateWithoutCompletionsInput = {
   magicLinkTokens?: Prisma.MagicLinkTokenUpdateManyWithoutUserNestedInput
   mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCompletionsInput = {
@@ -1286,7 +1738,13 @@ export type UserUncheckedUpdateWithoutCompletionsInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -1297,6 +1755,7 @@ export type UserUncheckedUpdateWithoutCompletionsInput = {
   magicLinkTokens?: Prisma.MagicLinkTokenUncheckedUpdateManyWithoutUserNestedInput
   mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutUnitProgressesInput = {
@@ -1308,7 +1767,13 @@ export type UserCreateWithoutUnitProgressesInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
@@ -1319,6 +1784,7 @@ export type UserCreateWithoutUnitProgressesInput = {
   mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutUnitProgressesInput = {
@@ -1330,7 +1796,13 @@ export type UserUncheckedCreateWithoutUnitProgressesInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
@@ -1341,6 +1813,7 @@ export type UserUncheckedCreateWithoutUnitProgressesInput = {
   mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutUnitProgressesInput = {
@@ -1368,7 +1841,13 @@ export type UserUpdateWithoutUnitProgressesInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
@@ -1379,6 +1858,7 @@ export type UserUpdateWithoutUnitProgressesInput = {
   mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUnitProgressesInput = {
@@ -1390,7 +1870,13 @@ export type UserUncheckedUpdateWithoutUnitProgressesInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -1401,6 +1887,7 @@ export type UserUncheckedUpdateWithoutUnitProgressesInput = {
   mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutWordProgressesInput = {
@@ -1412,7 +1899,13 @@ export type UserCreateWithoutWordProgressesInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
@@ -1423,6 +1916,7 @@ export type UserCreateWithoutWordProgressesInput = {
   mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutWordProgressesInput = {
@@ -1434,7 +1928,13 @@ export type UserUncheckedCreateWithoutWordProgressesInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
@@ -1445,6 +1945,7 @@ export type UserUncheckedCreateWithoutWordProgressesInput = {
   mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutWordProgressesInput = {
@@ -1472,7 +1973,13 @@ export type UserUpdateWithoutWordProgressesInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
@@ -1483,6 +1990,7 @@ export type UserUpdateWithoutWordProgressesInput = {
   mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWordProgressesInput = {
@@ -1494,7 +2002,13 @@ export type UserUncheckedUpdateWithoutWordProgressesInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -1505,6 +2019,7 @@ export type UserUncheckedUpdateWithoutWordProgressesInput = {
   mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutWordAttemptsInput = {
@@ -1516,7 +2031,13 @@ export type UserCreateWithoutWordAttemptsInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
@@ -1527,6 +2048,7 @@ export type UserCreateWithoutWordAttemptsInput = {
   mixedSessions?: Prisma.MixedSessionCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutWordAttemptsInput = {
@@ -1538,7 +2060,13 @@ export type UserUncheckedCreateWithoutWordAttemptsInput = {
   firstName?: string
   lastName?: string
   timezone?: string | null
+  locale?: string
   weeklyGoalDays?: number | null
+  wordlistId?: string
+  reminderOptIn?: boolean
+  reminderHour?: number | null
+  lastReminderOn?: string | null
+  lastRecapOn?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   learningSessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
@@ -1549,6 +2077,7 @@ export type UserUncheckedCreateWithoutWordAttemptsInput = {
   mixedSessions?: Prisma.MixedSessionUncheckedCreateNestedManyWithoutUserInput
   completions?: Prisma.CompletionLedgerUncheckedCreateNestedManyWithoutUserInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutWordAttemptsInput = {
@@ -1576,7 +2105,13 @@ export type UserUpdateWithoutWordAttemptsInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
@@ -1587,6 +2122,7 @@ export type UserUpdateWithoutWordAttemptsInput = {
   mixedSessions?: Prisma.MixedSessionUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWordAttemptsInput = {
@@ -1598,7 +2134,13 @@ export type UserUncheckedUpdateWithoutWordAttemptsInput = {
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
   weeklyGoalDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  wordlistId?: Prisma.StringFieldUpdateOperationsInput | string
+  reminderOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reminderHour?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastReminderOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastRecapOn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   learningSessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -1609,6 +2151,7 @@ export type UserUncheckedUpdateWithoutWordAttemptsInput = {
   mixedSessions?: Prisma.MixedSessionUncheckedUpdateManyWithoutUserNestedInput
   completions?: Prisma.CompletionLedgerUncheckedUpdateManyWithoutUserNestedInput
   unitCheckpoints?: Prisma.UnitCheckpointUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -1626,6 +2169,7 @@ export type UserCountOutputType = {
   mixedSessions: number
   completions: number
   unitCheckpoints: number
+  pushSubscriptions: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1638,6 +2182,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   mixedSessions?: boolean | UserCountOutputTypeCountMixedSessionsArgs
   completions?: boolean | UserCountOutputTypeCountCompletionsArgs
   unitCheckpoints?: boolean | UserCountOutputTypeCountUnitCheckpointsArgs
+  pushSubscriptions?: boolean | UserCountOutputTypeCountPushSubscriptionsArgs
 }
 
 /**
@@ -1713,6 +2258,13 @@ export type UserCountOutputTypeCountUnitCheckpointsArgs<ExtArgs extends runtime.
   where?: Prisma.UnitCheckpointWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountPushSubscriptionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PushSubscriptionWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1723,7 +2275,13 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   firstName?: boolean
   lastName?: boolean
   timezone?: boolean
+  locale?: boolean
   weeklyGoalDays?: boolean
+  wordlistId?: boolean
+  reminderOptIn?: boolean
+  reminderHour?: boolean
+  lastReminderOn?: boolean
+  lastRecapOn?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   learningSessions?: boolean | Prisma.User$learningSessionsArgs<ExtArgs>
@@ -1735,6 +2293,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   mixedSessions?: boolean | Prisma.User$mixedSessionsArgs<ExtArgs>
   completions?: boolean | Prisma.User$completionsArgs<ExtArgs>
   unitCheckpoints?: boolean | Prisma.User$unitCheckpointsArgs<ExtArgs>
+  pushSubscriptions?: boolean | Prisma.User$pushSubscriptionsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1747,7 +2306,13 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   firstName?: boolean
   lastName?: boolean
   timezone?: boolean
+  locale?: boolean
   weeklyGoalDays?: boolean
+  wordlistId?: boolean
+  reminderOptIn?: boolean
+  reminderHour?: boolean
+  lastReminderOn?: boolean
+  lastRecapOn?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -1761,7 +2326,13 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   firstName?: boolean
   lastName?: boolean
   timezone?: boolean
+  locale?: boolean
   weeklyGoalDays?: boolean
+  wordlistId?: boolean
+  reminderOptIn?: boolean
+  reminderHour?: boolean
+  lastReminderOn?: boolean
+  lastRecapOn?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -1775,12 +2346,18 @@ export type UserSelectScalar = {
   firstName?: boolean
   lastName?: boolean
   timezone?: boolean
+  locale?: boolean
   weeklyGoalDays?: boolean
+  wordlistId?: boolean
+  reminderOptIn?: boolean
+  reminderHour?: boolean
+  lastReminderOn?: boolean
+  lastRecapOn?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "username" | "password" | "googleId" | "firstName" | "lastName" | "timezone" | "weeklyGoalDays" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "username" | "password" | "googleId" | "firstName" | "lastName" | "timezone" | "locale" | "weeklyGoalDays" | "wordlistId" | "reminderOptIn" | "reminderHour" | "lastReminderOn" | "lastRecapOn" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   learningSessions?: boolean | Prisma.User$learningSessionsArgs<ExtArgs>
   quizResults?: boolean | Prisma.User$quizResultsArgs<ExtArgs>
@@ -1791,6 +2368,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   mixedSessions?: boolean | Prisma.User$mixedSessionsArgs<ExtArgs>
   completions?: boolean | Prisma.User$completionsArgs<ExtArgs>
   unitCheckpoints?: boolean | Prisma.User$unitCheckpointsArgs<ExtArgs>
+  pushSubscriptions?: boolean | Prisma.User$pushSubscriptionsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1808,6 +2386,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     mixedSessions: Prisma.$MixedSessionPayload<ExtArgs>[]
     completions: Prisma.$CompletionLedgerPayload<ExtArgs>[]
     unitCheckpoints: Prisma.$UnitCheckpointPayload<ExtArgs>[]
+    pushSubscriptions: Prisma.$PushSubscriptionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1818,7 +2397,43 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     firstName: string
     lastName: string
     timezone: string | null
+    /**
+     * *
+     *      * Which interface language this learner reads, captured the same silent way from the
+     *      * locale they registered under.
+     *      *
+     *      * It exists for the surfaces that have no request to infer it from: a reminder email
+     *      * sent by a cron, and the notification text a service worker fetches. Those were
+     *      * hard-coded Thai — right for most of this audience and wrong for the English-interface
+     *      * learner, who would get a Thai push about a course they are reading in English.
+     *      * Defaults to `th` because that is the primary audience, not because it is a guess.
+     */
+    locale: string
     weeklyGoalDays: number | null
+    /**
+     * *
+     *      * Reminder email settings. Off unless the learner turns them on — a streak is a memory
+     *      * aid, not a threat (LEARNER-LIFECYCLE.md §1.2), and an unasked-for daily email is the
+     *      * fastest way to turn one into the other.
+     *      *
+     *      * `reminderHour` is an hour in the learner's own `timezone`, which is why the cron runs
+     *      * hourly and each user's local time is computed rather than stored: one UTC send time
+     *      * would reach Bangkok and Berlin at unrelated moments of their day.
+     *      *
+     *      * `lastReminderOn` is a local date string (`YYYY-MM-DD`), and it is the idempotency
+     *      * key. D1 has no transactions, so "did we already mail this person today" cannot be a
+     *      * read-modify-write on a timestamp — it is a compare against a date the send itself
+     *      * writes.
+     * /**
+     *      * The list this learner is studying. Defaults to the Oxford 3000 course, which is what
+     *      * every existing learner is on, so the column is inert until a second list is
+     *      * published.
+     */
+    wordlistId: string
+    reminderOptIn: boolean
+    reminderHour: number | null
+    lastReminderOn: string | null
+    lastRecapOn: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["user"]>
@@ -2224,6 +2839,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   mixedSessions<T extends Prisma.User$mixedSessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mixedSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MixedSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   completions<T extends Prisma.User$completionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$completionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CompletionLedgerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   unitCheckpoints<T extends Prisma.User$unitCheckpointsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$unitCheckpointsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UnitCheckpointPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  pushSubscriptions<T extends Prisma.User$pushSubscriptionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$pushSubscriptionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PushSubscriptionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2261,7 +2877,13 @@ export interface UserFieldRefs {
   readonly firstName: Prisma.FieldRef<"User", 'String'>
   readonly lastName: Prisma.FieldRef<"User", 'String'>
   readonly timezone: Prisma.FieldRef<"User", 'String'>
+  readonly locale: Prisma.FieldRef<"User", 'String'>
   readonly weeklyGoalDays: Prisma.FieldRef<"User", 'Int'>
+  readonly wordlistId: Prisma.FieldRef<"User", 'String'>
+  readonly reminderOptIn: Prisma.FieldRef<"User", 'Boolean'>
+  readonly reminderHour: Prisma.FieldRef<"User", 'Int'>
+  readonly lastReminderOn: Prisma.FieldRef<"User", 'String'>
+  readonly lastRecapOn: Prisma.FieldRef<"User", 'String'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
 }
@@ -2868,6 +3490,30 @@ export type User$unitCheckpointsArgs<ExtArgs extends runtime.Types.Extensions.In
   take?: number
   skip?: number
   distinct?: Prisma.UnitCheckpointScalarFieldEnum | Prisma.UnitCheckpointScalarFieldEnum[]
+}
+
+/**
+ * User.pushSubscriptions
+ */
+export type User$pushSubscriptionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PushSubscription
+   */
+  select?: Prisma.PushSubscriptionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PushSubscription
+   */
+  omit?: Prisma.PushSubscriptionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PushSubscriptionInclude<ExtArgs> | null
+  where?: Prisma.PushSubscriptionWhereInput
+  orderBy?: Prisma.PushSubscriptionOrderByWithRelationInput | Prisma.PushSubscriptionOrderByWithRelationInput[]
+  cursor?: Prisma.PushSubscriptionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PushSubscriptionScalarFieldEnum | Prisma.PushSubscriptionScalarFieldEnum[]
 }
 
 /**

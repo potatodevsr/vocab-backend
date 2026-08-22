@@ -76,6 +76,14 @@ const PUBLIC_WORD_FIELDS = {
     letterBreakdown: true,
     sourceOrder: true,
     status: true,
+    // The R2 keys the learner-facing player needs to build an audio URL. Public because
+    // the audio itself is public content; an empty key simply means no player.
+    audioKeyEn: true,
+    audioKeyExample: true,
+    // Public because the *web* repo decides indexability from it (lib/seo.ts): only an
+    // approved row may be indexed. It says nothing a learner could not infer, and keeping
+    // it admin-only would mean a second, admin-authenticated read on every public page.
+    reviewState: true,
     // Powers <lastmod> in the sitemap — crawlers use it to decide what to re-fetch.
     updatedAt: true,
 } as const;
@@ -92,6 +100,11 @@ const ADMIN_WORD_FIELDS = {
     ...PUBLIC_WORD_FIELDS,
     notes: true,
     sourceKey: true,
+    // Which heuristics fired, and when a human last signed the row off. Admin-only: the
+    // queue is the only thing that reads them, and a public "we suspect this row is
+    // wrong" marker on a page we are still serving helps nobody.
+    reviewFlags: true,
+    reviewedAt: true,
 } as const;
 
 export const VOCAB_WORD_SHAPES = {
@@ -122,12 +135,15 @@ export const VOCAB_WORD_SHAPES = {
             unit: { equals: true },
             slug: { equals: true },
             status: { equals: true },
+            // The review queue is a filtered read of this same list: `reviewState=flagged`
+            // ordered worst-first.
+            reviewState: { equals: true },
             word: { contains: true, equals: true },
         },
         // `level` and `unit` are here so the curation list can be walked in the same
         // order a learner meets the words (A1 unit 1 first), rather than in the Oxford
         // list's global alphabetical order, which interleaves all four levels.
-        orderBy: { level: true, unit: true, sourceOrder: true, updatedAt: true },
+        orderBy: { level: true, unit: true, sourceOrder: true, updatedAt: true, reviewState: true },
         select: ADMIN_WORD_FIELDS,
         take: { max: 100, default: 50 },
         skip: true,
@@ -260,6 +276,16 @@ export const VOCAB_WORD_UPDATE_SHAPE = {
             letterBreakdown: true,
             notes: true,
             status: true,
+            // Writable so the queue can approve a row in the same PATCH that fixes its
+            // Thai. `reviewedAt` is set by the admin client rather than a trigger because
+            // D1 has none; the queue sends both together.
+            reviewState: true,
+            reviewFlags: true,
+            reviewedAt: true,
+            // Written by the audio generation script through the same admin path, so
+            // there is one writer for the table rather than a second privileged surface.
+            audioKeyEn: true,
+            audioKeyExample: true,
         },
         select: ADMIN_WORD_FIELDS,
     },

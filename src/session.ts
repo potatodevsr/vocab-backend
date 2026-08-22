@@ -2,6 +2,7 @@ import { Hono, type Context } from "hono";
 
 import type { Bindings, Variables } from "./index.js";
 import { MASTERY_MASTERED } from "./progress.js";
+import { DEFAULT_WORDLIST } from "./wordlists.js";
 
 type Env = { Bindings: Bindings; Variables: Variables };
 type Ctx = Context<Env>;
@@ -54,17 +55,30 @@ const ITEM_TYPE_SCHEDULE = [
     "choose-meaning",
     "choose-word",
     "spelling",
-    "choose-meaning",
+    // Listening, once the corpus has audio. A word with no clip falls back to
+    // `choose-meaning` in `buildItems`, so this slot is a silent no-op until the
+    // generation script has reached that word rather than a broken item.
+    "listen-choose",
     "match-pairs",
     "speed-round",
-    "choose-meaning",
+    // The word in a sentence, with itself removed. Recognition and recall both ask what a
+    // word means on its own; this asks where it belongs — which is the thing a learner
+    // actually has to do to use it. Falls back to `choose-meaning` for a word with no
+    // example sentence, exactly as the listening slot does with no clip.
+    "cloze",
 ] as const;
 
 export type SessionItemType = (typeof ITEM_TYPE_SCHEDULE)[number];
 
 /** Item types that feed the SRS ladder. match-pairs/speed-round are warm-up only (§4.1). */
 const isGradedForMastery = (type: string) =>
-    type === "choose-meaning" || type === "choose-word" || type === "spelling";
+    type === "choose-meaning" ||
+    type === "choose-word" ||
+    type === "spelling" ||
+    type === "cloze" ||
+    // Listening is recall, not a warm-up: the learner is given nothing but the sound and
+    // has to produce the meaning, which is at least as strong a signal as reading the word.
+    type === "listen-choose";
 
 const mulberry32 = (seed: number) => () => {
     seed |= 0;
@@ -119,6 +133,8 @@ type PoolWord = {
     partOfSpeech: string;
     meaningTh: string;
     pronunciationTh: string;
+    audioKeyEn: string;
+    exampleEn: string;
 };
 
 const wordSelect = {
@@ -127,6 +143,8 @@ const wordSelect = {
     partOfSpeech: true,
     meaningTh: true,
     pronunciationTh: true,
+    audioKeyEn: true,
+    exampleEn: true,
 } as const;
 
 /** Same derivation strategy as practice.ts: same-part-of-speech distractors preferred. */
@@ -148,8 +166,38 @@ const deriveOptionIds = (
 const promptFace = (word: PoolWord | undefined, direction: "meaning" | "word") =>
     word &&
     (direction === "meaning"
-        ? { displayWord: word.displayWord, partOfSpeech: word.partOfSpeech, pronunciationTh: word.pronunciationTh }
+        ? {
+              displayWord: word.displayWord,
+              partOfSpeech: word.partOfSpeech,
+              pronunciationTh: word.pronunciationTh,
+              // The clip is optional decoration here — the word is written on the card
+              // anyway. On a `listen-choose` item it is the entire question, which is why
+              // that branch sends it *without* `displayWord`.
+              audioKeyEn: word.audioKeyEn,
+          }
         : { meaningTh: word.meaningTh, partOfSpeech: word.partOfSpeech });
+
+/**
+ * The example sentence with the target word blanked out.
+ *
+ * Whole-word, case-insensitive, and it refuses to blank anything it is not sure of: if the
+ * headword does not appear as its own word in the sentence — inflected ("ran" in an
+ * example for "run"), part of a compound, or simply absent — this returns null and the
+ * item falls back to a type that does not need it. A cloze whose blank is in the wrong
+ * place teaches the wrong thing, and there is no way for the learner to tell.
+ */
+const clozeFrom = (word: PoolWord | undefined): string | null => {
+    const sentence = (word?.exampleEn ?? "").trim();
+    const target = (word?.displayWord ?? "").trim();
+    if (!sentence || !target) return null;
+
+    // Escape the headword: a few Oxford entries contain regex-significant characters.
+    const escaped = target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = new RegExp(`\\b${escaped}\\b`, "i");
+    if (!pattern.test(sentence)) return null;
+
+    return sentence.replace(pattern, "____");
+};
 
 const optionFace = (word: PoolWord | undefined, direction: "meaning" | "word") =>
     word &&
@@ -168,11 +216,17 @@ const pickSessionWords = async (
     userId: string,
     level: string,
     unit: number | null,
+    wordlistId: string,
 ): Promise<{ wordIds: string[]; dueWordIds: string[] }> => {
     const now = new Date();
 
     const due = await prisma.userWordProgress.findMany({
-        where: { userId, level, nextReviewAt: { lte: now }, word: { status: "published" } },
+        where: {
+            userId,
+            level,
+            nextReviewAt: { lte: now },
+            word: { status: "published", wordlistId },
+        },
         orderBy: { nextReviewAt: "asc" },
         take: SESSION_ITEM_COUNT,
         select: { wordId: true },
@@ -187,6 +241,7 @@ const pickSessionWords = async (
                 status: "published",
                 meaningTh: { not: "" },
                 level,
+                wordlistId,
                 ...(unit !== null ? { unit } : {}),
                 wordProgresses: { none: { userId } },
             },
@@ -202,7 +257,7 @@ const pickSessionWords = async (
 
     if (chosen.size < SESSION_ITEM_COUNT) {
         const any = await prisma.vocabWord.findMany({
-            where: { status: "published", meaningTh: { not: "" }, level },
+            where: { status: "published", meaningTh: { not: "" }, level, wordlistId },
             orderBy: { sourceOrder: "asc" },
             take: SESSION_ITEM_COUNT * 2,
             select: { id: true },
@@ -229,6 +284,7 @@ const pickComebackWords = async (
     prisma: Variables["prisma"],
     userId: string,
     level: string,
+    wordlistId: string,
 ): Promise<{ wordIds: string[]; dueWordIds: string[] }> => {
     const now = new Date();
 
@@ -245,7 +301,12 @@ const pickComebackWords = async (
     });
 
     const due = await prisma.userWordProgress.findMany({
-        where: { userId, level, nextReviewAt: { lte: now }, word: { status: "published" } },
+        where: {
+            userId,
+            level,
+            nextReviewAt: { lte: now },
+            word: { status: "published", wordlistId },
+        },
         orderBy: { nextReviewAt: "asc" },
         take: COMEBACK_MAX,
         select: { wordId: true },
@@ -264,7 +325,7 @@ const pickComebackWords = async (
 
     if (chosen.size < COMEBACK_MAX) {
         const fallback = await prisma.vocabWord.findMany({
-            where: { status: "published", meaningTh: { not: "" }, level },
+            where: { status: "published", meaningTh: { not: "" }, level, wordlistId },
             orderBy: { sourceOrder: "asc" },
             take: COMEBACK_MAX * 2,
             select: { id: true },
@@ -289,10 +350,16 @@ const pickReviewWords = async (
     prisma: Variables["prisma"],
     userId: string,
     level: string,
+    wordlistId: string,
 ): Promise<{ wordIds: string[]; dueWordIds: string[] }> => {
     const now = new Date();
     const due = await prisma.userWordProgress.findMany({
-        where: { userId, level, nextReviewAt: { lte: now }, word: { status: "published" } },
+        where: {
+            userId,
+            level,
+            nextReviewAt: { lte: now },
+            word: { status: "published", wordlistId },
+        },
         orderBy: { nextReviewAt: "asc" },
         take: SESSION_ITEM_COUNT,
         select: { wordId: true },
@@ -314,7 +381,21 @@ const buildItems = (
     wordsById: Map<string, PoolWord>,
 ) =>
     targetIds.map((targetId, index) => {
-        const type = itemTypes[index] ?? "choose-meaning";
+        const scheduled = itemTypes[index] ?? "choose-meaning";
+        /**
+         * A listening item is only a listening item if there is something to listen to.
+         * Audio is generated word by word (`scripts/generate-audio.mjs`), so for most of
+         * the corpus's life this slot has to degrade rather than serve a question whose
+         * prompt is silence. The fallback is derived from stored data, not chosen at
+         * random, so `/answer` re-derives exactly the same type for the same session.
+         */
+        const cloze = scheduled === "cloze" ? clozeFrom(wordsById.get(targetId)) : null;
+        const type =
+            scheduled === "listen-choose" && !wordsById.get(targetId)?.audioKeyEn
+                ? "choose-meaning"
+                : scheduled === "cloze" && !cloze
+                  ? "choose-meaning"
+                  : scheduled;
         const direction = type === "choose-word" ? "word" : "meaning";
         if (type === "spelling") {
             // No options: the client renders a text field. The target word itself is
@@ -326,6 +407,31 @@ const buildItems = (
             };
         }
         const optionIds = deriveOptionIds(sessionId, index, targetId, poolEntries);
+
+        if (type === "cloze" && cloze) {
+            // Options are words, not meanings: the question is which word fills the gap.
+            // The sentence itself carries no `displayWord` field, so nothing on the card
+            // spells the answer.
+            return {
+                index,
+                type,
+                prompt: { clozeEn: cloze, partOfSpeech: wordsById.get(targetId)?.partOfSpeech ?? "" },
+                options: optionIds.map((id) => optionFace(wordsById.get(id), "word")),
+            };
+        }
+
+        if (type === "listen-choose") {
+            const word = wordsById.get(targetId);
+            // Deliberately no `displayWord` and no `pronunciationTh`: sending either would
+            // put the answer on the card. The learner hears the word and picks its meaning.
+            return {
+                index,
+                type,
+                prompt: { audioKeyEn: word?.audioKeyEn ?? "", partOfSpeech: word?.partOfSpeech ?? "" },
+                options: optionIds.map((id) => optionFace(wordsById.get(id), "meaning")),
+            };
+        }
+
         return {
             index,
             type,
@@ -357,6 +463,34 @@ session.post("/progress/session/start", async (c) => {
     // items under the review label. There is at most one open session per learner by
     // construction (partial unique index), so an incompatible open session falls through to
     // fresh selection below, where the index makes any create a resume of the existing row.
+    /**
+     * Which list this learner is studying (`wordlists.ts`). Every selection query below is
+     * scoped to it, so publishing a second list cannot interleave its words into an
+     * existing learner's course — the failure mode that made the list a first-class thing
+     * rather than a `sourceName` string.
+     */
+    const learner = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { wordlistId: true },
+    });
+    const wordlistId = learner?.wordlistId ?? DEFAULT_WORDLIST;
+
+    /**
+     * Unit order is **guidance, not enforcement**, and this is where that was decided.
+     *
+     * An earlier version of this route silently served unit 1 to a learner who asked for
+     * unit 7. It broke three existing tests, and the tests were right: "each unit serves
+     * its own twenty words" is the invariant behind AGENTS.md rule 9, and a lesson that
+     * teaches unit 1 while the learner navigated to unit 7 is a quiet lie no amount of
+     * response metadata makes honest.
+     *
+     * So the order lives where a learner can act on it instead: `/progress/units` says
+     * which unit is next and which are still closed, the Today card and the level page
+     * point there, and `units.ts` explains why a locked unit is still readable. Someone who
+     * navigates past the frontier on purpose gets exactly the unit they asked for — that is
+     * what the public level test exists to let them do.
+     */
+
     const openSession = await prisma.mixedSession.findFirst({
         where: { userId, completedAt: null },
         orderBy: { createdAt: "desc" },
@@ -397,10 +531,10 @@ session.post("/progress/session/start", async (c) => {
 
     const { wordIds: targetIds, dueWordIds } =
         mode === "comeback"
-            ? await pickComebackWords(prisma, userId, level)
+            ? await pickComebackWords(prisma, userId, level, wordlistId)
             : mode === "review"
-              ? await pickReviewWords(prisma, userId, level)
-              : await pickSessionWords(prisma, userId, level, unit);
+              ? await pickReviewWords(prisma, userId, level, wordlistId)
+              : await pickSessionWords(prisma, userId, level, unit, wordlistId);
 
     // A review with nothing due is a valid, empty result — not an error and not a session.
     // The client is told there is nothing to review (sessionId null, no items) and no open
@@ -422,7 +556,7 @@ session.post("/progress/session/start", async (c) => {
     }
 
     const pool: PoolWord[] = await prisma.vocabWord.findMany({
-        where: { status: "published", meaningTh: { not: "" }, level },
+        where: { status: "published", meaningTh: { not: "" }, level, wordlistId },
         orderBy: { sourceOrder: "asc" },
         take: POOL_SIZE,
         select: wordSelect,

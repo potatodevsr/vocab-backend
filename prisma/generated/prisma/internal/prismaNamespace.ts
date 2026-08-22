@@ -397,10 +397,12 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 
 export const ModelName = {
+  Wordlist: 'Wordlist',
   VocabWord: 'VocabWord',
   ThaiLetter: 'ThaiLetter',
   AdminUser: 'AdminUser',
   User: 'User',
+  PushSubscription: 'PushSubscription',
   MagicLinkToken: 'MagicLinkToken',
   PendingSignup: 'PendingSignup',
   PracticeTrial: 'PracticeTrial',
@@ -428,10 +430,84 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "vocabWord" | "thaiLetter" | "adminUser" | "user" | "magicLinkToken" | "pendingSignup" | "practiceTrial" | "trialRateLimit" | "mixedSession" | "unitCheckpoint" | "learningSession" | "quizResult" | "completionLedger" | "userUnitProgress" | "userWordProgress" | "userWordAttempt"
+    modelProps: "wordlist" | "vocabWord" | "thaiLetter" | "adminUser" | "user" | "pushSubscription" | "magicLinkToken" | "pendingSignup" | "practiceTrial" | "trialRateLimit" | "mixedSession" | "unitCheckpoint" | "learningSession" | "quizResult" | "completionLedger" | "userUnitProgress" | "userWordProgress" | "userWordAttempt"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
+    Wordlist: {
+      payload: Prisma.$WordlistPayload<ExtArgs>
+      fields: Prisma.WordlistFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WordlistFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WordlistPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WordlistFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WordlistPayload>
+        }
+        findFirst: {
+          args: Prisma.WordlistFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WordlistPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WordlistFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WordlistPayload>
+        }
+        findMany: {
+          args: Prisma.WordlistFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WordlistPayload>[]
+        }
+        create: {
+          args: Prisma.WordlistCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WordlistPayload>
+        }
+        createMany: {
+          args: Prisma.WordlistCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WordlistCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WordlistPayload>[]
+        }
+        delete: {
+          args: Prisma.WordlistDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WordlistPayload>
+        }
+        update: {
+          args: Prisma.WordlistUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WordlistPayload>
+        }
+        deleteMany: {
+          args: Prisma.WordlistDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WordlistUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WordlistUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WordlistPayload>[]
+        }
+        upsert: {
+          args: Prisma.WordlistUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WordlistPayload>
+        }
+        aggregate: {
+          args: Prisma.WordlistAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWordlist>
+        }
+        groupBy: {
+          args: Prisma.WordlistGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WordlistGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WordlistCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WordlistCountAggregateOutputType> | number
+        }
+      }
+    }
     VocabWord: {
       payload: Prisma.$VocabWordPayload<ExtArgs>
       fields: Prisma.VocabWordFieldRefs
@@ -725,6 +801,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.UserCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.UserCountAggregateOutputType> | number
+        }
+      }
+    }
+    PushSubscription: {
+      payload: Prisma.$PushSubscriptionPayload<ExtArgs>
+      fields: Prisma.PushSubscriptionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PushSubscriptionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PushSubscriptionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PushSubscriptionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PushSubscriptionPayload>
+        }
+        findFirst: {
+          args: Prisma.PushSubscriptionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PushSubscriptionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PushSubscriptionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PushSubscriptionPayload>
+        }
+        findMany: {
+          args: Prisma.PushSubscriptionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PushSubscriptionPayload>[]
+        }
+        create: {
+          args: Prisma.PushSubscriptionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PushSubscriptionPayload>
+        }
+        createMany: {
+          args: Prisma.PushSubscriptionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PushSubscriptionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PushSubscriptionPayload>[]
+        }
+        delete: {
+          args: Prisma.PushSubscriptionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PushSubscriptionPayload>
+        }
+        update: {
+          args: Prisma.PushSubscriptionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PushSubscriptionPayload>
+        }
+        deleteMany: {
+          args: Prisma.PushSubscriptionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PushSubscriptionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PushSubscriptionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PushSubscriptionPayload>[]
+        }
+        upsert: {
+          args: Prisma.PushSubscriptionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PushSubscriptionPayload>
+        }
+        aggregate: {
+          args: Prisma.PushSubscriptionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePushSubscription>
+        }
+        groupBy: {
+          args: Prisma.PushSubscriptionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PushSubscriptionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PushSubscriptionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PushSubscriptionCountAggregateOutputType> | number
         }
       }
     }
@@ -1652,12 +1802,29 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
+export const WordlistScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  titleTh: 'titleTh',
+  description: 'description',
+  descriptionTh: 'descriptionTh',
+  ordinal: 'ordinal',
+  isFree: 'isFree',
+  isPublished: 'isPublished',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WordlistScalarFieldEnum = (typeof WordlistScalarFieldEnum)[keyof typeof WordlistScalarFieldEnum]
+
+
 export const VocabWordScalarFieldEnum = {
   id: 'id',
   sourceKey: 'sourceKey',
   sourceOrder: 'sourceOrder',
   sourceName: 'sourceName',
   sourceTitle: 'sourceTitle',
+  wordlistId: 'wordlistId',
   level: 'level',
   unit: 'unit',
   word: 'word',
@@ -1676,6 +1843,11 @@ export const VocabWordScalarFieldEnum = {
   posUsages: 'posUsages',
   letterBreakdown: 'letterBreakdown',
   notes: 'notes',
+  audioKeyEn: 'audioKeyEn',
+  audioKeyExample: 'audioKeyExample',
+  reviewState: 'reviewState',
+  reviewFlags: 'reviewFlags',
+  reviewedAt: 'reviewedAt',
   status: 'status',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -1722,12 +1894,31 @@ export const UserScalarFieldEnum = {
   firstName: 'firstName',
   lastName: 'lastName',
   timezone: 'timezone',
+  locale: 'locale',
   weeklyGoalDays: 'weeklyGoalDays',
+  wordlistId: 'wordlistId',
+  reminderOptIn: 'reminderOptIn',
+  reminderHour: 'reminderHour',
+  lastReminderOn: 'lastReminderOn',
+  lastRecapOn: 'lastRecapOn',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const PushSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  endpoint: 'endpoint',
+  p256dh: 'p256dh',
+  auth: 'auth',
+  createdAt: 'createdAt',
+  failedAt: 'failedAt'
+} as const
+
+export type PushSubscriptionScalarFieldEnum = (typeof PushSubscriptionScalarFieldEnum)[keyof typeof PushSubscriptionScalarFieldEnum]
 
 
 export const MagicLinkTokenScalarFieldEnum = {
@@ -1975,16 +2166,16 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
 
 
 /**
- * Reference to a field of type 'DateTime'
+ * Reference to a field of type 'Boolean'
  */
-export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
 /**
- * Reference to a field of type 'Boolean'
+ * Reference to a field of type 'DateTime'
  */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
     
 
 
@@ -2145,10 +2336,12 @@ export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions 
  */
 export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter
 export type GlobalOmitConfig = {
+  wordlist?: Prisma.WordlistOmit
   vocabWord?: Prisma.VocabWordOmit
   thaiLetter?: Prisma.ThaiLetterOmit
   adminUser?: Prisma.AdminUserOmit
   user?: Prisma.UserOmit
+  pushSubscription?: Prisma.PushSubscriptionOmit
   magicLinkToken?: Prisma.MagicLinkTokenOmit
   pendingSignup?: Prisma.PendingSignupOmit
   practiceTrial?: Prisma.PracticeTrialOmit

@@ -30,10 +30,27 @@ import {
     returnPathFrom,
 } from "./google-auth.js";
 import { checkpoint } from "./checkpoint.js";
+import { audio } from "./audio.js";
+import { reminders, runReminderPass } from "./reminders.js";
+import { placement } from "./placement.js";
+import { wordlists } from "./wordlists.js";
+import { push } from "./push.js";
+import { stats } from "./stats.js";
+import { units } from "./units.js";
 
 export type Bindings = {
     DB: D1Database;
     JWT_SECRET: string;
+    /**
+     * Pre-generated word and example audio (SPEC §5.6), keyed `audio/en/{wordId}.mp3`.
+     * Optional so the API still boots where the bucket is not bound — `src/audio.ts`
+     * answers 404/503 and the learner simply gets no player.
+     */
+    AUDIO?: R2Bucket;
+    /** Workers AI, used only by the admin-driven TTS generation route. */
+    AI?: { run: (model: string, input: Record<string, unknown>) => Promise<unknown> };
+    /** Pins one TTS model for a deploy, overriding the fallback order in `audio.ts`. */
+    TTS_MODEL?: string;
     /**
      * Origin allowed to call this Worker from a browser. Only needed while the web app
      * and the API are on different origins in local dev — once Next forwards `/api/*`
@@ -43,6 +60,12 @@ export type Bindings = {
     FRONTEND_URL?: string;
     APP_URL?: string;
     RESEND_API_KEY?: string;
+    /**
+     * Web push application-server keys. Absent means push routes answer 503 and the
+     * reminder falls back to email — the channel is optional, the reminder is not.
+     */
+    VAPID_PUBLIC_KEY?: string;
+    VAPID_PRIVATE_KEY?: string;
     MAGIC_LINK_FROM?: string;
     MAGIC_LINK_DEV_MODE?: string;
     /** Test harness only: prevents every browser test sharing Wrangler's loopback IP bucket. */
@@ -431,6 +454,12 @@ const SESSION_OPENAPI = {
                     meaningTh: { type: "string" },
                     partOfSpeech: { type: "string" },
                     pronunciationTh: { type: "string" },
+                    // The R2 key of the word's clip. Present on a prompt, never on an
+                    // option — an option that could be played would give the answer away
+                    // on a listening item.
+                    audioKeyEn: { type: "string" },
+                    // The example sentence with the word blanked out, on a cloze prompt.
+                    clozeEn: { type: "string" },
                 },
                 additionalProperties: false,
             },
@@ -439,7 +468,7 @@ const SESSION_OPENAPI = {
                 required: ["index", "type", "prompt"],
                 properties: {
                     index: { type: "integer" },
-                    type: { type: "string", enum: ["choose-meaning", "choose-word", "spelling", "match-pairs", "speed-round"] },
+                    type: { type: "string", enum: ["choose-meaning", "choose-word", "spelling", "listen-choose", "cloze", "match-pairs", "speed-round"] },
                     prompt: { $ref: "#/components/schemas/SessionPromptFace" },
                     options: { type: "array", items: { $ref: "#/components/schemas/SessionPromptFace" } },
                 },
@@ -500,7 +529,7 @@ const SESSION_OPENAPI = {
             },
             TodaySummary: {
                 type: "object",
-                required: ["dueCount", "inProgressSession", "absenceDays", "lifecycleState", "recommendedAction", "nextUnit", "defaultLevel", "weeklyGoal", "collection"],
+                required: ["dueCount", "inProgressSession", "absenceDays", "lifecycleState", "recommendedAction", "nextUnit", "defaultLevel", "weeklyGoal", "streak", "collection"],
                 properties: {
                     dueCount: { type: "integer" },
                     absenceDays: { type: "integer", nullable: true, description: "Whole local days since the most recent completed session/quiz, or null if none ever completed" },
@@ -528,6 +557,21 @@ const SESSION_OPENAPI = {
                             eligibleToSetGoal: { type: "boolean" },
                             activeDaysThisWeek: { type: "integer" },
                             weekStart: { type: "string" },
+                        },
+                        additionalProperties: false,
+                    },
+                    streak: {
+                        type: "object",
+                        required: ["days", "weeks", "activeToday"],
+                        properties: {
+                            // Consecutive active days, ending today or yesterday — a
+                            // streak does not break at midnight before the learner has
+                            // had their evening.
+                            days: { type: "integer" },
+                            // Consecutive weeks that met the learner's own goal. The
+                            // headline number for this audience (SPEC §5.4.3).
+                            weeks: { type: "integer" },
+                            activeToday: { type: "boolean" },
                         },
                         additionalProperties: false,
                     },
@@ -770,6 +814,422 @@ const CHECKPOINT_OPENAPI = {
 } as const;
 
 /**
+ * The reminder settings a learner controls (`reminders.ts`). The cron-driven send has no
+ * OpenAPI surface on purpose — it is not a route anyone calls — and `/reminders/run` is
+ * dev-mode only, so it is documented in the module rather than in the public contract.
+ */
+const REMINDERS_OPENAPI = {
+    openapi: "3.1.0",
+    info: { title: "Vocab Learning App reminders API", version: "1.0.0" },
+    paths: {
+        "/wordlists": {
+            get: {
+                operationId: "wordlistsList",
+                responses: {
+                    "200": { description: "Published word lists", content: { "application/json": { schema: { $ref: "#/components/schemas/WordlistsResult" } } } },
+                },
+            },
+        },
+        "/wordlists/current": {
+            get: {
+                operationId: "wordlistCurrentGet",
+                responses: {
+                    "200": { description: "The learner's list", content: { "application/json": { schema: { $ref: "#/components/schemas/CurrentWordlist" } } } },
+                    "401": { description: "Not signed in", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } } },
+                },
+            },
+            post: {
+                operationId: "wordlistCurrentSet",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["wordlistId"],
+                                properties: { wordlistId: { type: "string" } },
+                                additionalProperties: false,
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    "200": { description: "Switched", content: { "application/json": { schema: { $ref: "#/components/schemas/CurrentWordlist" } } } },
+                    "402": { description: "Not available on the caller's plan", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } } },
+                    "404": { description: "No such published list", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } } },
+                },
+            },
+        },
+        "/placement/start": {
+            post: {
+                operationId: "placementStart",
+                requestBody: {
+                    required: false,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    // Present for `/english/test/[level]` ("are you ready
+                                    // for A2?"): questions come from that level only, and
+                                    // there are twice as many of them.
+                                    level: { type: "string", enum: ["A1", "A2", "B1", "B2"] },
+                                },
+                                additionalProperties: false,
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    "200": { description: "Questions, with no answer key", content: { "application/json": { schema: { $ref: "#/components/schemas/PlacementStartResult" } } } },
+                    "422": { description: "Not enough published content", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } } },
+                },
+            },
+        },
+        "/placement/score": {
+            post: {
+                operationId: "placementScore",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["token", "answers"],
+                                properties: {
+                                    token: { type: "string" },
+                                    // One selected option index per item, in item order.
+                                    // A null is an unanswered item and scores as wrong.
+                                    answers: { type: "array", items: { type: "integer", nullable: true } },
+                                },
+                                additionalProperties: false,
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    "200": { description: "Result", content: { "application/json": { schema: { $ref: "#/components/schemas/PlacementResult" } } } },
+                    "400": { description: "Expired or forged token", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } } },
+                },
+            },
+        },
+        "/progress/units": {
+            get: {
+                operationId: "progressUnits",
+                parameters: [
+                    { name: "level", in: "query", required: false, schema: { type: "string", enum: ["A1", "A2", "B1", "B2"] } },
+                ],
+                responses: {
+                    "200": { description: "Unit states for the level", content: { "application/json": { schema: { $ref: "#/components/schemas/UnitProgress" } } } },
+                    "401": { description: "Not signed in", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } } },
+                },
+            },
+        },
+        "/progress/history": {
+            get: {
+                operationId: "progressHistory",
+                parameters: [
+                    { name: "days", in: "query", required: false, schema: { type: "integer", minimum: 7, maximum: 365 } },
+                ],
+                responses: {
+                    "200": { description: "Per-day activity", content: { "application/json": { schema: { $ref: "#/components/schemas/ProgressHistory" } } } },
+                    "401": { description: "Not signed in", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } } },
+                },
+            },
+        },
+        "/reminders/settings": {
+            get: {
+                operationId: "reminderSettingsGet",
+                responses: {
+                    "200": { description: "Current settings", content: { "application/json": { schema: { $ref: "#/components/schemas/ReminderSettings" } } } },
+                    "401": { description: "Not signed in", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } } },
+                },
+            },
+            post: {
+                operationId: "reminderSettingsSave",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["optIn"],
+                                properties: {
+                                    optIn: { type: "boolean" },
+                                    hour: { type: "integer", minimum: 0, maximum: 23 },
+                                },
+                                additionalProperties: false,
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    "200": { description: "Saved", content: { "application/json": { schema: { $ref: "#/components/schemas/ReminderSettings" } } } },
+                    "400": { description: "Invalid", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } } },
+                    "401": { description: "Not signed in", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } } },
+                },
+            },
+        },
+        "/reminders/preview": {
+            get: {
+                operationId: "reminderPreview",
+                responses: {
+                    "200": { description: "What a notification should say right now", content: { "application/json": { schema: { $ref: "#/components/schemas/ReminderPreview" } } } },
+                    "401": { description: "Not signed in", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } } },
+                },
+            },
+        },
+        "/push/key": {
+            get: {
+                operationId: "pushKey",
+                responses: {
+                    "200": { description: "The VAPID application server key", content: { "application/json": { schema: { type: "object", required: ["key"], properties: { key: { type: "string" } }, additionalProperties: false } } } },
+                    "503": { description: "Push is not configured", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } } },
+                },
+            },
+        },
+        "/push/subscribe": {
+            post: {
+                operationId: "pushSubscribe",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["endpoint", "keys"],
+                                properties: {
+                                    endpoint: { type: "string", format: "uri" },
+                                    keys: {
+                                        type: "object",
+                                        required: ["p256dh", "auth"],
+                                        properties: { p256dh: { type: "string" }, auth: { type: "string" } },
+                                        additionalProperties: false,
+                                    },
+                                },
+                                additionalProperties: true,
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    "200": { description: "Subscribed", content: { "application/json": { schema: { type: "object", required: ["ok"], properties: { ok: { const: true } }, additionalProperties: false } } } },
+                    "400": { description: "Missing or non-https endpoint", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } } },
+                    "401": { description: "Not signed in", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } } },
+                    "503": { description: "Push is not configured", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } } },
+                },
+            },
+        },
+        "/push/unsubscribe": {
+            post: {
+                operationId: "pushUnsubscribe",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["endpoint"],
+                                properties: { endpoint: { type: "string", format: "uri" } },
+                                additionalProperties: false,
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    "200": { description: "Unsubscribed", content: { "application/json": { schema: { type: "object", required: ["ok"], properties: { ok: { const: true } }, additionalProperties: false } } } },
+                    "401": { description: "Not signed in", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } } },
+                },
+            },
+        },
+        "/reminders/unsubscribe": {
+            get: {
+                operationId: "reminderUnsubscribe",
+                parameters: [
+                    { name: "token", in: "query", required: true, schema: { type: "string" } },
+                ],
+                responses: {
+                    "200": { description: "Unsubscribed", content: { "application/json": { schema: { type: "object", required: ["ok"], properties: { ok: { const: true } }, additionalProperties: false } } } },
+                    "400": { description: "Expired or forged link", content: { "application/json": { schema: { $ref: "#/components/schemas/ApiError" } } } },
+                },
+            },
+        },
+    },
+    components: {
+        schemas: {
+            Wordlist: {
+                type: "object",
+                required: ["id", "title", "titleTh", "description", "descriptionTh", "isFree", "wordCount"],
+                properties: {
+                    id: { type: "string" },
+                    title: { type: "string" },
+                    titleTh: { type: "string" },
+                    description: { type: "string" },
+                    descriptionTh: { type: "string" },
+                    // The entitlement seam. Everything is free today; the field exists so
+                    // the client never has to infer availability from a name.
+                    isFree: { type: "boolean" },
+                    // Published words only — a list is as big as what a learner can reach.
+                    wordCount: { type: "integer" },
+                },
+                additionalProperties: false,
+            },
+            WordlistsResult: {
+                type: "object",
+                required: ["lists"],
+                properties: {
+                    lists: { type: "array", items: { $ref: "#/components/schemas/Wordlist" } },
+                },
+                additionalProperties: false,
+            },
+            CurrentWordlist: {
+                type: "object",
+                required: ["wordlistId"],
+                properties: { wordlistId: { type: "string" } },
+                additionalProperties: false,
+            },
+            PlacementItem: {
+                type: "object",
+                required: ["index", "level", "prompt", "options"],
+                properties: {
+                    index: { type: "integer" },
+                    level: { type: "string", enum: ["A1", "A2", "B1", "B2"] },
+                    prompt: {
+                        type: "object",
+                        required: ["displayWord", "partOfSpeech"],
+                        properties: {
+                            displayWord: { type: "string" },
+                            partOfSpeech: { type: "string" },
+                        },
+                        additionalProperties: false,
+                    },
+                    options: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            required: ["meaningTh"],
+                            properties: { meaningTh: { type: "string" } },
+                            additionalProperties: false,
+                        },
+                    },
+                },
+                additionalProperties: false,
+            },
+            PlacementStartResult: {
+                type: "object",
+                required: ["token", "itemCount", "items"],
+                properties: {
+                    // Carries the answer key, signed. The client never sees which option
+                    // is correct until it submits.
+                    token: { type: "string" },
+                    itemCount: { type: "integer" },
+                    items: { type: "array", items: { $ref: "#/components/schemas/PlacementItem" } },
+                },
+                additionalProperties: false,
+            },
+            PlacementResult: {
+                type: "object",
+                required: ["recommendedLevel", "correctCount", "itemCount", "levels"],
+                properties: {
+                    recommendedLevel: { type: "string", enum: ["A1", "A2", "B1", "B2"] },
+                    correctCount: { type: "integer" },
+                    itemCount: { type: "integer" },
+                    levels: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            required: ["level", "correct", "total"],
+                            properties: {
+                                level: { type: "string", enum: ["A1", "A2", "B1", "B2"] },
+                                correct: { type: "integer" },
+                                total: { type: "integer" },
+                            },
+                            additionalProperties: false,
+                        },
+                    },
+                },
+                additionalProperties: false,
+            },
+            UnitProgress: {
+                type: "object",
+                required: ["level", "nextUnit", "crowns", "units"],
+                properties: {
+                    level: { type: "string" },
+                    // Where the path should send the learner: the first open, unfinished
+                    // unit.
+                    nextUnit: { type: "integer" },
+                    crowns: { type: "integer" },
+                    units: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            required: ["unit", "words", "strong", "complete", "unlocked", "crown"],
+                            properties: {
+                                unit: { type: "integer" },
+                                words: { type: "integer" },
+                                strong: { type: "integer" },
+                                complete: { type: "boolean" },
+                                // Derived, never stored: unit 1 is always open, the rest
+                                // follow the one before them.
+                                unlocked: { type: "boolean" },
+                                crown: { type: "boolean" },
+                            },
+                            additionalProperties: false,
+                        },
+                    },
+                },
+                additionalProperties: false,
+            },
+            ProgressHistory: {
+                type: "object",
+                required: ["days", "entries"],
+                properties: {
+                    days: { type: "integer" },
+                    entries: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            required: ["day", "sessions", "items"],
+                            properties: {
+                                // A Bangkok calendar day, `YYYY-MM-DD` — the same day
+                                // boundary the weekly goal is measured against.
+                                day: { type: "string" },
+                                sessions: { type: "integer" },
+                                items: { type: "integer" },
+                            },
+                            additionalProperties: false,
+                        },
+                    },
+                },
+                additionalProperties: false,
+            },
+            ReminderPreview: {
+                type: "object",
+                required: ["title", "body", "url"],
+                properties: {
+                    title: { type: "string" },
+                    body: { type: "string" },
+                    // Where the notification should open. Same-origin path, not a URL.
+                    url: { type: "string" },
+                },
+                additionalProperties: false,
+            },
+            ReminderSettings: {
+                type: "object",
+                required: ["optIn", "hour"],
+                properties: {
+                    optIn: { type: "boolean" },
+                    /** An hour in the learner's own timezone, not UTC. */
+                    hour: { type: "integer", minimum: 0, maximum: 23 },
+                    timezone: { type: "string", nullable: true },
+                },
+                additionalProperties: false,
+            },
+        },
+    },
+} as const;
+
+/**
  * Merges AUTH_OPENAPI, PRACTICE_OPENAPI, SESSION_OPENAPI and CHECKPOINT_OPENAPI into one
  * document so `pnpm gen:api-types` runs `openapi-typescript` once, against one URL, and
  * `lib/api-types.ts` carries every hand-written verb's real response shape rather than a
@@ -778,13 +1238,14 @@ const CHECKPOINT_OPENAPI = {
 const OPENAPI = {
     openapi: "3.1.0" as const,
     info: { title: "Vocab Learning App API", version: "1.0.0" },
-    paths: { ...AUTH_OPENAPI.paths, ...PRACTICE_OPENAPI.paths, ...SESSION_OPENAPI.paths, ...CHECKPOINT_OPENAPI.paths },
+    paths: { ...AUTH_OPENAPI.paths, ...PRACTICE_OPENAPI.paths, ...SESSION_OPENAPI.paths, ...CHECKPOINT_OPENAPI.paths, ...REMINDERS_OPENAPI.paths },
     components: {
         schemas: {
             ...AUTH_OPENAPI.components.schemas,
             ...PRACTICE_OPENAPI.components.schemas,
             ...SESSION_OPENAPI.components.schemas,
             ...CHECKPOINT_OPENAPI.components.schemas,
+            ...REMINDERS_OPENAPI.components.schemas,
         },
     },
 };
@@ -1080,14 +1541,19 @@ const resolveTimezone = (value: unknown): string => {
 };
 
 app.post("/user/register", async (c) => {
-    const { email, username, password, firstName, lastName, timezone } = await c.req.json<{
-        email?: string;
-        username?: string;
-        password?: string;
-        firstName?: string;
-        lastName?: string;
-        timezone?: string;
-    }>();
+    const { email, username, password, firstName, lastName, timezone, locale } =
+        await c.req.json<{
+            email?: string;
+            username?: string;
+            password?: string;
+            firstName?: string;
+            lastName?: string;
+            timezone?: string;
+            // The interface language the learner registered under. Captured silently like
+            // the timezone — never a form field — and used later by the surfaces that have
+            // no request to read it from (reminder email, push text).
+            locale?: string;
+        }>();
 
     // Name is not required to learn vocabulary. It stays accepted, because the profile
     // still shows it, but demanding it was two fields of friction in front of the product.
@@ -1115,6 +1581,7 @@ app.post("/user/register", async (c) => {
             firstName: firstName ?? "",
             lastName: lastName ?? "",
             timezone: resolveTimezone(timezone),
+            locale: locale === "en" ? "en" : "th",
         },
         select: {
             id: true,
@@ -1524,6 +1991,13 @@ app.route("/", progress);
 app.route("/", practice);
 app.route("/", session);
 app.route("/", checkpoint);
+app.route("/", audio);
+app.route("/", reminders);
+app.route("/", placement);
+app.route("/", wordlists);
+app.route("/", push);
+app.route("/", stats);
+app.route("/", units);
 
 // ------------------------------------------------------------ generated CRUD
 
@@ -1586,5 +2060,29 @@ app.route(
     } as never),
 );
 
-export default app;
+/**
+ * The Worker, with its scheduled half.
+ *
+ * The cron fires hourly and the reminder pass decides who, if anyone, is at their chosen
+ * local hour right now (`reminders.ts`) — one UTC send time would reach Bangkok and Berlin
+ * at unrelated moments of their day, and the audience is in one of those places.
+ *
+ * `waitUntil` rather than a bare await so a slow mail provider cannot make the scheduled
+ * invocation itself look failed and get retried, which would mail people twice.
+ */
+export default {
+    fetch: app.fetch,
+    scheduled: async (
+        _event: unknown,
+        env: Bindings,
+        ctx: { waitUntil: (promise: Promise<unknown>) => void },
+    ) => {
+        const prisma = getPrisma(env.DB) as never;
+        ctx.waitUntil(
+            runReminderPass(env, prisma, new Date(), { dryRun: false }).catch((error) => {
+                console.error("reminder pass failed", error);
+            }),
+        );
+    },
+};
 export { requireUser };

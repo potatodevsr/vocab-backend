@@ -11,6 +11,48 @@ import type {
 type TM = typeof TYPE_MAP
 type UM = typeof UNIQUE_MAP
 
+export type WordlistSelect = TypedProjection<TM, 'Wordlist', 1, UM>
+export type WordlistProjection = WordlistSelect
+export type WordlistInclude = TypedInclude<TM, 'Wordlist', 1, UM>
+export type WordlistCountSelect = TypedCountSelect<TM, 'Wordlist'>
+export type WordlistGuardShape = TypedGuardShape<TM, 'Wordlist', 1, UM>
+export type WordlistFindManyShape = OperationShape<TM, 'Wordlist', 'findMany', 1, UM>
+export type WordlistFindManyShapeInput<TCtx = unknown> = ShapeInput<WordlistFindManyShape, TCtx>
+export type WordlistFindFirstShape = OperationShape<TM, 'Wordlist', 'findFirst', 1, UM>
+export type WordlistFindFirstShapeInput<TCtx = unknown> = ShapeInput<WordlistFindFirstShape, TCtx>
+export type WordlistFindFirstOrThrowShape = OperationShape<TM, 'Wordlist', 'findFirstOrThrow', 1, UM>
+export type WordlistFindFirstOrThrowShapeInput<TCtx = unknown> = ShapeInput<WordlistFindFirstOrThrowShape, TCtx>
+export type WordlistFindUniqueShape = OperationShape<TM, 'Wordlist', 'findUnique', 1, UM>
+export type WordlistFindUniqueShapeInput<TCtx = unknown> = ShapeInput<WordlistFindUniqueShape, TCtx>
+export type WordlistFindUniqueOrThrowShape = OperationShape<TM, 'Wordlist', 'findUniqueOrThrow', 1, UM>
+export type WordlistFindUniqueOrThrowShapeInput<TCtx = unknown> = ShapeInput<WordlistFindUniqueOrThrowShape, TCtx>
+export type WordlistFindManyPaginatedShape = OperationShape<TM, 'Wordlist', 'findManyPaginated', 1, UM>
+export type WordlistFindManyPaginatedShapeInput<TCtx = unknown> = ShapeInput<WordlistFindManyPaginatedShape, TCtx>
+export type WordlistCountShape = OperationShape<TM, 'Wordlist', 'count', 1, UM>
+export type WordlistCountShapeInput<TCtx = unknown> = ShapeInput<WordlistCountShape, TCtx>
+export type WordlistAggregateShape = OperationShape<TM, 'Wordlist', 'aggregate', 1, UM>
+export type WordlistAggregateShapeInput<TCtx = unknown> = ShapeInput<WordlistAggregateShape, TCtx>
+export type WordlistGroupByShape = OperationShape<TM, 'Wordlist', 'groupBy', 1, UM>
+export type WordlistGroupByShapeInput<TCtx = unknown> = ShapeInput<WordlistGroupByShape, TCtx>
+export type WordlistCreateShape = OperationShape<TM, 'Wordlist', 'create', 1, UM>
+export type WordlistCreateShapeInput<TCtx = unknown> = ShapeInput<WordlistCreateShape, TCtx>
+export type WordlistCreateManyShape = OperationShape<TM, 'Wordlist', 'createMany', 1, UM>
+export type WordlistCreateManyShapeInput<TCtx = unknown> = ShapeInput<WordlistCreateManyShape, TCtx>
+export type WordlistCreateManyAndReturnShape = OperationShape<TM, 'Wordlist', 'createManyAndReturn', 1, UM>
+export type WordlistCreateManyAndReturnShapeInput<TCtx = unknown> = ShapeInput<WordlistCreateManyAndReturnShape, TCtx>
+export type WordlistUpdateShape = OperationShape<TM, 'Wordlist', 'update', 1, UM>
+export type WordlistUpdateShapeInput<TCtx = unknown> = ShapeInput<WordlistUpdateShape, TCtx>
+export type WordlistUpdateManyShape = OperationShape<TM, 'Wordlist', 'updateMany', 1, UM>
+export type WordlistUpdateManyShapeInput<TCtx = unknown> = ShapeInput<WordlistUpdateManyShape, TCtx>
+export type WordlistUpdateManyAndReturnShape = OperationShape<TM, 'Wordlist', 'updateManyAndReturn', 1, UM>
+export type WordlistUpdateManyAndReturnShapeInput<TCtx = unknown> = ShapeInput<WordlistUpdateManyAndReturnShape, TCtx>
+export type WordlistUpsertShape = OperationShape<TM, 'Wordlist', 'upsert', 1, UM>
+export type WordlistUpsertShapeInput<TCtx = unknown> = ShapeInput<WordlistUpsertShape, TCtx>
+export type WordlistDeleteShape = OperationShape<TM, 'Wordlist', 'delete', 1, UM>
+export type WordlistDeleteShapeInput<TCtx = unknown> = ShapeInput<WordlistDeleteShape, TCtx>
+export type WordlistDeleteManyShape = OperationShape<TM, 'Wordlist', 'deleteMany', 1, UM>
+export type WordlistDeleteManyShapeInput<TCtx = unknown> = ShapeInput<WordlistDeleteManyShape, TCtx>
+
 export type VocabWordSelect = TypedProjection<TM, 'VocabWord', 1, UM>
 export type VocabWordProjection = VocabWordSelect
 export type VocabWordInclude = TypedInclude<TM, 'VocabWord', 1, UM>
@@ -178,6 +220,48 @@ export type UserDeleteShape = OperationShape<TM, 'User', 'delete', 1, UM>
 export type UserDeleteShapeInput<TCtx = unknown> = ShapeInput<UserDeleteShape, TCtx>
 export type UserDeleteManyShape = OperationShape<TM, 'User', 'deleteMany', 1, UM>
 export type UserDeleteManyShapeInput<TCtx = unknown> = ShapeInput<UserDeleteManyShape, TCtx>
+
+export type PushSubscriptionSelect = TypedProjection<TM, 'PushSubscription', 1, UM>
+export type PushSubscriptionProjection = PushSubscriptionSelect
+export type PushSubscriptionInclude = TypedInclude<TM, 'PushSubscription', 1, UM>
+export type PushSubscriptionCountSelect = TypedCountSelect<TM, 'PushSubscription'>
+export type PushSubscriptionGuardShape = TypedGuardShape<TM, 'PushSubscription', 1, UM>
+export type PushSubscriptionFindManyShape = OperationShape<TM, 'PushSubscription', 'findMany', 1, UM>
+export type PushSubscriptionFindManyShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionFindManyShape, TCtx>
+export type PushSubscriptionFindFirstShape = OperationShape<TM, 'PushSubscription', 'findFirst', 1, UM>
+export type PushSubscriptionFindFirstShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionFindFirstShape, TCtx>
+export type PushSubscriptionFindFirstOrThrowShape = OperationShape<TM, 'PushSubscription', 'findFirstOrThrow', 1, UM>
+export type PushSubscriptionFindFirstOrThrowShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionFindFirstOrThrowShape, TCtx>
+export type PushSubscriptionFindUniqueShape = OperationShape<TM, 'PushSubscription', 'findUnique', 1, UM>
+export type PushSubscriptionFindUniqueShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionFindUniqueShape, TCtx>
+export type PushSubscriptionFindUniqueOrThrowShape = OperationShape<TM, 'PushSubscription', 'findUniqueOrThrow', 1, UM>
+export type PushSubscriptionFindUniqueOrThrowShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionFindUniqueOrThrowShape, TCtx>
+export type PushSubscriptionFindManyPaginatedShape = OperationShape<TM, 'PushSubscription', 'findManyPaginated', 1, UM>
+export type PushSubscriptionFindManyPaginatedShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionFindManyPaginatedShape, TCtx>
+export type PushSubscriptionCountShape = OperationShape<TM, 'PushSubscription', 'count', 1, UM>
+export type PushSubscriptionCountShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionCountShape, TCtx>
+export type PushSubscriptionAggregateShape = OperationShape<TM, 'PushSubscription', 'aggregate', 1, UM>
+export type PushSubscriptionAggregateShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionAggregateShape, TCtx>
+export type PushSubscriptionGroupByShape = OperationShape<TM, 'PushSubscription', 'groupBy', 1, UM>
+export type PushSubscriptionGroupByShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionGroupByShape, TCtx>
+export type PushSubscriptionCreateShape = OperationShape<TM, 'PushSubscription', 'create', 1, UM>
+export type PushSubscriptionCreateShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionCreateShape, TCtx>
+export type PushSubscriptionCreateManyShape = OperationShape<TM, 'PushSubscription', 'createMany', 1, UM>
+export type PushSubscriptionCreateManyShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionCreateManyShape, TCtx>
+export type PushSubscriptionCreateManyAndReturnShape = OperationShape<TM, 'PushSubscription', 'createManyAndReturn', 1, UM>
+export type PushSubscriptionCreateManyAndReturnShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionCreateManyAndReturnShape, TCtx>
+export type PushSubscriptionUpdateShape = OperationShape<TM, 'PushSubscription', 'update', 1, UM>
+export type PushSubscriptionUpdateShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionUpdateShape, TCtx>
+export type PushSubscriptionUpdateManyShape = OperationShape<TM, 'PushSubscription', 'updateMany', 1, UM>
+export type PushSubscriptionUpdateManyShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionUpdateManyShape, TCtx>
+export type PushSubscriptionUpdateManyAndReturnShape = OperationShape<TM, 'PushSubscription', 'updateManyAndReturn', 1, UM>
+export type PushSubscriptionUpdateManyAndReturnShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionUpdateManyAndReturnShape, TCtx>
+export type PushSubscriptionUpsertShape = OperationShape<TM, 'PushSubscription', 'upsert', 1, UM>
+export type PushSubscriptionUpsertShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionUpsertShape, TCtx>
+export type PushSubscriptionDeleteShape = OperationShape<TM, 'PushSubscription', 'delete', 1, UM>
+export type PushSubscriptionDeleteShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionDeleteShape, TCtx>
+export type PushSubscriptionDeleteManyShape = OperationShape<TM, 'PushSubscription', 'deleteMany', 1, UM>
+export type PushSubscriptionDeleteManyShapeInput<TCtx = unknown> = ShapeInput<PushSubscriptionDeleteManyShape, TCtx>
 
 export type MagicLinkTokenSelect = TypedProjection<TM, 'MagicLinkToken', 1, UM>
 export type MagicLinkTokenProjection = MagicLinkTokenSelect

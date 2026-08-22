@@ -4,10 +4,12 @@ import { getEnv, removeTrailingSlash } from "./misc.js";
 const _env = getEnv();
 
 const MODELS = [
+  "Wordlist",
   "VocabWord",
   "ThaiLetter",
   "AdminUser",
   "User",
+  "PushSubscription",
   "MagicLinkToken",
   "PendingSignup",
   "PracticeTrial",

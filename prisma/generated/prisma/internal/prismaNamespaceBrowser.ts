@@ -51,10 +51,12 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
+  Wordlist: 'Wordlist',
   VocabWord: 'VocabWord',
   ThaiLetter: 'ThaiLetter',
   AdminUser: 'AdminUser',
   User: 'User',
+  PushSubscription: 'PushSubscription',
   MagicLinkToken: 'MagicLinkToken',
   PendingSignup: 'PendingSignup',
   PracticeTrial: 'PracticeTrial',
@@ -82,12 +84,29 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
+export const WordlistScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  titleTh: 'titleTh',
+  description: 'description',
+  descriptionTh: 'descriptionTh',
+  ordinal: 'ordinal',
+  isFree: 'isFree',
+  isPublished: 'isPublished',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WordlistScalarFieldEnum = (typeof WordlistScalarFieldEnum)[keyof typeof WordlistScalarFieldEnum]
+
+
 export const VocabWordScalarFieldEnum = {
   id: 'id',
   sourceKey: 'sourceKey',
   sourceOrder: 'sourceOrder',
   sourceName: 'sourceName',
   sourceTitle: 'sourceTitle',
+  wordlistId: 'wordlistId',
   level: 'level',
   unit: 'unit',
   word: 'word',
@@ -106,6 +125,11 @@ export const VocabWordScalarFieldEnum = {
   posUsages: 'posUsages',
   letterBreakdown: 'letterBreakdown',
   notes: 'notes',
+  audioKeyEn: 'audioKeyEn',
+  audioKeyExample: 'audioKeyExample',
+  reviewState: 'reviewState',
+  reviewFlags: 'reviewFlags',
+  reviewedAt: 'reviewedAt',
   status: 'status',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -152,12 +176,31 @@ export const UserScalarFieldEnum = {
   firstName: 'firstName',
   lastName: 'lastName',
   timezone: 'timezone',
+  locale: 'locale',
   weeklyGoalDays: 'weeklyGoalDays',
+  wordlistId: 'wordlistId',
+  reminderOptIn: 'reminderOptIn',
+  reminderHour: 'reminderHour',
+  lastReminderOn: 'lastReminderOn',
+  lastRecapOn: 'lastRecapOn',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const PushSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  endpoint: 'endpoint',
+  p256dh: 'p256dh',
+  auth: 'auth',
+  createdAt: 'createdAt',
+  failedAt: 'failedAt'
+} as const
+
+export type PushSubscriptionScalarFieldEnum = (typeof PushSubscriptionScalarFieldEnum)[keyof typeof PushSubscriptionScalarFieldEnum]
 
 
 export const MagicLinkTokenScalarFieldEnum = {
