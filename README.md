@@ -97,4 +97,4 @@ Never commit `.dev.vars`, API keys, signing secrets, OAuth credentials, or produ
 ## Related project
 
 - [Web application](https://github.com/potatodevsr/vocab-learning-app)
-- [Live product](https://vocab-learning-app.hoshiku1997.workers.dev)
+- [Live product](https://vocab-learning-app.thousandsofraccoons.workers.dev)

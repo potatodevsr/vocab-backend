@@ -12,7 +12,7 @@
       "database_name": "vocab",
       // Created 2026-08-11 with `wrangler d1 create vocab` (region APAC).
       // Local dev (--local) ignores this and uses .wrangler/state.
-      "database_id": "bed5cde7-a095-4787-b27c-82c7d0e74242",
+      "database_id": "c935a7bb-762a-4e5e-8eb6-5637319b6481",
       "migrations_dir": "migrations"
     }
   ],
@@ -61,7 +61,7 @@
     // These two are the real origin: magic-link emails embed FRONTEND_URL, so a localhost
     // value here mails learners a link they cannot open. `pnpm dev` and
     // `e2e/scripts/start-api.sh` override both with --var.
-    "FRONTEND_URL": "https://vocab-learning-app.hoshiku1997.workers.dev",
-    "APP_URL": "https://vocab-learning-app.hoshiku1997.workers.dev"
+    "FRONTEND_URL": "https://vocab-learning-app.thousandsofraccoons.workers.dev",
+    "APP_URL": "https://vocab-learning-app.thousandsofraccoons.workers.dev"
   }
 }

@@ -256,7 +256,7 @@ export const runReminderPass = async (
     now: Date,
     { dryRun }: { dryRun: boolean },
 ): Promise<Mail[]> => {
-    const appUrl = env.APP_URL ?? "https://vocab-learning-app.hoshiku1997.workers.dev";
+    const appUrl = env.APP_URL ?? "https://vocab-learning-app.thousandsofraccoons.workers.dev";
     const candidates = (await prisma.user.findMany({
         where: { reminderOptIn: true },
         select: {
