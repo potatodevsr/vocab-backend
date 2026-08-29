@@ -134,7 +134,16 @@ model VocabWord {
     //
     // "unreviewed" (imported, untouched) -> "flagged" (a heuristic found something worth
     // a human's attention, scripts/flag-thai-quality.mjs) -> "approved" (a human said it
-    // is right). Only "approved" is indexable.
+    // is right).
+    //
+    // **Indexing rule, as implemented:** a row is indexable unless it is `flagged`
+    // (web repo, `lib/review.ts`). This comment used to say "only approved is indexable",
+    // which was the intention and never the behaviour — and could not be, because zero
+    // rows are approved: switching to approved-only would de-index the entire corpus in
+    // one deploy. The staged rule and the fourteen places that would have to change
+    // together are written up in `docs/EDITORIAL-REVIEW.md` §8; until a review operation
+    // exists to approve rows, running the flagger is what removes pages from the index and
+    // nothing adds any.
     reviewState      String             @default("unreviewed")
     // JSON array of the flag codes that fired, e.g. `["glyph-spacing","meaning-dupe"]`.
     // Kept as data rather than a boolean so the review queue can be worked worst-first
@@ -616,6 +625,24 @@ model UserWordProgress {
     lastIncorrectAt DateTime?
     nextReviewAt    DateTime?
     masteredAt      DateTime?
+    // Evidence that this word was recalled across time, which is what
+    // docs/LEARNER-LIFECYCLE.md §2.1 means by "strong": two successful recalls on
+    // different days, at least one of them a recall rather than a recognition.
+    //
+    // `mastery` above stays the SRS scheduling rung and decides nothing about the claim.
+    // The predicate lives in `backend/src/mastery.ts` and reads only these columns, so
+    // the API, the collection meter, the unit gates, the export and the pips cannot
+    // disagree the way `mastery >= 2` and `mastery >= 3` did.
+    //
+    // `lastStrongDay`/`lastRecallDay` are `YYYY-MM-DD` in the fixed Bangkok day used
+    // everywhere else in this codebase (see progress.ts on why the boundary is not
+    // per-learner). They exist so answering the same word twice in one day credits one
+    // day, which is the entire point.
+    strongDays      Int       @default(0)
+    recallDays      Int       @default(0)
+    lastStrongDay   String?
+    lastRecallDay   String?
+    strongAt        DateTime?
     // The PracticeTrial id whose reward is reflected in this row's counters/mastery, if
     // the most recent write to them came from a trial claim. This is the reward's actual
     // idempotency marker (backend/src/practice.ts, applyTrialClaim): the counters and this
@@ -649,6 +676,7 @@ model UserWordProgress {
     @@index([userId, status])
     @@index([userId, nextReviewAt])
     @@index([userId, level, unit])
+    @@index([userId, strongDays])
 }
 
 model UserWordAttempt {

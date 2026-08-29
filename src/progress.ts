@@ -1,6 +1,16 @@
 import { Hono } from "hono";
 
 import type { Bindings, Variables } from "./index.js";
+import {
+    MASTERY_MASTERED,
+    MASTERY_MAX,
+    RECALL_DAYS_REQUIRED,
+    REVIEW_INTERVAL_DAYS,
+    STRONG_DAYS_REQUIRED,
+    isRecallItem,
+    isStrong,
+    learnerDay,
+} from "./mastery.js";
 
 type Env = { Bindings: Bindings; Variables: Variables };
 
@@ -20,12 +30,11 @@ const requireUserId = (c: { get: (k: "userId") => string | undefined }) =>
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** A word counts as mastered at the top of the interval ladder. */
-export const MASTERY_MASTERED = 5;
 
-/** SM-2 lite: correct answers push the next review further out, a lapse resets it. */
+
+/** The ladder, extended past 30 days — `./mastery.js`. */
 const reviewIntervalDays = (mastery: number) =>
-    [1, 1, 3, 7, 14, 30][Math.min(Math.max(mastery, 0), 5)];
+    REVIEW_INTERVAL_DAYS[Math.min(Math.max(mastery, 0), MASTERY_MAX)];
 
 const asStringArray = (value: unknown): string[] =>
     Array.isArray(value)
@@ -185,6 +194,20 @@ const normalize = (value: string) =>
         .replace(/[^\p{L}\p{N}]+/gu, "");
 
 const QUIZ_ANSWER_TYPES = ["meaning-choice", "reverse-choice", "spelling"] as const;
+
+/**
+ * What each legacy quiz question actually asks of the learner, in the mixed session's own
+ * vocabulary (`backend/src/mastery.ts`).
+ *
+ * `meaning-choice` shows the word and four Thai glosses: recognition. `reverse-choice`
+ * shows a gloss and four words — the same shape as the session's `choose-word`, so recall.
+ * `spelling` is typed from nothing: recall.
+ */
+const QUIZ_ITEM_CATEGORY: Record<(typeof QUIZ_ANSWER_TYPES)[number], string> = {
+    "meaning-choice": "choose-meaning",
+    "reverse-choice": "choose-word",
+    spelling: "spelling",
+};
 type QuizAnswerType = (typeof QUIZ_ANSWER_TYPES)[number];
 const isQuizAnswerType = (v: unknown): v is QuizAnswerType =>
     typeof v === "string" && (QUIZ_ANSWER_TYPES as readonly string[]).includes(v);
@@ -222,16 +245,33 @@ const applyQuizWordReward = async (
     unit: number,
     isCorrect: boolean,
     now: Date,
+    questionType: (typeof QUIZ_ANSWER_TYPES)[number],
+    timezone: string | null,
 ): Promise<void> => {
     const isCorrectFlag = isCorrect ? 1 : 0;
     const initialMastery = isCorrect ? 1 : 0;
-    const reviewDates = [1, 1, 3, 7, 14, 30].map((days) => new Date(now.getTime() + days * DAY_MS));
+    const reviewDates = REVIEW_INTERVAL_DAYS.map((days) => new Date(now.getTime() + days * DAY_MS));
+
+    /**
+     * The question's *own* category decides what it proves.
+     *
+     * This used to pass the literal string `"spelling"` to `isRecallItem`, which is always
+     * true — so a `meaning-choice`, which is recognition, credited a recall day. Every quiz
+     * answer looked like production. `QUIZ_ITEM_CATEGORY` maps each of the three legacy
+     * types onto the same categories the mixed session uses, so one policy covers both.
+     *
+     * Same in-SQL, same-day-idempotent shape as `session.ts`; `backend/src/mastery.ts`
+     * explains why the day is computed in the statement rather than read first.
+     */
+    const today = learnerDay(now, timezone);
+    const isRecallFlag = isCorrect && isRecallItem(QUIZ_ITEM_CATEGORY[questionType]) ? 1 : 0;
 
     await prisma.$executeRaw`
         INSERT INTO UserWordProgress
             (id, userId, wordId, level, unit, status, mastery, seenCount, knownCount,
              reviewCount, correctCount, incorrectCount, streak, lastSeenAt, lastCorrectAt,
-             lastIncorrectAt, nextReviewAt, masteredAt, lastQuizId, createdAt, updatedAt)
+             lastIncorrectAt, nextReviewAt, masteredAt, strongDays, recallDays,
+             lastStrongDay, lastRecallDay, lastQuizId, createdAt, updatedAt)
         VALUES
             (${crypto.randomUUID()}, ${userId}, ${wordId}, ${level}, ${unit},
              ${isCorrect ? "known" : "review"}, ${initialMastery}, 1, 0, 0,
@@ -239,12 +279,29 @@ const applyQuizWordReward = async (
              ${isCorrect ? now : null}, ${isCorrect ? null : now},
              ${reviewDates[initialMastery]},
              ${initialMastery >= MASTERY_MASTERED ? now : null},
+             ${isCorrect ? 1 : 0}, ${isRecallFlag},
+             ${isCorrect ? today : null}, ${isRecallFlag === 1 ? today : null},
              ${quizId}, ${now}, ${now})
         ON CONFLICT(userId, wordId) DO UPDATE SET
             status = ${isCorrect ? "known" : "review"},
             mastery = CASE WHEN ${isCorrectFlag} = 1
-                           THEN MIN(mastery + 1, ${MASTERY_MASTERED})
+                           THEN MIN(mastery + 1, ${MASTERY_MAX})
                            ELSE MAX(mastery - 1, 0) END,
+            strongDays = CASE
+                WHEN ${isCorrectFlag} = 1 AND (lastStrongDay IS NULL OR lastStrongDay != ${today})
+                THEN strongDays + 1 ELSE strongDays END,
+            recallDays = CASE
+                WHEN ${isRecallFlag} = 1 AND (lastRecallDay IS NULL OR lastRecallDay != ${today})
+                THEN recallDays + 1 ELSE recallDays END,
+            strongAt = CASE
+                WHEN strongAt IS NULL
+                 AND (CASE WHEN ${isCorrectFlag} = 1 AND (lastStrongDay IS NULL OR lastStrongDay != ${today})
+                           THEN strongDays + 1 ELSE strongDays END) >= ${STRONG_DAYS_REQUIRED}
+                 AND (CASE WHEN ${isRecallFlag} = 1 AND (lastRecallDay IS NULL OR lastRecallDay != ${today})
+                           THEN recallDays + 1 ELSE recallDays END) >= ${RECALL_DAYS_REQUIRED}
+                THEN ${now} ELSE strongAt END,
+            lastStrongDay = CASE WHEN ${isCorrectFlag} = 1 THEN ${today} ELSE lastStrongDay END,
+            lastRecallDay = CASE WHEN ${isRecallFlag} = 1 THEN ${today} ELSE lastRecallDay END,
             seenCount = seenCount + 1,
             correctCount = correctCount + ${isCorrect ? 1 : 0},
             incorrectCount = incorrectCount + ${isCorrect ? 0 : 1},
@@ -254,18 +311,22 @@ const applyQuizWordReward = async (
             lastIncorrectAt = CASE WHEN ${isCorrectFlag} = 1 THEN lastIncorrectAt ELSE ${now} END,
             nextReviewAt = CASE
                 (CASE WHEN ${isCorrectFlag} = 1
-                      THEN MIN(mastery + 1, ${MASTERY_MASTERED})
+                      THEN MIN(mastery + 1, ${MASTERY_MAX})
                       ELSE MAX(mastery - 1, 0) END)
                 WHEN 0 THEN ${reviewDates[0]}
                 WHEN 1 THEN ${reviewDates[1]}
                 WHEN 2 THEN ${reviewDates[2]}
                 WHEN 3 THEN ${reviewDates[3]}
                 WHEN 4 THEN ${reviewDates[4]}
-                ELSE ${reviewDates[5]}
+                WHEN 5 THEN ${reviewDates[5]}
+                WHEN 6 THEN ${reviewDates[6]}
+                WHEN 7 THEN ${reviewDates[7]}
+                ELSE ${reviewDates[8]}
             END,
             masteredAt = CASE
-                WHEN (CASE WHEN ${isCorrectFlag} = 1
-                           THEN MIN(mastery + 1, ${MASTERY_MASTERED})
+                WHEN masteredAt IS NULL
+                 AND (CASE WHEN ${isCorrectFlag} = 1
+                           THEN MIN(mastery + 1, ${MASTERY_MAX})
                            ELSE MAX(mastery - 1, 0) END) >= ${MASTERY_MASTERED}
                 THEN ${now} ELSE masteredAt END,
             lastQuizId = ${quizId},
@@ -341,7 +402,9 @@ progress.post("/progress/quiz", async (c) => {
         const word = wordsById.get(a.wordId)!;
         const correctAnswer = a.type === "meaning-choice" ? word.meaningTh : word.displayWord;
         const isCorrect = normalize(a.answer) === normalize(correctAnswer);
-        return { wordId: a.wordId, isCorrect, answer: a.answer, correctAnswer };
+        // `type` travels with the graded answer: the reward needs it to know whether the
+        // learner recognised or recalled (`QUIZ_ITEM_CATEGORY`).
+        return { wordId: a.wordId, type: a.type, isCorrect, answer: a.answer, correctAnswer };
     });
 
     // The score is computed here, never read from the request.
@@ -372,13 +435,23 @@ progress.post("/progress/quiz", async (c) => {
         });
     }
 
+    // The learner's own day boundary, read once for the whole quiz (backend/src/mastery.ts).
+    const quizLearner = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { timezone: true },
+    });
+    const quizTimezone = quizLearner?.timezone ?? null;
+
     // Runs whether this is the first call or a retry: every write below is an atomic,
     // idempotent, per-word UPSERT (`applyQuizWordReward`), so a retry that finds
     // `existing` already true still finishes healing any word this quiz hadn't reached
     // yet — the bug this replaces was returning `duplicate: true` here immediately and
     // leaving those words' rewards permanently unapplied.
     for (const answer of answers) {
-        await applyQuizWordReward(prisma, userId, answer.wordId, quizId, level, unit, answer.isCorrect, now);
+        await applyQuizWordReward(
+            prisma, userId, answer.wordId, quizId, level, unit, answer.isCorrect, now,
+            answer.type, quizTimezone,
+        );
 
         // Best-effort audit row, healed independently of the reward it describes — same
         // split as session.ts's healSessionAttemptLedger and practice.ts's
@@ -440,6 +513,40 @@ progress.get("/progress/words", async (c) => {
  * The mistakes bank: words this learner has got wrong or flagged for review, worst first.
  * `MASTERY_MASTERED` is the ceiling, so anything below it can still come back.
  */
+/**
+ * Test-only: make the caller's own progress rows overdue.
+ *
+ * The suite cannot otherwise produce an overdue word. Scheduling is server-side and the
+ * shortest interval is a day, so a review regression written against a fresh learner
+ * either finds nothing due — and passes vacuously — or waits a day. The one that shipped
+ * did the former: it scheduled words for tomorrow, asked for a review immediately, and
+ * explicitly passed when the review came back empty. It could never have caught the defect
+ * it was written for.
+ *
+ * Gated exactly like `POST /reminders/run`: `MAGIC_LINK_DEV_MODE` is set by the e2e
+ * launcher and by nothing else, so this route does not exist in production. It is also
+ * scoped to the caller — it can only backdate rows it already owns, so even if the flag
+ * were ever set by mistake it grants a learner nothing they could not do by waiting.
+ */
+progress.post("/progress/test/backdate", async (c) => {
+    if (c.env.MAGIC_LINK_DEV_MODE !== "true") return c.json({ message: "Not found" }, 404);
+
+    const userId = requireUserId(c);
+    if (!userId) return c.json({ message: "Unauthorized" }, 401);
+
+    const body = (await c.req.json().catch(() => ({}))) as { days?: unknown };
+    const days = typeof body.days === "number" && body.days > 0 ? Math.trunc(body.days) : 1;
+    const when = new Date(Date.now() - days * DAY_MS);
+
+    const updated = await c.get("prisma").$executeRaw`
+        UPDATE UserWordProgress
+        SET nextReviewAt = ${when}, lastSeenAt = ${when}
+        WHERE userId = ${userId} AND nextReviewAt IS NOT NULL
+    `;
+
+    return c.json({ ok: true, updated });
+});
+
 progress.get("/progress/mistakes", async (c) => {
     const userId = requireUserId(c);
     if (!userId) return c.json({ message: "Unauthorized" }, 401);
@@ -461,6 +568,8 @@ progress.get("/progress/mistakes", async (c) => {
             unit: true,
             status: true,
             mastery: true,
+            strongDays: true,
+            recallDays: true,
             incorrectCount: true,
             word: {
                 select: {
@@ -474,7 +583,13 @@ progress.get("/progress/mistakes", async (c) => {
         },
     });
 
-    return c.json({ words: rows, total: rows.length });
+    // `strong` is decided here, once, and sent as a verdict. The pips used to re-derive it
+    // in the browser from `mastery >= 3` while the collection meter counted `mastery >= 2`,
+    // so the same word could be strong in one place on the screen and not in another.
+    return c.json({
+        words: rows.map((row) => ({ ...row, strong: isStrong(row) })),
+        total: rows.length,
+    });
 });
 
 /** Everything the profile page needs, in one round trip. */
@@ -560,9 +675,19 @@ progress.get("/progress/summary", async (c) => {
 const DEFAULT_COURSE_LEVEL = "A1";
 const ALL_LEVELS = ["A1", "A2", "B1", "B2"];
 
-/** §2.1 "strong": two successful recalls on different days. Each correct answer moves the
- *  ladder by one, so two-on-different-days is well approximated by reaching rung 2. */
-const STRONG_MASTERY = 2;
+/**
+ * §2.1 "strong": two successful recalls on different days.
+ *
+ * It used to be approximated by `mastery >= 2` — the ladder rung — with the UI drawing the
+ * same band at 3. Neither was the promise, and the collection meter counted words answered
+ * twice in one sitting. The evidence columns and the one predicate now live in
+ * `./mastery.js`; this is the same test expressed as a Prisma filter so a count stays a
+ * count rather than becoming a full read.
+ */
+const STRONG_WHERE = {
+    strongDays: { gte: STRONG_DAYS_REQUIRED },
+    recallDays: { gte: RECALL_DAYS_REQUIRED },
+} as const;
 
 /**
  * §9 decision 10, resolved: the week starts **Sunday**, in Thailand local time — the
@@ -869,7 +994,7 @@ const collectionMeter = async (prisma: Variables["prisma"], userId: string) => {
             const [total, strong, mastered] = await Promise.all([
                 prisma.vocabWord.count({ where: { level, status: "published" } }),
                 prisma.userWordProgress.count({
-                    where: { userId, level, mastery: { gte: STRONG_MASTERY } },
+                    where: { userId, level, ...STRONG_WHERE },
                 }),
                 prisma.userWordProgress.count({
                     where: { userId, level, mastery: { gte: MASTERY_MASTERED } },
@@ -909,6 +1034,12 @@ const EXPORT_WORD_COLUMNS = [
     "level",
     "unit",
     "mastery",
+    // Why the word is called strong, not just that it is: the two evidence counters and
+    // the moment the predicate first became true.
+    "strong",
+    "strongDays",
+    "recallDays",
+    "strongAt",
     "lastSeenAt",
     "nextReviewAt",
     "correctCount",
@@ -986,6 +1117,9 @@ progress.get("/progress/export", async (c) => {
                 level: true,
                 unit: true,
                 mastery: true,
+                strongDays: true,
+                recallDays: true,
+                strongAt: true,
                 lastSeenAt: true,
                 nextReviewAt: true,
                 correctCount: true,
@@ -1005,6 +1139,12 @@ progress.get("/progress/export", async (c) => {
             level: r.level,
             unit: r.unit,
             mastery: r.mastery,
+            // The evidence, exported alongside the rung so a learner's own copy of their
+            // data says why a word is called strong rather than only that it is.
+            strongDays: r.strongDays,
+            recallDays: r.recallDays,
+            strong: isStrong(r),
+            strongAt: r.strongAt ? r.strongAt.toISOString() : null,
             lastSeenAt: r.lastSeenAt ? r.lastSeenAt.toISOString() : null,
             nextReviewAt: r.nextReviewAt ? r.nextReviewAt.toISOString() : null,
             correctCount: r.correctCount,
@@ -1020,7 +1160,7 @@ progress.get("/progress/export", async (c) => {
 
     const summary = {
         total: words.length,
-        strong: words.filter((w) => w.mastery >= STRONG_MASTERY).length,
+        strong: words.filter((w) => isStrong(w)).length,
         mastered: words.filter((w) => w.mastery >= MASTERY_MASTERED).length,
     };
 

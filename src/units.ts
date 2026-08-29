@@ -2,6 +2,15 @@ import { Hono } from "hono";
 
 import type { Bindings, Variables } from "./index.js";
 import { DEFAULT_WORDLIST } from "./wordlists.js";
+/**
+ * The unit list counts strong words with the same predicate as everything else.
+ *
+ * It was the last `mastery >= 3` in the codebase — a fourth threshold for one idea,
+ * sitting behind the unit badges while the meter above them counted something different.
+ * Expressed as SQL rather than `isStrong` because this is a `groupBy` over one learner's
+ * whole level; the two must be read together (`backend/src/mastery.ts`).
+ */
+import { RECALL_DAYS_REQUIRED, STRONG_DAYS_REQUIRED } from "./mastery.js";
 
 type Env = { Bindings: Bindings; Variables: Variables };
 
@@ -65,7 +74,9 @@ units.get("/progress/units", async (c) => {
             FROM UserWordProgress p
             JOIN VocabWord w ON w.id = p.wordId
             WHERE p.userId = ${userId} AND w.level = ${level}
-              AND w.wordlistId = ${wordlistId} AND p.mastery >= 3
+              AND w.wordlistId = ${wordlistId}
+              AND p.recallDays >= ${RECALL_DAYS_REQUIRED}
+              AND p.strongDays >= ${STRONG_DAYS_REQUIRED}
             GROUP BY w.unit
         `,
         prisma.completionLedger.findMany({

@@ -201,7 +201,7 @@ const PRACTICE_OPENAPI = {
                                 properties: {
                                     level: { type: "string", enum: ["A1", "A2", "B1", "B2"] },
                                     unit: { type: "integer", minimum: 1 },
-                                    mode: { type: "string", enum: ["normal", "comeback", "review"] },
+                                    mode: { type: "string", enum: ["normal", "comeback", "review", "mistakes"] },
                                 },
                                 additionalProperties: false,
                             },
@@ -420,6 +420,23 @@ const SESSION_OPENAPI = {
                 },
             },
         },
+        "/progress/mistakes": {
+            get: {
+                operationId: "getMistakes",
+                responses: {
+                    "200": {
+                        description:
+                            "The caller's own mistake bank: words they have got wrong, worst first, joined to the word so the list and the count can never disagree",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/MistakeBank" },
+                            },
+                        },
+                    },
+                    "401": { description: "Not signed in" },
+                },
+            },
+        },
         "/progress/export": {
             get: {
                 operationId: "exportProgress",
@@ -481,7 +498,7 @@ const SESSION_OPENAPI = {
                     sessionId: { type: "string", nullable: true },
                     level: { type: "string" },
                     unit: { type: "integer", nullable: true },
-                    mode: { type: "string", enum: ["normal", "comeback", "review"] },
+                    mode: { type: "string", enum: ["normal", "comeback", "review", "mistakes"] },
                     itemCount: { type: "integer" },
                     dueCount: { type: "integer" },
                     items: { type: "array", items: { $ref: "#/components/schemas/SessionItem" } },
@@ -598,14 +615,69 @@ const SESSION_OPENAPI = {
                 },
                 additionalProperties: false,
             },
+            MistakeWord: {
+                type: "object",
+                required: [
+                    "wordId", "level", "unit", "status", "mastery",
+                    "strongDays", "recallDays", "strong", "incorrectCount", "word",
+                ],
+                properties: {
+                    wordId: { type: "string" },
+                    level: { type: "string" },
+                    unit: { type: "integer", nullable: true },
+                    status: { type: "string" },
+                    mastery: { type: "integer" },
+                    strongDays: { type: "integer" },
+                    recallDays: { type: "integer" },
+                    // The server's verdict, so the pips render a decision rather than
+                    // re-deriving one from a rung and disagreeing with the meter above them.
+                    strong: { type: "boolean" },
+                    incorrectCount: { type: "integer" },
+                    word: {
+                        type: "object",
+                        required: ["displayWord", "partOfSpeech", "meaningTh", "pronunciationTh", "slug"],
+                        properties: {
+                            displayWord: { type: "string" },
+                            partOfSpeech: { type: "string" },
+                            meaningTh: { type: "string" },
+                            pronunciationTh: { type: "string" },
+                            slug: { type: "string" },
+                        },
+                        additionalProperties: false,
+                    },
+                },
+                additionalProperties: false,
+            },
+            MistakeBank: {
+                type: "object",
+                required: ["words", "total"],
+                properties: {
+                    words: { type: "array", items: { $ref: "#/components/schemas/MistakeWord" } },
+                    total: { type: "integer" },
+                },
+                additionalProperties: false,
+            },
             ProgressExportWord: {
                 type: "object",
-                required: ["displayWord", "level", "unit", "mastery", "lastSeenAt", "nextReviewAt", "correctCount", "incorrectCount"],
+                required: [
+                    "displayWord", "level", "unit", "mastery",
+                    "strong", "strongDays", "recallDays", "strongAt",
+                    "lastSeenAt", "nextReviewAt", "correctCount", "incorrectCount",
+                ],
                 properties: {
                     displayWord: { type: "string" },
                     level: { type: "string" },
                     unit: { type: "integer", nullable: true },
+                    // The SRS rung. Kept because it explains the schedule, but it is no
+                    // longer what decides whether a word counts as learned.
                     mastery: { type: "integer" },
+                    // The claim, and the evidence behind it (backend/src/mastery.ts):
+                    // recalled on `strongDays` distinct days, `recallDays` of which asked
+                    // the learner to produce rather than recognise.
+                    strong: { type: "boolean" },
+                    strongDays: { type: "integer" },
+                    recallDays: { type: "integer" },
+                    strongAt: { type: "string", nullable: true },
                     lastSeenAt: { type: "string", nullable: true },
                     nextReviewAt: { type: "string", nullable: true },
                     correctCount: { type: "integer" },

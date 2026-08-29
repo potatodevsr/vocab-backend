@@ -1,7 +1,18 @@
 import { Hono, type Context } from "hono";
 
 import type { Bindings, Variables } from "./index.js";
-import { MASTERY_MASTERED } from "./progress.js";
+import {
+    ITEM_TYPE_SCHEDULE,
+    MASTERY_MASTERED,
+    MASTERY_MAX,
+    RECALL_DAYS_REQUIRED,
+    RESERVED_NEW_SLOTS,
+    REVIEW_INTERVAL_DAYS,
+    STRONG_DAYS_REQUIRED,
+    isRecallItem,
+    learnerDay,
+    gradedSlotCount,
+} from "./mastery.js";
 import { DEFAULT_WORDLIST } from "./wordlists.js";
 
 type Env = { Bindings: Bindings; Variables: Variables };
@@ -35,10 +46,21 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  */
 const COMEBACK_MAX = 5;
 
-/** A word is "previously strong" — safe to lead a comeback with — at mastery 3+ (§4.0). */
-const COMEBACK_STRONG_MASTERY = 3;
+/**
+ * A word is "previously strong" — safe to lead a comeback with — when it meets the
+ * product's one definition of strong (`backend/src/mastery.ts`), not a rung of its own.
+ *
+ * It was `mastery >= 3`, which was a third threshold for the same idea: the API counted
+ * the collection at 2 and the pips drew their band at 3. A comeback is meant to open with
+ * words the learner can win, and "recalled on two different days" is a better answer to
+ * that than any rung.
+ */
+const COMEBACK_STRONG_WHERE = {
+    strongDays: { gte: STRONG_DAYS_REQUIRED },
+    recallDays: { gte: RECALL_DAYS_REQUIRED },
+} as const;
 
-const SESSION_MODES = ["normal", "comeback", "review"] as const;
+const SESSION_MODES = ["normal", "comeback", "review", "mistakes"] as const;
 export type SessionMode = (typeof SESSION_MODES)[number];
 
 /**
@@ -47,30 +69,17 @@ export type SessionMode = (typeof SESSION_MODES)[number];
  * eight-item session, so an old client that sends no mode keeps working unchanged.
  */
 const parseMode = (value: unknown): SessionMode =>
-    value === "comeback" || value === "review" ? value : "normal";
-
-/** recognition(0) -> recall(choose-word) -> spelling -> due recall -> warm-ups -> revisit. */
-const ITEM_TYPE_SCHEDULE = [
-    "choose-meaning",
-    "choose-meaning",
-    "choose-word",
-    "spelling",
-    // Listening, once the corpus has audio. A word with no clip falls back to
-    // `choose-meaning` in `buildItems`, so this slot is a silent no-op until the
-    // generation script has reached that word rather than a broken item.
-    "listen-choose",
-    "match-pairs",
-    "speed-round",
-    // The word in a sentence, with itself removed. Recognition and recall both ask what a
-    // word means on its own; this asks where it belongs — which is the thing a learner
-    // actually has to do to use it. Falls back to `choose-meaning` for a word with no
-    // example sentence, exactly as the listening slot does with no clip.
-    "cloze",
-] as const;
+    value === "comeback" || value === "review" || value === "mistakes" ? value : "normal";
 
 export type SessionItemType = (typeof ITEM_TYPE_SCHEDULE)[number];
 
-/** Item types that feed the SRS ladder. match-pairs/speed-round are warm-up only (§4.1). */
+/**
+ * Item types that feed the SRS ladder. match-pairs/speed-round are warm-up only (§4.1).
+ *
+ * Declared above `GRADED_SLOT_COUNT`, not below it: a `const` arrow is not hoisted, and
+ * `GRADED_SLOT_COUNT`'s initializer runs at import. With the two the other way round the
+ * Worker died at boot — `TypeError: isGradedForMastery is not a function`.
+ */
 const isGradedForMastery = (type: string) =>
     type === "choose-meaning" ||
     type === "choose-word" ||
@@ -79,6 +88,20 @@ const isGradedForMastery = (type: string) =>
     // Listening is recall, not a warm-up: the learner is given nothing but the sound and
     // has to produce the meaning, which is at least as strong a signal as reading the word.
     type === "listen-choose";
+
+/**
+ * How many of the eight slots can actually clear a due word.
+ *
+ * `match-pairs` and `speed-round` are warm-ups: `applyWarmupWordReward` leaves `mastery`,
+ * `streak` and `nextReviewAt` untouched, so a due word placed on one is answered and still
+ * due. Every selector caps its due set at this number.
+ *
+ * The cap alone is not the guarantee — the *ordering* above is. A cap of six is only safe
+ * because the six graded slots are the first six, so a session of any length n has
+ * `min(n, 6)` of them and a due set of at most six always lands on one. That invariant is
+ * asserted in `e2e/unit/session-schedule.spec.ts` rather than left to a comment.
+ */
+const GRADED_SLOT_COUNT = gradedSlotCount(ITEM_TYPE_SCHEDULE.length);
 
 const mulberry32 = (seed: number) => () => {
     seed |= 0;
@@ -206,6 +229,65 @@ const optionFace = (word: PoolWord | undefined, direction: "meaning" | "word") =
         : { displayWord: word.displayWord, partOfSpeech: word.partOfSpeech });
 
 /**
+ * Places due words on graded slots and everything else on what is left.
+ *
+ * Order-preserving within each group, so selection stays deterministic: the same inputs
+ * produce the same session, which is what lets `/answer` and a resumed `/start` re-derive
+ * an identical item list without storing one.
+ */
+const assignSlots = (
+    targetIds: string[],
+    dueWordIds: string[],
+    itemTypes: readonly string[],
+): string[] => {
+    const due = new Set(dueWordIds);
+    const dueQueue = targetIds.filter((id) => due.has(id));
+    const restQueue = targetIds.filter((id) => !due.has(id));
+
+    const graded: number[] = [];
+    const warmUp: number[] = [];
+
+    itemTypes.forEach((type, index) => {
+        (isGradedForMastery(type) ? graded : warmUp).push(index);
+    });
+
+    const slots: string[] = new Array(targetIds.length);
+
+    /**
+     * Due words take graded slots, and **only** graded slots.
+     *
+     * `applyWarmupWordReward` deliberately leaves `mastery`, `streak` and `nextReviewAt`
+     * alone, so a due word in a warm-up slot is spent: answered, and still due tomorrow.
+     * An earlier version let the overflow fall through into the warm-ups "which is still
+     * better than the reverse" — it is not. A review session picking eight due words put
+     * two of them somewhere that could never clear them, every time, and the learner had
+     * no way to see it. The selectors now cap the due set at the graded-slot count
+     * (`GRADED_SLOT_COUNT`), which is what makes the guarantee hold; this loop places
+     * them and never reaches past the graded slots to do it.
+     */
+    for (const index of graded) {
+        const id = dueQueue.shift();
+        if (id === undefined) break;
+        slots[index] = id;
+    }
+
+    // Unreachable while the selectors cap at `GRADED_SLOT_COUNT`. If one ever stops, the
+    // extras are treated as ordinary words rather than silently prioritised into a slot
+    // that cannot clear them.
+    restQueue.unshift(...dueQueue.splice(0, dueQueue.length));
+
+    for (let index = 0; index < slots.length; index += 1) {
+        if (slots[index] === undefined) {
+            const id = restQueue.shift();
+            if (id !== undefined) slots[index] = id;
+        }
+    }
+
+    // Anything left over (more words than slots cannot happen, but be total anyway).
+    return slots.map((id, index) => id ?? targetIds[index]);
+};
+
+/**
  * Picks up to `SESSION_ITEM_COUNT` target words, due reviews first
  * (LEARNER-LIFECYCLE.md §3.6 "Due words or recent mistakes" is item one on the Today
  * card), then unseen words from the level/unit, then any remaining published word in the
@@ -220,17 +302,53 @@ const pickSessionWords = async (
 ): Promise<{ wordIds: string[]; dueWordIds: string[] }> => {
     const now = new Date();
 
-    const due = await prisma.userWordProgress.findMany({
+    /**
+     * How many unseen words are still waiting in the scope this session is for.
+     *
+     * Asked first, because it decides how many slots the due queue may take. This is the
+     * fix for the starvation the audit found: selection was due-first with `take: 8`, so
+     * once a level produced eight due words a day the learner never saw a new one again —
+     * silently, with no message and no way to ask for one. Reviews still come first, they
+     * just no longer take every seat.
+     */
+    const unseenCount = await prisma.vocabWord.count({
         where: {
-            userId,
+            status: "published",
+            meaningTh: { not: "" },
             level,
-            nextReviewAt: { lte: now },
-            word: { status: "published", wordlistId },
+            wordlistId,
+            ...(unit !== null ? { unit } : {}),
+            wordProgresses: { none: { userId } },
         },
-        orderBy: { nextReviewAt: "asc" },
-        take: SESSION_ITEM_COUNT,
-        select: { wordId: true },
     });
+
+    const reserved = Math.min(unseenCount, RESERVED_NEW_SLOTS);
+    // Never more due words than there are slots that can clear them.
+    const dueBudget = Math.min(Math.max(SESSION_ITEM_COUNT - reserved, 0), GRADED_SLOT_COUNT);
+
+    /**
+     * Due selection follows the session's own scope.
+     *
+     * A learner who opens unit 4 is asking to study unit 4. Pulling their whole level's
+     * backlog into that session replaced the thing they asked for with something else and
+     * called it the same lesson. Unit-scoped due words come first; the level-wide backlog
+     * is still reachable, deliberately, through `mode=review`.
+     */
+    const dueScope = {
+        userId,
+        level,
+        nextReviewAt: { lte: now },
+        word: { status: "published", wordlistId },
+    } as const;
+
+    const due = dueBudget
+        ? await prisma.userWordProgress.findMany({
+              where: unit !== null ? { ...dueScope, unit } : dueScope,
+              orderBy: { nextReviewAt: "asc" },
+              take: dueBudget,
+              select: { wordId: true },
+          })
+        : [];
 
     const dueWordIds = due.map((d) => d.wordId);
     const chosen = new Set(dueWordIds);
@@ -255,6 +373,28 @@ const pickSessionWords = async (
         }
     }
 
+    /**
+     * Anything still short is filled from the wider due queue — a unit with nothing new
+     * left should not hand back a three-item session when the level has reviews waiting.
+     */
+    if (chosen.size < SESSION_ITEM_COUNT) {
+        const widerDue = await prisma.userWordProgress.findMany({
+            where: dueScope,
+            orderBy: { nextReviewAt: "asc" },
+            take: SESSION_ITEM_COUNT,
+            select: { wordId: true },
+        });
+
+        for (const row of widerDue) {
+            if (chosen.size >= SESSION_ITEM_COUNT) break;
+            // Same cap: a top-up may not push the due set past the graded slots either.
+            if (dueWordIds.length >= GRADED_SLOT_COUNT) break;
+            if (chosen.has(row.wordId)) continue;
+            chosen.add(row.wordId);
+            dueWordIds.push(row.wordId);
+        }
+    }
+
     if (chosen.size < SESSION_ITEM_COUNT) {
         const any = await prisma.vocabWord.findMany({
             where: { status: "published", meaningTh: { not: "" }, level, wordlistId },
@@ -272,10 +412,65 @@ const pickSessionWords = async (
 };
 
 /**
+ * The mistake bank, as a session.
+ *
+ * `/review` used to list a learner's wrong answers and then send "practise these" to
+ * `/quiz?level=…&unit=…` for the unit the *first* mistake happened to belong to — so the
+ * button under a list of twelve words across four units practised twenty other words and
+ * possibly none of the twelve.
+ *
+ * The word ids stay server-side, exactly like every other selection here: the client asks
+ * for `mode=mistakes` and the server decides which words that means. A client that could
+ * name its own words could choose the ones it already knows.
+ *
+ * Deliberately not scoped to a level or a unit — a mistake is a mistake wherever it
+ * happened, and a learner who has moved to A2 still needs the A1 word they keep missing.
+ */
+const pickMistakeWords = async (
+    prisma: Variables["prisma"],
+    userId: string,
+    wordlistId: string,
+): Promise<{ wordIds: string[]; dueWordIds: string[] }> => {
+    const now = new Date();
+
+    const rows = await prisma.userWordProgress.findMany({
+        where: {
+            userId,
+            OR: [{ status: "review" }, { incorrectCount: { gt: 0 } }],
+            word: { status: "published", meaningTh: { not: "" }, wordlistId },
+        },
+        // Worst first, then least recently seen: the words costing the learner the most.
+        orderBy: [{ incorrectCount: "desc" }, { lastSeenAt: "asc" }],
+        take: SESSION_ITEM_COUNT,
+        select: { wordId: true, nextReviewAt: true },
+    });
+
+    const isDue = (row: { nextReviewAt: Date | null }) =>
+        row.nextReviewAt !== null && row.nextReviewAt <= now;
+
+    /**
+     * If more of the set is due than there are slots that can clear it, the session gets
+     * shorter rather than parking overdue words on warm-up slots that leave them due —
+     * the same trade `pickReviewWords` makes, for the same reason.
+     */
+    const selected =
+        rows.filter(isDue).length > GRADED_SLOT_COUNT
+            ? rows.slice(0, GRADED_SLOT_COUNT)
+            : rows;
+
+    return {
+        wordIds: selected.map((row) => row.wordId),
+        // A mistake that is also due is reported as due, so the Today card's count and this
+        // session agree about what was cleared.
+        dueWordIds: selected.filter(isDue).map((row) => row.wordId),
+    };
+};
+
+/**
  * Comeback selection for a returning learner (LEARNER-LIFECYCLE.md §2): up to
  * `COMEBACK_MAX`, and at least three whenever the level has that many ready words, so the
  * set is never so short it isn't a session. Priority is confidence-first — words the
- * learner was already strong on (`mastery >= COMEBACK_STRONG_MASTERY`), then anything now
+ * learner was already strong on (the shared predicate), then anything now
  * due, then a safe published fallback so the minimum is always reachable. Every target is a
  * real published word, and `itemTypes`/pool derivation are identical to the normal path, so
  * `/progress/session/answer` grades a comeback session with no special-casing.
@@ -292,7 +487,7 @@ const pickComebackWords = async (
         where: {
             userId,
             level,
-            mastery: { gte: COMEBACK_STRONG_MASTERY },
+            ...COMEBACK_STRONG_WHERE,
             word: { status: "published" },
         },
         orderBy: { lastSeenAt: "desc" },
@@ -342,9 +537,14 @@ const pickComebackWords = async (
 
 /**
  * Review selection (LEARNER-LIFECYCLE.md §3.6): only words whose SRS review is actually
- * due (`nextReviewAt <= now`), zero to eight of them. Unlike normal/comeback there is no
- * fallback — a review with nothing due is genuinely empty, and the caller returns a 200
- * empty result rather than minting a session over unrelated words.
+ * due (`nextReviewAt <= now`). Unlike normal/comeback there is no fallback — a review with
+ * nothing due is genuinely empty, and the caller returns a 200 empty result rather than
+ * minting a session over unrelated words.
+ *
+ * **At most `GRADED_SLOT_COUNT` of them**, not eight. It used to take eight, and the two
+ * that landed on the warm-up slots were answered and left exactly as due as before — every
+ * single full review session burned two overdue words. A shorter session that clears
+ * everything it shows beats a full one that cannot.
  */
 const pickReviewWords = async (
     prisma: Variables["prisma"],
@@ -361,7 +561,7 @@ const pickReviewWords = async (
             word: { status: "published", wordlistId },
         },
         orderBy: { nextReviewAt: "asc" },
-        take: SESSION_ITEM_COUNT,
+        take: GRADED_SLOT_COUNT,
         select: { wordId: true },
     });
     const wordIds = due.map((d) => d.wordId);
@@ -373,6 +573,25 @@ export const session = new Hono<Env>();
 /** Re-derives the served item list from a session record's stored fields — used both for
  *  a freshly created session and for resuming an already-open one, so both return the
  *  exact same shape from the exact same logic. */
+/**
+ * What an item *actually* asks, once the corpus has had its say.
+ *
+ * A listening item is only a listening item if there is a clip; a cloze is only a cloze if
+ * the sentence yields a usable blank. Both degrade to `choose-meaning`, which is
+ * recognition — and the reward path used to read the *scheduled* type, so a degraded
+ * listening slot credited a recall day for a question the learner answered by recognising
+ * a gloss. That is the difference between the product's central claim being true and
+ * looking true.
+ *
+ * Called once at session creation; the effective types are what gets stored, so
+ * `buildItems`, `/answer` and the reward all read the same answer without re-deriving it.
+ */
+const effectiveItemType = (scheduled: string, word: PoolWord | undefined): string => {
+    if (scheduled === "listen-choose" && !word?.audioKeyEn) return "choose-meaning";
+    if (scheduled === "cloze" && !clozeFrom(word)) return "choose-meaning";
+    return scheduled;
+};
+
 const buildItems = (
     sessionId: string,
     targetIds: string[],
@@ -449,9 +668,10 @@ session.post("/progress/session/start", async (c) => {
         .catch(() => ({}));
     const level = typeof body.level === "string" ? body.level : "A1";
     const mode = parseMode(body.mode);
-    // Review is level-wide ("everything due right now"), never scoped to one unit; normal
-    // and comeback keep the requested unit (or null) as their scope.
-    const unit = mode === "review" ? null : parseUnit(body.unit);
+    // Review is level-wide ("everything due right now") and mistakes is level- *and*
+    // course-wide ("everything you keep getting wrong"), so neither is scoped to a unit;
+    // normal and comeback keep the requested unit (or null) as their scope.
+    const unit = mode === "review" || mode === "mistakes" ? null : parseUnit(body.unit);
 
     const prisma = c.get("prisma");
 
@@ -534,12 +754,15 @@ session.post("/progress/session/start", async (c) => {
             ? await pickComebackWords(prisma, userId, level, wordlistId)
             : mode === "review"
               ? await pickReviewWords(prisma, userId, level, wordlistId)
-              : await pickSessionWords(prisma, userId, level, unit, wordlistId);
+              : mode === "mistakes"
+                ? await pickMistakeWords(prisma, userId, wordlistId)
+                : await pickSessionWords(prisma, userId, level, unit, wordlistId);
 
-    // A review with nothing due is a valid, empty result — not an error and not a session.
-    // The client is told there is nothing to review (sessionId null, no items) and no open
-    // session is created, so the learner's next "start" is free to be a normal one.
-    if (mode === "review" && targetIds.length === 0) {
+    // A review with nothing due, or a mistake session with no mistakes left, is a valid
+    // empty result — not an error and not a session. The client is told there is nothing
+    // to do (sessionId null, no items) and no open session is created, so the learner's
+    // next "start" is free to be a normal one.
+    if ((mode === "review" || mode === "mistakes") && targetIds.length === 0) {
         return c.json({
             sessionId: null,
             level,
@@ -574,7 +797,29 @@ session.post("/progress/session/start", async (c) => {
     }));
 
     const sessionId = crypto.randomUUID();
-    const itemTypes = ITEM_TYPE_SCHEDULE.slice(0, targetIds.length);
+    const scheduledTypes = ITEM_TYPE_SCHEDULE.slice(0, targetIds.length);
+
+    /**
+     * A due word must land on a slot that can clear it.
+     *
+     * `match-pairs` and `speed-round` are warm-ups: `applyWarmupWordReward` deliberately
+     * leaves `mastery`, `streak` and `nextReviewAt` alone (§4.1, "never as proof of
+     * mastery"). A due word placed in one of those slots is therefore *spent* — it fills a
+     * seat, the learner answers it, and it is still due tomorrow. With the old due-first
+     * selection a saturated learner could meet the same overdue word in a warm-up slot day
+     * after day and never clear it.
+     *
+     * Reordering rather than rescheduling: the schedule's teaching shape (recognition,
+     * then recall, then spelling, warm-ups in the middle) is deliberate and stays exactly
+     * as authored. Only *which word* sits on each slot changes.
+     */
+    const orderedTargetIds = assignSlots(targetIds, dueWordIds, scheduledTypes);
+
+    // Resolved after the words are placed, because whether a slot can be a listening or
+    // cloze item depends on which word landed on it.
+    const itemTypes = scheduledTypes.map((scheduled, index) =>
+        effectiveItemType(scheduled, wordsById.get(orderedTargetIds[index])),
+    );
 
     // A concurrent double-tap of "start" can race here: both requests pass the
     // `openSession` check above (neither has committed yet) and both attempt to create a
@@ -588,7 +833,7 @@ session.post("/progress/session/start", async (c) => {
                 level,
                 unit,
                 mode,
-                wordIds: JSON.stringify(targetIds),
+                wordIds: JSON.stringify(orderedTargetIds),
                 itemTypes: JSON.stringify(itemTypes),
                 poolIds: JSON.stringify(poolEntries),
                 dueWordIds: JSON.stringify(dueWordIds),
@@ -620,7 +865,7 @@ session.post("/progress/session/start", async (c) => {
         });
     }
 
-    const items = buildItems(sessionId, targetIds, itemTypes, poolEntries, wordsById);
+    const items = buildItems(sessionId, orderedTargetIds, itemTypes, poolEntries, wordsById);
 
     return c.json({
         sessionId,
@@ -751,8 +996,13 @@ session.post("/progress/session/answer", async (c) => {
     return c.json({ message: "Could not record answer, please retry" }, 409);
 });
 
+/**
+ * The ladder now runs past "mastered" (`backend/src/mastery.ts`): 60, 120 and 240 days.
+ * A word the learner keeps getting right stops competing for session slots with the words
+ * they have never seen, which is the whole reason the ceiling moved.
+ */
 const reviewIntervalDays = (mastery: number) =>
-    [1, 1, 3, 7, 14, 30][Math.min(Math.max(mastery, 0), 5)];
+    REVIEW_INTERVAL_DAYS[Math.min(Math.max(mastery, 0), MASTERY_MAX)];
 
 /**
  * Applies one word's session result to its UserWordProgress row and marks that row with
@@ -781,16 +1031,33 @@ const applyGradedWordReward = async (
     session: { level: string; unit: number | null },
     isCorrect: boolean,
     now: Date,
+    itemType: string,
+    timezone: string | null,
 ): Promise<void> => {
     const isCorrectFlag = isCorrect ? 1 : 0;
     const initialMastery = isCorrect ? 1 : 0;
-    const reviewDates = [1, 1, 3, 7, 14, 30].map((days) => new Date(now.getTime() + days * DAY_MS));
+    const reviewDates = REVIEW_INTERVAL_DAYS.map((days) => new Date(now.getTime() + days * DAY_MS));
+
+    /**
+     * The evidence half (`backend/src/mastery.ts`). Computed inside the SQL from the row's
+     * own pre-update columns, for the same reason `mastery` is: D1 gives no transaction to
+     * hold "read the last day, then write it" together, so a crash or a concurrent retry
+     * between the two steps would credit a day twice or skip one.
+     *
+     * Only a *correct* answer credits anything, a second correct answer on the same local
+     * day credits nothing, and a recognition never credits a recall day.
+     */
+    const today = learnerDay(now, timezone);
+    const isRecallFlag = isCorrect && isRecallItem(itemType) ? 1 : 0;
+    const initialStrongDays = isCorrect ? 1 : 0;
+    const initialRecallDays = isRecallFlag;
 
     await prisma.$executeRaw`
         INSERT INTO UserWordProgress
             (id, userId, wordId, level, unit, status, mastery, seenCount, knownCount,
              reviewCount, correctCount, incorrectCount, streak, lastSeenAt, lastCorrectAt,
-             lastIncorrectAt, nextReviewAt, masteredAt, lastSessionRewardId, createdAt, updatedAt)
+             lastIncorrectAt, nextReviewAt, masteredAt, strongDays, recallDays,
+             lastStrongDay, lastRecallDay, strongAt, lastSessionRewardId, createdAt, updatedAt)
         VALUES
             (${crypto.randomUUID()}, ${userId}, ${wordId}, ${session.level}, ${session.unit},
              ${isCorrect ? "known" : "review"}, ${initialMastery}, 1, 0, 0,
@@ -798,11 +1065,14 @@ const applyGradedWordReward = async (
              ${isCorrect ? now : null}, ${isCorrect ? null : now},
              ${reviewDates[initialMastery]},
              ${initialMastery >= MASTERY_MASTERED ? now : null},
+             ${initialStrongDays}, ${initialRecallDays},
+             ${isCorrect ? today : null}, ${isRecallFlag === 1 ? today : null},
+             ${null},
              ${sessionId}, ${now}, ${now})
         ON CONFLICT(userId, wordId) DO UPDATE SET
             status = ${isCorrect ? "known" : "review"},
             mastery = CASE WHEN ${isCorrectFlag} = 1
-                           THEN MIN(mastery + 1, ${MASTERY_MASTERED})
+                           THEN MIN(mastery + 1, ${MASTERY_MAX})
                            ELSE MAX(mastery - 1, 0) END,
             seenCount = seenCount + 1,
             correctCount = correctCount + ${isCorrect ? 1 : 0},
@@ -813,20 +1083,39 @@ const applyGradedWordReward = async (
             lastIncorrectAt = CASE WHEN ${isCorrectFlag} = 1 THEN lastIncorrectAt ELSE ${now} END,
             nextReviewAt = CASE
                 (CASE WHEN ${isCorrectFlag} = 1
-                      THEN MIN(mastery + 1, ${MASTERY_MASTERED})
+                      THEN MIN(mastery + 1, ${MASTERY_MAX})
                       ELSE MAX(mastery - 1, 0) END)
                 WHEN 0 THEN ${reviewDates[0]}
                 WHEN 1 THEN ${reviewDates[1]}
                 WHEN 2 THEN ${reviewDates[2]}
                 WHEN 3 THEN ${reviewDates[3]}
                 WHEN 4 THEN ${reviewDates[4]}
-                ELSE ${reviewDates[5]}
+                WHEN 5 THEN ${reviewDates[5]}
+                WHEN 6 THEN ${reviewDates[6]}
+                WHEN 7 THEN ${reviewDates[7]}
+                ELSE ${reviewDates[8]}
             END,
             masteredAt = CASE
-                WHEN (CASE WHEN ${isCorrectFlag} = 1
-                           THEN MIN(mastery + 1, ${MASTERY_MASTERED})
+                WHEN masteredAt IS NULL
+                 AND (CASE WHEN ${isCorrectFlag} = 1
+                           THEN MIN(mastery + 1, ${MASTERY_MAX})
                            ELSE MAX(mastery - 1, 0) END) >= ${MASTERY_MASTERED}
                 THEN ${now} ELSE masteredAt END,
+            strongDays = CASE
+                WHEN ${isCorrectFlag} = 1 AND (lastStrongDay IS NULL OR lastStrongDay != ${today})
+                THEN strongDays + 1 ELSE strongDays END,
+            recallDays = CASE
+                WHEN ${isRecallFlag} = 1 AND (lastRecallDay IS NULL OR lastRecallDay != ${today})
+                THEN recallDays + 1 ELSE recallDays END,
+            strongAt = CASE
+                WHEN strongAt IS NULL
+                 AND (CASE WHEN ${isCorrectFlag} = 1 AND (lastStrongDay IS NULL OR lastStrongDay != ${today})
+                           THEN strongDays + 1 ELSE strongDays END) >= ${STRONG_DAYS_REQUIRED}
+                 AND (CASE WHEN ${isRecallFlag} = 1 AND (lastRecallDay IS NULL OR lastRecallDay != ${today})
+                           THEN recallDays + 1 ELSE recallDays END) >= ${RECALL_DAYS_REQUIRED}
+                THEN ${now} ELSE strongAt END,
+            lastStrongDay = CASE WHEN ${isCorrectFlag} = 1 THEN ${today} ELSE lastStrongDay END,
+            lastRecallDay = CASE WHEN ${isRecallFlag} = 1 THEN ${today} ELSE lastRecallDay END,
             lastSessionRewardId = ${sessionId},
             updatedAt = ${now}
         WHERE lastSessionRewardId IS NULL OR lastSessionRewardId != ${sessionId}
@@ -916,12 +1205,22 @@ const applySessionReward = async (
     const now = new Date();
     const sessionMeta = { level: record.level, unit: record.unit };
 
+    // One read for the whole reward pass: "different days" are the learner's days
+    // (`backend/src/mastery.ts`), so the boundary has to come from their profile.
+    const learner = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { timezone: true },
+    });
+    const timezone = learner?.timezone ?? null;
+
     for (const [index, wordId] of targetIds.entries()) {
         const isCorrect = answers[index] ?? false;
         const type = itemTypes[index] ?? "choose-meaning";
 
         if (isGradedForMastery(type)) {
-            await applyGradedWordReward(prisma, userId, wordId, sessionId, sessionMeta, isCorrect, now);
+            await applyGradedWordReward(
+                prisma, userId, wordId, sessionId, sessionMeta, isCorrect, now, type, timezone,
+            );
         } else {
             await applyWarmupWordReward(prisma, userId, wordId, sessionId, sessionMeta, isCorrect, now);
         }

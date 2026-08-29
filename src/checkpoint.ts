@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 
 import type { Bindings, Variables } from "./index.js";
+import { RECALL_DAYS_REQUIRED, STRONG_DAYS_REQUIRED } from "./mastery.js";
 
 type Env = { Bindings: Bindings; Variables: Variables };
 
@@ -29,12 +30,26 @@ const POOL_SIZE = 60;
 /**
  * The gate's two independent conditions (see `finalizeCheckpoint`): the learner must have
  * answered at least `CHECKPOINT_PASS_SCORE` of the five items correctly *and* every
- * published word in the unit must already sit at `CHECKPOINT_PASS_MASTERY` or above. A
+ * published word in the unit must already be `strong`. A
  * checkpoint is proof the unit was learned, so a lucky five-in-a-row over a half-mastered
  * unit is deliberately not enough.
  */
 const CHECKPOINT_PASS_SCORE = 4;
-const CHECKPOINT_PASS_MASTERY = 3;
+
+/**
+ * The unit half of the gate is now the product's one definition of "strong"
+ * (`backend/src/mastery.ts`): recalled correctly on two different days, one of them a
+ * recall rather than a recognition.
+ *
+ * It used to be `mastery >= 3`, a third number for the same idea — the API counted the
+ * collection at `mastery >= 2` and the pips drew their strong band at 3. A unit gate that
+ * disagrees with the meter above it is telling the learner two different things about the
+ * same twenty words.
+ */
+const CHECKPOINT_STRONG_WHERE = {
+    strongDays: { gte: STRONG_DAYS_REQUIRED },
+    recallDays: { gte: RECALL_DAYS_REQUIRED },
+} as const;
 
 /** Levels a checkpoint can be run for — the Oxford 3000 CEFR bands. */
 const VALID_LEVELS = new Set(["A1", "A2", "B1", "B2"]);
@@ -199,9 +214,9 @@ const normalizeSpelling = (value: string) => value.trim().toLowerCase();
 /**
  * The mastery half of the gate, and the source of `recoveryCount`. Counts every published
  * word in the unit and, of those, how many the learner already holds at
- * `CHECKPOINT_PASS_MASTERY`+. `recoveryCount` is the remainder — words still below the bar
- * or with no `UserWordProgress` row at all (a missing row is mastery 0 by definition, so it
- * is caught by the difference without a separate query). Read-only: it never writes
+ * `strong`. `recoveryCount` is the remainder — words still below the bar or with no
+ * `UserWordProgress` row at all (a missing row carries no evidence by definition, so it is
+ * caught by the difference without a separate query). Read-only: it never writes
  * progress, so grading a checkpoint can never lower a mastery the learner earned.
  */
 const computeGate = async (
@@ -215,7 +230,7 @@ const computeGate = async (
         prisma.userWordProgress.count({
             where: {
                 userId,
-                mastery: { gte: CHECKPOINT_PASS_MASTERY },
+                ...CHECKPOINT_STRONG_WHERE,
                 word: { status: "published", level, unit },
             },
         }),

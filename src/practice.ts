@@ -3,7 +3,13 @@ import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { SignJWT, jwtVerify } from "jose";
 
 import type { Bindings, Variables } from "./index.js";
-import { MASTERY_MASTERED } from "./progress.js";
+import {
+    MASTERY_MASTERED,
+    MASTERY_MAX,
+    RECALL_DAYS_REQUIRED,
+    STRONG_DAYS_REQUIRED,
+    learnerDay,
+} from "./mastery.js";
 
 type Env = { Bindings: Bindings; Variables: Variables };
 type Ctx = Context<Env>;
@@ -439,16 +445,28 @@ const applyWordReward = async (
     trial: { level: string | null; unit: number | null },
     isCorrect: boolean,
     now: Date,
+    timezone: string | null,
 ): Promise<boolean> => {
     const initialMastery = isCorrect ? 1 : 0;
     const isCorrectFlag = isCorrect ? 1 : 0;
     const status = isCorrect ? "known" : "review";
 
+    /**
+     * A claimed trial credits a strong day but never a recall day: every trial item is
+     * recognition — a word, and four Thai meanings to choose from. That is deliberate
+     * (LEARNER-LIFECYCLE.md §3.2 wants the first two items winnable), and it is exactly the
+     * distinction `backend/src/mastery.ts` draws: recognising a gloss among four is not
+     * evidence the learner can produce the word, so a trial alone can never make a word
+     * strong. It takes a second day, and a real recall, in a saved session.
+     */
+    const today = learnerDay(now, timezone);
+
     const updated = await prisma.$executeRaw`
         INSERT INTO UserWordProgress
             (id, userId, wordId, level, unit, status, mastery, seenCount, knownCount,
              reviewCount, correctCount, incorrectCount, streak, lastSeenAt, lastCorrectAt,
-             lastIncorrectAt, nextReviewAt, masteredAt, trialClaimId, createdAt, updatedAt)
+             lastIncorrectAt, nextReviewAt, masteredAt, strongDays, recallDays,
+             lastStrongDay, trialClaimId, createdAt, updatedAt)
         VALUES
             (${crypto.randomUUID()}, ${userId}, ${wordId}, ${trial.level ?? ""}, ${trial.unit},
              ${status}, ${initialMastery}, 1, 0, 0,
@@ -456,12 +474,23 @@ const applyWordReward = async (
              ${isCorrect ? now : null}, ${isCorrect ? null : now},
              ${new Date(now.getTime() + DAY_MS)},
              ${initialMastery >= MASTERY_MASTERED ? now : null},
+             ${isCorrect ? 1 : 0}, 0, ${isCorrect ? today : null},
              ${trialId}, ${now}, ${now})
         ON CONFLICT(userId, wordId) DO UPDATE SET
             status = ${status},
             mastery = CASE WHEN ${isCorrectFlag} = 1
-                           THEN MIN(mastery + 1, ${MASTERY_MASTERED})
+                           THEN MIN(mastery + 1, ${MASTERY_MAX})
                            ELSE MAX(mastery - 1, 0) END,
+            strongDays = CASE
+                WHEN ${isCorrectFlag} = 1 AND (lastStrongDay IS NULL OR lastStrongDay != ${today})
+                THEN strongDays + 1 ELSE strongDays END,
+            strongAt = CASE
+                WHEN strongAt IS NULL
+                 AND (CASE WHEN ${isCorrectFlag} = 1 AND (lastStrongDay IS NULL OR lastStrongDay != ${today})
+                           THEN strongDays + 1 ELSE strongDays END) >= ${STRONG_DAYS_REQUIRED}
+                 AND recallDays >= ${RECALL_DAYS_REQUIRED}
+                THEN ${now} ELSE strongAt END,
+            lastStrongDay = CASE WHEN ${isCorrectFlag} = 1 THEN ${today} ELSE lastStrongDay END,
             seenCount = seenCount + 1,
             correctCount = correctCount + ${isCorrect ? 1 : 0},
             incorrectCount = incorrectCount + ${isCorrect ? 0 : 1},
@@ -470,8 +499,9 @@ const applyWordReward = async (
             lastCorrectAt = CASE WHEN ${isCorrectFlag} = 1 THEN ${now} ELSE lastCorrectAt END,
             lastIncorrectAt = CASE WHEN ${isCorrectFlag} = 1 THEN lastIncorrectAt ELSE ${now} END,
             masteredAt = CASE
-                WHEN (CASE WHEN ${isCorrectFlag} = 1
-                           THEN MIN(mastery + 1, ${MASTERY_MASTERED})
+                WHEN masteredAt IS NULL
+                 AND (CASE WHEN ${isCorrectFlag} = 1
+                           THEN MIN(mastery + 1, ${MASTERY_MAX})
                            ELSE MAX(mastery - 1, 0) END) >= ${MASTERY_MASTERED}
                 THEN ${now} ELSE masteredAt END,
             trialClaimId = ${trialId},
@@ -553,13 +583,23 @@ export const applyTrialClaim = async (
     const now = new Date();
     const trialMeta = { level: trial.level, unit: trial.unit };
 
+    // The claimant's own day boundary, read once (backend/src/mastery.ts). A trial is
+    // claimed at signup, so this is usually the very first day of their evidence.
+    const claimant = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { timezone: true },
+    });
+    const claimTimezone = claimant?.timezone ?? null;
+
     for (const [index, wordId] of targetIds.entries()) {
         const isCorrect = answers[index] ?? false;
 
         // Whether this call is the one that actually grants the reward or finds it
         // already granted by an earlier, partial run, the ledger still needs healing —
         // that's the point of keeping the two steps independent.
-        await applyWordReward(prisma, userId, wordId, trialId, trialMeta, isCorrect, now);
+        await applyWordReward(
+            prisma, userId, wordId, trialId, trialMeta, isCorrect, now, claimTimezone,
+        );
         await healAttemptLedger(prisma, userId, wordId, trialId, trialMeta, isCorrect);
     }
 
