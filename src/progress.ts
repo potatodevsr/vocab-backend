@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 
 import type { Bindings, Variables } from "./index.js";
+import { readJsonBody } from "./helpers/json-body.js";
 import {
     MASTERY_MASTERED,
     MASTERY_MAX,
@@ -1199,7 +1200,7 @@ progress.post("/progress/goal", async (c) => {
     const userId = requireUserId(c);
     if (!userId) return c.json({ message: "Unauthorized" }, 401);
 
-    const body = await c.req.json<{ days?: unknown }>().catch(() => ({}));
+    const body = await readJsonBody<{ days: unknown }>(c);
     const days = parseUnit(body.days);
     if (days === null || days < 1 || days > 7) {
         return c.json({ message: "days must be an integer from 1 to 7" }, 400);

@@ -82,6 +82,7 @@ before changing the schema or adding routes.
 
 ```bash
 pnpm dev                  # wrangler dev on :4000, local D1/R2 + remote Workers AI
+pnpm typecheck            # THE TypeScript gate — see below. Not `tsc --noEmit`.
 pnpm db:generate          # prisma generate — regenerates client + routers + guard
 pnpm db:migrate:local     # wrangler d1 migrations apply vocab --local
 pnpm db:migrate:new       # prisma migrate diff -> SQL for a new migrations/ file
@@ -107,6 +108,18 @@ model.
 Two databases, deliberately separate: `.wrangler/state` (dev, real content) and
 `.wrangler/e2e-state` (wiped and reseeded on every e2e run). The e2e stack runs on :4100
 so it can never reach the dev one.
+
+**`pnpm exec tsc --noEmit` is red and always has been — use `pnpm typecheck`.**
+`tsconfig.json` includes only `src/**/*.ts`, but `src` imports the committed
+`prisma/generated/` tree, so TypeScript checks that too and it does not compile: 133 errors,
+none of them in application code. 81 are a single generator bug (`HandlerContext` declares
+`prisma` optional, `Context<HonoEnv>` requires it — both are generated types); most of the
+rest come from `routeConfig.ts` and `routeConfig.target.ts` exporting two incompatible
+`RouteConfig` types. Fixing it means changing or upgrading `prisma-generator-express`.
+
+`pnpm typecheck` is the honest gate: **any** error in `src/` fails, and the generated count
+is pinned to a baseline so a regeneration that breaks something new fails too. It is what CI
+and the release checklist should run. Read the raw list with `pnpm exec tsc --noEmit`.
 
 **Do not run `prisma migrate dev` or `prisma migrate deploy` against D1.** Prisma's
 documented D1 workflow is `wrangler d1 migrations create` + `prisma migrate diff` +

@@ -3,6 +3,7 @@ import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { SignJWT, jwtVerify } from "jose";
 
 import type { Bindings, Variables } from "./index.js";
+import { readJsonBody } from "./helpers/json-body.js";
 import {
     MASTERY_MASTERED,
     MASTERY_MAX,
@@ -266,12 +267,38 @@ practice.post("/practice/start", async (c) => {
         }
     }
 
-    const body = await c.req.json<{ level?: string; unit?: unknown }>().catch(() => ({}));
+    const body = await readJsonBody<{ level: string; unit: unknown }>(c);
     const level = typeof body.level === "string" ? body.level : undefined;
     const unit = parseUnit(body.unit);
 
+    /**
+     * A unit number means nothing on its own.
+     *
+     * Unit 4 exists in all four levels, so `{ unit: 4 }` alone selects A1 unit 4 *and* A2
+     * unit 4 *and* B1 unit 4 *and* B2 unit 4 — and the distractor supplement below, with
+     * no level to filter on, then drew wrong answers from the whole corpus. That produced
+     * an A2 prompt answered by A1 meanings, defeating the "distractors come from the same
+     * published level" rule the supplement exists to honour.
+     *
+     * Rejecting the combination is the fix rather than inferring a level from the rows:
+     * every real caller already sends both (`components/practice/practice-session.tsx`
+     * scopes by `{ level, unit }`), a bare `unit` has no defensible meaning across four
+     * levels, and guessing one would silently pick a scope the caller never asked for.
+     */
+    if (unit !== null && level === undefined) {
+        return c.json({ message: "unit requires a level" }, 400);
+    }
+
     const prisma = c.get("prisma");
-    const pool: PoolWord[] = await prisma.vocabWord.findMany({
+
+    /**
+     * What the trial is *about* — only ever the rows inside the requested scope.
+     *
+     * Every word promoted to a prompt comes from here, so a unit's trial teaches that unit
+     * and nothing else. This is the invariant that the distractor supplement below must
+     * not touch.
+     */
+    const targetPool: PoolWord[] = await prisma.vocabWord.findMany({
         where: {
             status: "published",
             meaningTh: { not: "" },
@@ -283,16 +310,68 @@ practice.post("/practice/start", async (c) => {
         select: wordSelect,
     });
 
-    if (pool.length < Math.min(TRIAL_OPTION_COUNT, TRIAL_ITEM_COUNT)) {
+    /**
+     * Wrong answers may come from outside the unit. Questions may not.
+     *
+     * Real units hold **3 to 20** published rows (`curriculum-inventory.ts`), and an item
+     * needs four options, so every unit smaller than four could not build a single
+     * question and the endpoint answered 422 — while the unit page went on advertising
+     * "practise this unit" and linking to it. A1 Unit 32 has three words: a public CTA on
+     * an indexed page led to an error screen, in production, for anyone who clicked it.
+     *
+     * The honest reading is that the unit was never short of *content*, only of plausible
+     * wrong answers, and a wrong answer is not curriculum. So the shortfall is filled from
+     * the rest of the same published level — words the learner is already entitled to see
+     * on any public page — and the target list stays exactly what it was. A three-word
+     * unit therefore starts a three-item trial with four options each, and 422 is left for
+     * the case it is actually true of: a scope that cannot be filled even from the wider
+     * pool.
+     *
+     * The supplement is only read when it is needed, so the common case still runs one
+     * query. It is stored in `poolIds` alongside the targets, which is what lets
+     * `/practice/answer` and the claim path re-derive the identical option order later —
+     * the distractors are part of the trial's recorded shape, not a render-time decision.
+     */
+    const needed = Math.min(TRIAL_OPTION_COUNT, TRIAL_ITEM_COUNT);
+    const needsSupplement =
+        unit !== null && targetPool.length > 0 && targetPool.length < needed;
+    const distractorPool: PoolWord[] = needsSupplement
+        ? await prisma.vocabWord.findMany({
+              where: {
+                  status: "published",
+                  meaningTh: { not: "" },
+                  // Guaranteed present whenever `unit` narrowed the scope — the guard at
+                  // the top rejects a unit without a level — so a supplemented trial can
+                  // only ever borrow from the level its own prompts belong to.
+                  ...(level ? { level } : {}),
+                  // `unit: { not: unit }` is the whole exclusion: it cannot return a row
+                  // already in `targetPool`, so the two lists concatenate without a
+                  // de-duplication pass and without an `id` filter the guard shapes have
+                  // never needed to allow.
+                  unit: { not: unit },
+              },
+              orderBy: { sourceOrder: "asc" },
+              take: TRIAL_POOL_SIZE,
+              select: wordSelect,
+          })
+        : [];
+
+    const pool: PoolWord[] = [...targetPool, ...distractorPool];
+
+    // Two different failures, one status. No targets at all means the scope teaches
+    // nothing; too small a combined pool means no item could offer distinguishable
+    // options even after widening. Either way the caller is told the scope is unusable
+    // rather than handed a broken session.
+    if (targetPool.length === 0 || pool.length < needed) {
         return c.json({ message: "Not enough published content for a trial" }, 422);
     }
 
     const trialId = crypto.randomUUID();
     const rand = mulberry32(seedFrom(trialId));
     const targetIds = shuffled(
-        pool.map((w) => w.id),
+        targetPool.map((w) => w.id),
         rand,
-    ).slice(0, Math.min(TRIAL_ITEM_COUNT, pool.length));
+    ).slice(0, Math.min(TRIAL_ITEM_COUNT, targetPool.length));
 
     const poolEntries: PoolEntry[] = pool.map((w) => ({ id: w.id, partOfSpeech: w.partOfSpeech }));
     const expiresAt = new Date(Date.now() + TRIAL_TTL_DAYS * DAY_MS);

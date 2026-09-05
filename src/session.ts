@@ -14,6 +14,7 @@ import {
     gradedSlotCount,
 } from "./mastery.js";
 import { DEFAULT_WORDLIST } from "./wordlists.js";
+import { readJsonBody } from "./helpers/json-body.js";
 
 type Env = { Bindings: Bindings; Variables: Variables };
 type Ctx = Context<Env>;
@@ -663,9 +664,7 @@ session.post("/progress/session/start", async (c) => {
     const userId = c.get("userId");
     if (!userId) return c.json({ message: "Unauthorized" }, 401);
 
-    const body = await c.req
-        .json<{ level?: string; unit?: unknown; mode?: unknown }>()
-        .catch(() => ({}));
+    const body = await readJsonBody<{ level: string; unit: unknown; mode: unknown }>(c);
     const level = typeof body.level === "string" ? body.level : "A1";
     const mode = parseMode(body.mode);
     // Review is level-wide ("everything due right now") and mistakes is level- *and*

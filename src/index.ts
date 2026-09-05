@@ -37,6 +37,7 @@ import { wordlists } from "./wordlists.js";
 import { push } from "./push.js";
 import { stats } from "./stats.js";
 import { units } from "./units.js";
+import { curriculum } from "./curriculum.js";
 
 export type Bindings = {
     DB: D1Database;
@@ -1307,10 +1308,86 @@ const REMINDERS_OPENAPI = {
  * `lib/api-types.ts` carries every hand-written verb's real response shape rather than a
  * hand-duplicated guess.
  */
+/**
+ * OpenAPI for the public curriculum inventory (`curriculum.ts`).
+ *
+ * A hand-written aggregate read rather than generated CRUD: the generator emits per-model
+ * routes and this is a `GROUP BY` across a model, which no generated operation expresses.
+ * Documented here so `pnpm gen:api-types` gives the web repo a real type for it and nobody
+ * hand-writes the shape (AGENTS.md rule 2).
+ */
+const CURRICULUM_OPENAPI = {
+    openapi: "3.1.0",
+    info: { title: "Vocab Learning App curriculum API", version: "1.0.0" },
+    paths: {
+        "/curriculum": {
+            get: {
+                operationId: "curriculumInventory",
+                summary: "Which levels and units actually exist, from stored rows",
+                parameters: [
+                    {
+                        name: "wordlistId",
+                        in: "query",
+                        required: false,
+                        schema: { type: "string" },
+                        description: "Defaults to the free Oxford 3000 list",
+                    },
+                ],
+                responses: {
+                    "200": {
+                        description: "Published levels, their real units, and real row counts",
+                        content: {
+                            "application/json": {
+                                schema: { $ref: "#/components/schemas/CurriculumInventory" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    components: {
+        schemas: {
+            UnitInventory: {
+                type: "object",
+                required: ["unit", "words"],
+                properties: {
+                    unit: { type: "integer", description: "The stored unit number" },
+                    words: { type: "integer", description: "Published rows really in it (3-20 today)" },
+                },
+            },
+            LevelInventory: {
+                type: "object",
+                required: ["level", "words", "unitCount", "firstUnit", "lastUnit", "units"],
+                properties: {
+                    level: { type: "string" },
+                    words: { type: "integer" },
+                    unitCount: {
+                        type: "integer",
+                        description: "Count of stored units. Never ceil(words / UNIT_SIZE).",
+                    },
+                    firstUnit: { type: "integer" },
+                    lastUnit: { type: "integer" },
+                    units: { type: "array", items: { $ref: "#/components/schemas/UnitInventory" } },
+                },
+            },
+            CurriculumInventory: {
+                type: "object",
+                required: ["wordlistId", "words", "levels"],
+                properties: {
+                    wordlistId: { type: "string" },
+                    words: { type: "integer" },
+                    levels: { type: "array", items: { $ref: "#/components/schemas/LevelInventory" } },
+                },
+            },
+        },
+    },
+} as const;
+
 const OPENAPI = {
     openapi: "3.1.0" as const,
     info: { title: "Vocab Learning App API", version: "1.0.0" },
-    paths: { ...AUTH_OPENAPI.paths, ...PRACTICE_OPENAPI.paths, ...SESSION_OPENAPI.paths, ...CHECKPOINT_OPENAPI.paths, ...REMINDERS_OPENAPI.paths },
+    paths: { ...AUTH_OPENAPI.paths, ...PRACTICE_OPENAPI.paths, ...SESSION_OPENAPI.paths, ...CHECKPOINT_OPENAPI.paths, ...REMINDERS_OPENAPI.paths, ...CURRICULUM_OPENAPI.paths },
     components: {
         schemas: {
             ...AUTH_OPENAPI.components.schemas,
@@ -1318,6 +1395,7 @@ const OPENAPI = {
             ...SESSION_OPENAPI.components.schemas,
             ...CHECKPOINT_OPENAPI.components.schemas,
             ...REMINDERS_OPENAPI.components.schemas,
+            ...CURRICULUM_OPENAPI.components.schemas,
         },
     },
 };
@@ -2070,6 +2148,7 @@ app.route("/", wordlists);
 app.route("/", push);
 app.route("/", stats);
 app.route("/", units);
+app.route("/", curriculum);
 
 // ------------------------------------------------------------ generated CRUD
 

@@ -157,6 +157,104 @@ const lines = [
     "",
 ];
 
+/**
+ * A2: the irregular-unit level, and the production-shaped one.
+ *
+ * **Irregular units.** A1 above is a neat 40 published rows in two twenty-row units, which
+ * is exactly why the unit-count defect (`todo.md` F-03) survived every test for so long:
+ * with twenty-row units `ceil(rows / UNIT_SIZE)` happens to equal the real unit count, so
+ * an arithmetic unit count and a stored one agree and no assertion can tell them apart.
+ *
+ * Production is not like that. Stored units hold 3 to 20 published rows, so A1's 758 rows
+ * span 45 real units while the arithmetic claimed 38 — and 171 published rows across the
+ * four levels were left out of the generated map, the Learn clamp and both sitemaps.
+ *
+ * This level reproduces that in miniature: **9 published rows across four units, sized
+ * 2, 2, 2, 3**. `ceil(9 / 20)` is **1**; the real answer is **4**. Any consumer that goes
+ * back to dividing will list one unit here and lose three, and the curriculum spec will
+ * say so. The three-row tail unit is deliberately the size of production's A1 Unit 32 —
+ * the unit whose public "practise this unit" CTA answered 422, because a trial needs four
+ * options and the unit holds three words (`backend/src/practice.ts`).
+ *
+ * **Production shape.** Every A1 row above carries a transliteration, a romanisation, an
+ * IPA string and an example sentence, and two carry audio. Production carries **none of
+ * those on any of its 3,082 published rows** — `meaningThReading`, `meaningThRoman`,
+ * `ipa`, `exampleEn`/`exampleTh` and `audioKeyEn` are empty everywhere. A seed where every
+ * row is fully furnished cannot fail the way production fails, and it did not: the word
+ * page gated its whole Thai-reading block (the speech control included) on
+ * `meaningThReading || meaningThRoman`, so the feature was dead in production while the
+ * suite was green. These rows carry a trusted meaning and a trusted pronunciation and
+ * nothing else, so the "optional content is absent" path is exercised on every run.
+ *
+ * A1 keeps its rich rows: the audio, example, IPA and transliteration branches are real
+ * features with their own coverage, and this is a second shape rather than a replacement.
+ *
+ * Numbers are spelled out in Thai rather than written as digits, because
+ * `isTrustworthyPronunciation` (`lib/thai-text.ts`) rejects digits and brackets in a
+ * respelling — `คำอ่านเอทู1` would be withheld from the page as OCR debris, which would
+ * make these rows a *missing-pronunciation* fixture rather than a production-shaped one.
+ *
+ * Kept small on purpose: the public `vocabword` guard shape reads `take.default = 50`,
+ * so a corpus above fifty published rows turns every unpaged read in the API specs into
+ * a paged one and quietly changes what they assert.
+ */
+const A2_UNIT_SIZES = [2, 2, 2, 3];
+const THAI_NUMERAL_WORDS = [
+    "ศูนย์",
+    "หนึ่ง",
+    "สอง",
+    "สาม",
+    "สี่",
+    "ห้า",
+    "หก",
+    "เจ็ด",
+    "แปด",
+    "เก้า",
+];
+let a2Order = 0;
+
+for (const [unitIndex, size] of A2_UNIT_SIZES.entries()) {
+    for (let seat = 0; seat < size; seat += 1) {
+        a2Order += 1;
+        const word = `a2word${a2Order}`;
+
+        words.push({
+            id: `e2e-a2-${String(a2Order).padStart(4, "0")}`,
+            sourceKey: `a2-${word}`,
+            sourceOrder: 1000 + a2Order,
+            sourceName: "oxford-3000",
+            sourceTitle: "The Oxford 3000 by CEFR level",
+            level: "A2",
+            unit: unitIndex + 1,
+            word,
+            displayWord: word,
+            slug: word,
+            homograph: null,
+            sense: null,
+            partOfSpeech: PARTS[a2Order % PARTS.length],
+            // Trusted Thai, both of them — this level's point is that the *optional*
+            // fields are missing, not that the row is damaged.
+            meaningTh: `ความหมายเอทู${THAI_NUMERAL_WORDS[a2Order]}`,
+            pronunciationTh: `คำอ่านเอทู${THAI_NUMERAL_WORDS[a2Order]}`,
+            // Everything below this line is empty because it is empty in production.
+            meaningThReading: "",
+            meaningThRoman: "",
+            ipa: "",
+            exampleEn: "",
+            exampleTh: "",
+            // `'[]'`, not `''`: A1 above and every production row store an empty JSON
+            // array here, and a bare empty string is a shape no reader is written for.
+            posUsages: "[]",
+            notes: "",
+            status: "published",
+            reviewState: "unreviewed",
+            reviewFlags: "[]",
+            audioKeyEn: "",
+            audioKeyExample: "",
+        });
+    }
+}
+
 for (const w of words) {
     lines.push(
         `INSERT INTO VocabWord (id, sourceKey, sourceOrder, sourceName, sourceTitle, level, unit, word, displayWord, slug, homograph, sense, partOfSpeech, meaningTh, pronunciationTh, meaningThReading, meaningThRoman, ipa, exampleEn, exampleTh, posUsages, notes, status, reviewState, reviewFlags, audioKeyEn, audioKeyExample, createdAt, updatedAt) VALUES (` +

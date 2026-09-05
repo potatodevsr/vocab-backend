@@ -2,6 +2,7 @@ import { Hono } from "hono";
 
 import type { Bindings, Variables } from "./index.js";
 import { RECALL_DAYS_REQUIRED, STRONG_DAYS_REQUIRED } from "./mastery.js";
+import { readJsonBody } from "./helpers/json-body.js";
 
 type Env = { Bindings: Bindings; Variables: Variables };
 
@@ -301,7 +302,7 @@ checkpoint.post("/progress/checkpoint/start", async (c) => {
     const userId = c.get("userId");
     if (!userId) return c.json({ message: "Unauthorized" }, 401);
 
-    const body = await c.req.json<{ level?: unknown; unit?: unknown }>().catch(() => ({}));
+    const body = await readJsonBody<{ level: unknown; unit: unknown }>(c);
     const level = typeof body.level === "string" ? body.level : "";
     const unit = parseUnit(body.unit);
 

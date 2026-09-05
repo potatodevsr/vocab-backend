@@ -17,7 +17,8 @@
         "import:wordlist": "node scripts/import-wordlist.mjs",
         "qa:thai": "node scripts/flag-thai-quality.mjs",
         "seed:oxford-thai": "tsx scripts/seed-oxford-thai.ts",
-        "seed:vocab": "tsx src/seed-vocab.ts"
+        "seed:vocab": "tsx src/seed-vocab.ts",
+        "typecheck": "node scripts/typecheck.mjs"
     },
     "dependencies": {
         "@prisma/adapter-d1": "^7.9.0",
