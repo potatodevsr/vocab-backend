@@ -4,6 +4,7 @@ import { SignJWT, jwtVerify } from "jose";
 
 import type { Bindings, Variables } from "./index.js";
 import { readJsonBody } from "./helpers/json-body.js";
+import { trustedThai, trustedPronunciation, readTrustedPool } from "./helpers/thai-text.js";
 import {
     MASTERY_MASTERED,
     MASTERY_MAX,
@@ -181,12 +182,12 @@ const promptFace = (word: PoolWord | undefined) =>
     word && {
         displayWord: word.displayWord,
         partOfSpeech: word.partOfSpeech,
-        pronunciationTh: word.pronunciationTh,
+        pronunciationTh: trustedPronunciation(word.pronunciationTh) ?? "",
     };
 
 const optionFace = (word: PoolWord | undefined) =>
     word && {
-        meaningTh: word.meaningTh,
+        meaningTh: trustedThai(word.meaningTh) ?? "",
         partOfSpeech: word.partOfSpeech,
     };
 
@@ -268,6 +269,12 @@ practice.post("/practice/start", async (c) => {
     }
 
     const body = await readJsonBody<{ level: string; unit: unknown }>(c);
+    if (
+        body.level !== undefined &&
+        (typeof body.level !== "string" || !["A1", "A2", "B1", "B2"].includes(body.level))
+    ) {
+        return c.json({ message: "level must be A1, A2, B1 or B2" }, 400);
+    }
     const level = typeof body.level === "string" ? body.level : undefined;
     const unit = parseUnit(body.unit);
 
@@ -291,6 +298,23 @@ practice.post("/practice/start", async (c) => {
 
     const prisma = c.get("prisma");
 
+    // Filter before selecting targets or recording the deterministic option pool.
+    // Keep paging when OCR damage fills an early page; a capped raw read must not
+    // make usable content later in the same scope disappear. Existing trial IDs and
+    // answer derivation are unchanged, and a bad optional pronunciation hides only
+    // that field, never a word with a usable meaning.
+    const readPool = (scope: { level?: string; unit?: number | { not: number } }) =>
+        readTrustedPool<PoolWord>(
+            (skip, take) => prisma.vocabWord.findMany({
+                where: { status: "published", meaningTh: { not: "" }, ...scope },
+                orderBy: [{ sourceOrder: "asc" }, { id: "asc" }],
+                take,
+                skip,
+                select: wordSelect,
+            }),
+            TRIAL_POOL_SIZE,
+        );
+
     /**
      * What the trial is *about* — only ever the rows inside the requested scope.
      *
@@ -298,16 +322,9 @@ practice.post("/practice/start", async (c) => {
      * and nothing else. This is the invariant that the distractor supplement below must
      * not touch.
      */
-    const targetPool: PoolWord[] = await prisma.vocabWord.findMany({
-        where: {
-            status: "published",
-            meaningTh: { not: "" },
-            ...(level ? { level } : {}),
-            ...(unit !== null ? { unit } : {}),
-        },
-        orderBy: { sourceOrder: "asc" },
-        take: TRIAL_POOL_SIZE,
-        select: wordSelect,
+    const targetPool = await readPool({
+        ...(level ? { level } : {}),
+        ...(unit !== null ? { unit } : {}),
     });
 
     /**
@@ -336,23 +353,13 @@ practice.post("/practice/start", async (c) => {
     const needsSupplement =
         unit !== null && targetPool.length > 0 && targetPool.length < needed;
     const distractorPool: PoolWord[] = needsSupplement
-        ? await prisma.vocabWord.findMany({
-              where: {
-                  status: "published",
-                  meaningTh: { not: "" },
-                  // Guaranteed present whenever `unit` narrowed the scope — the guard at
-                  // the top rejects a unit without a level — so a supplemented trial can
-                  // only ever borrow from the level its own prompts belong to.
-                  ...(level ? { level } : {}),
-                  // `unit: { not: unit }` is the whole exclusion: it cannot return a row
-                  // already in `targetPool`, so the two lists concatenate without a
-                  // de-duplication pass and without an `id` filter the guard shapes have
-                  // never needed to allow.
-                  unit: { not: unit },
-              },
-              orderBy: { sourceOrder: "asc" },
-              take: TRIAL_POOL_SIZE,
-              select: wordSelect,
+        ? await readPool({
+              // Guaranteed present whenever `unit` narrowed the scope — the guard at
+              // the top rejects a unit without a level — so a supplemented trial can
+              // only ever borrow from the level its own prompts belong to.
+              ...(level ? { level } : {}),
+              // Disjoint units mean no row can already be in the target pool.
+              unit: { not: unit },
           })
         : [];
 

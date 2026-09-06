@@ -31,7 +31,12 @@ export const readJsonBody = async <T extends object>(
     c: JsonRequest,
 ): Promise<Partial<T>> => {
     try {
-        return await c.req.json<Partial<T>>();
+        const body = await c.req.json<Partial<T>>();
+        // Valid JSON is not necessarily an object. Treat null, arrays and primitives
+        // like an absent body; field validation remains the caller's responsibility.
+        return body !== null && typeof body === "object" && !Array.isArray(body)
+            ? body
+            : {};
     } catch {
         // No body, a truncated body, or something that is not JSON. Every caller treats
         // that identically to a body with none of the fields it wanted.
