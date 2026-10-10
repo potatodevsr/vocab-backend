@@ -84,6 +84,9 @@ model VocabWord {
     // How the *English* word sounds, written in Thai script — for a Thai learner reading
     // English. `about` -> `เออะ บ๊าว ถึ`.
     pronunciationTh  String             @default("")
+    // The same English word as a Latin respelling, stressed syllable in capitals:
+    // `about` -> `uh-BOUT`.
+    pronunciationRoman String           @default("")
     // The mirror image, for a foreign learner reading Thai: how `meaningTh` itself is
     // read. `วัฒนธรรม` -> `วัด-ทะ-นะ-ทำ` (Thai script) and `Wat-tha-na-tham` (Latin).
     // Two columns, not one, so each can be searched, styled and read aloud on its own.
@@ -92,6 +95,8 @@ model VocabWord {
     ipa              String             @default("")
     exampleEn        String             @default("")
     exampleTh        String             @default("")
+    // `exampleTh` read aloud in Latin script, for a learner who cannot read Thai yet.
+    exampleThRoman   String             @default("")
     // One meaning and one example pair *per part of speech*, as JSON:
     // `[{ "pos": "prep.", "meaningTh": "…", "exampleEn": "…", "exampleTh": "…" }]`.
     // `partOfSpeech` is a list for 260 words (`across` is `"prep., adv."`), and the two

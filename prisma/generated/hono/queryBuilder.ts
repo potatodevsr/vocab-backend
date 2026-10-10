@@ -76,7 +76,7 @@ function doStart(options: QueryBuilderOptions): Promise<void> {
     const host = options.host || "localhost";
     const schemaPath =
       options.schemaPath ||
-      "/Users/potato/vocab-learning-app/backend/prisma/schema.prisma";
+      resolve(process.cwd(), "prisma/schema.prisma");
     const databaseUrl = options.databaseUrl || env.DATABASE_URL || "";
 
     if (!existsSync(schemaPath)) {

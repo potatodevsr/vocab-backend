@@ -16,6 +16,7 @@
         "generate:oxford-thai-local": "tsx scripts/generate-oxford-thai-local.ts",
         "import:wordlist": "node scripts/import-wordlist.mjs",
         "qa:thai": "node scripts/flag-thai-quality.mjs",
+        "extract:thai-ai": "node scripts/ai-extract-memmoread.mjs",
         "seed:oxford-thai": "tsx scripts/seed-oxford-thai.ts",
         "seed:vocab": "tsx src/seed-vocab.ts",
         "typecheck": "node scripts/typecheck.mjs"

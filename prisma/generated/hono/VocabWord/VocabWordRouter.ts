@@ -343,6 +343,15 @@ const MODEL_FIELDS = [
     isUpdatedAt: false,
   },
   {
+    name: "pronunciationRoman",
+    kind: "scalar",
+    type: "String",
+    isList: false,
+    isRequired: true,
+    hasDefaultValue: true,
+    isUpdatedAt: false,
+  },
+  {
     name: "meaningThReading",
     kind: "scalar",
     type: "String",
@@ -380,6 +389,15 @@ const MODEL_FIELDS = [
   },
   {
     name: "exampleTh",
+    kind: "scalar",
+    type: "String",
+    isList: false,
+    isRequired: true,
+    hasDefaultValue: true,
+    isUpdatedAt: false,
+  },
+  {
+    name: "exampleThRoman",
     kind: "scalar",
     type: "String",
     isList: false,

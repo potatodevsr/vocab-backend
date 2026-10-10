@@ -158,7 +158,7 @@ const DUPE_THRESHOLD = 5;
 
 const main = () => {
     const rows = d1(
-        `SELECT id, displayWord, level, unit, status, reviewState, meaningTh, pronunciationTh
+        `SELECT id, displayWord, level, unit, status, reviewState, reviewFlags, meaningTh, pronunciationTh
          FROM VocabWord ORDER BY sourceOrder`,
     );
 
@@ -187,6 +187,15 @@ const main = () => {
         if (meaning && (byMeaning.get(meaning) ?? 0) >= DUPE_THRESHOLD) {
             flags.push("meaning-dupe");
         }
+
+        // `ai-*` flags come from scripts/ai-extract-memmoread.mjs, which compared several
+        // reads of the source page. No rule here can re-derive them from the text, so they
+        // are carried over rather than cleared on every run.
+        let previous = [];
+        try {
+            previous = JSON.parse(row.reviewFlags || "[]");
+        } catch {}
+        flags.push(...previous.filter((code) => code.startsWith("ai-")));
 
         for (const flag of flags) counts.set(flag, (counts.get(flag) ?? 0) + 1);
         if (flags.length > 0) flagged.push({ row: normalized, flags });

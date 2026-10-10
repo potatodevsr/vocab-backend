@@ -27,3 +27,13 @@
 # Prisma's compiled query engine, restored by `prisma generate`
 /prisma/generated/prisma/internal/query_compiler_fast_bg.wasm
 /prisma/generated/prisma/internal/query_compiler_fast_bg.js
+
+# AI content pipeline (scripts/ai-extract-memmoread.mjs, ai-generate-word-content.mjs,
+# sync-words-to-remote.mjs). Everything these write is local working state: page strips,
+# per-pass model answers (~1,600 JSON files), apply/rollback SQL, review spreadsheets,
+# and D1 exports — which contain the User table, password hashes included, so they must
+# never be committed. Only the hand-checked golden set is source.
+/data/ai-extract/*
+!/data/ai-extract/golden.json
+/data/ai-generate/
+/data/sync/

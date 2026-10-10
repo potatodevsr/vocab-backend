@@ -1,0 +1,17 @@
+{
+  "note": "Hand-checked against 300 dpi crops of the PDF. Values as printed (spacing is ignored when scored). null = not checked. Rows quoted as examples in the extraction prompt (about, ask, back, bath, actor, cool) are left out so the score is not inflated by them.",
+  "rows": [
+    { "page": 2, "vocab": "above", "meaningTh": "ข้างบน", "pronunciationTh": "เออะ บ๊ะ ฝึ", "ipa": "ʌ b ˈʌ v" },
+    { "page": 2, "vocab": "adult", "meaningTh": "ผู้ใหญ่", "pronunciationTh": "เออะ ด๊ะ ล ถึ", "ipa": "ʌ d ˈʌ l t" },
+    { "page": 2, "vocab": "as", "meaningTh": "เช่น", "pronunciationTh": "แอ๊ สึ", "ipa": "ˈæ z" },
+    { "page": 2, "vocab": "at", "meaningTh": "ที่", "pronunciationTh": "แอ๊ ถึ", "ipa": "ˈæ t" },
+    { "page": 2, "vocab": "August", "meaningTh": "สิงหาคม", "pronunciationTh": "อ๊า เกอะ สึ ถึ", "ipa": "ˈɑː g ʌ s t" },
+    { "page": 2, "vocab": "aunt", "meaningTh": "ป้า", "pronunciationTh": "แอ๊ น ถึ", "ipa": "ˈæ n t" },
+    { "page": 3, "vocab": "bad", "meaningTh": null, "pronunciationTh": "แบ ดึ", "ipa": "b ˈæ d" },
+    { "page": 3, "vocab": "bag", "meaningTh": null, "pronunciationTh": "แบ กึ", "ipa": "b ˈæ g" },
+    { "page": 3, "vocab": "ball", "meaningTh": null, "pronunciationTh": "บอ ล", "ipa": "b ˈɔː l" },
+    { "page": 3, "vocab": "banana", "meaningTh": null, "pronunciationTh": "เบอะ แน้ เหนอะ", "ipa": "b ʌ n ˈæ n ʌ" },
+    { "page": 3, "vocab": "band", "meaningTh": null, "pronunciationTh": "แบ น ดึ", "ipa": "b ˈæ n d" },
+    { "page": 3, "vocab": "bank", "meaningTh": null, "pronunciationTh": "แบ ง ขึ", "ipa": "b ˈæ ŋ k" }
+  ]
+}

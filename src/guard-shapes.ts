@@ -63,11 +63,13 @@ const PUBLIC_WORD_FIELDS = {
     partOfSpeech: true,
     meaningTh: true,
     pronunciationTh: true,
+    pronunciationRoman: true,
     meaningThReading: true,
     meaningThRoman: true,
     ipa: true,
     exampleEn: true,
     exampleTh: true,
+    exampleThRoman: true,
     // JSON: the per-part-of-speech meanings and examples. Public because the word page
     // renders them — see the column comment in schema.prisma.
     posUsages: true,
@@ -267,11 +269,13 @@ export const VOCAB_WORD_UPDATE_SHAPE = {
         data: {
             meaningTh: true,
             pronunciationTh: true,
+            pronunciationRoman: true,
             meaningThReading: true,
             meaningThRoman: true,
             ipa: true,
             exampleEn: true,
             exampleTh: true,
+            exampleThRoman: true,
             posUsages: true,
             letterBreakdown: true,
             notes: true,
