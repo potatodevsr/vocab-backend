@@ -12,6 +12,11 @@
 //   node scripts/sync-words-to-remote.mjs            # dry run: counts per column, SQL on disk
 //   node scripts/sync-words-to-remote.mjs --write    # execute against production
 //
+// Two more rules keep production's own curation safe:
+//   - a row a human approved on production (`reviewState = 'approved'`) is never touched;
+//   - a column that is empty locally never blanks a filled production value.
+// Skipped rows are listed so nothing is lost silently.
+//
 // Every run writes the update SQL and a rollback SQL (production's values before the
 // change) to data/sync/. Back up first anyway:
 //   pnpm exec wrangler d1 export vocab --remote --output data/sync/remote-backup.sql
@@ -71,15 +76,36 @@ const main = () => {
 
     const updates = [];
     const rollback = [];
+    const approvedOnRemote = [];
+    let keptRemoteValue = 0;
     const perColumn = new Map(COLUMNS.map((c) => [c, 0]));
     for (const [id, l] of local) {
         const r = remote.get(id);
         if (!r) continue;
-        const changed = COLUMNS.filter((c) => (l[c] ?? null) !== (r[c] ?? null));
+        if (r.reviewState === "approved") {
+            if (COLUMNS.some((c) => (l[c] ?? null) !== (r[c] ?? null))) approvedOnRemote.push(id);
+            continue;
+        }
+        const blank = (v) => v == null || v === "" || v === "[]";
+        const changed = COLUMNS.filter((c) => {
+            if ((l[c] ?? null) === (r[c] ?? null)) return false;
+            if (blank(l[c]) && !blank(r[c])) {
+                keptRemoteValue++;
+                return false;
+            }
+            return true;
+        });
         if (!changed.length) continue;
         for (const c of changed) perColumn.set(c, perColumn.get(c) + 1);
         updates.push(`UPDATE VocabWord SET ${changed.map((c) => `${c}=${sql(l[c])}`).join(", ")} WHERE id=${sql(id)};`);
         rollback.push(`UPDATE VocabWord SET ${changed.map((c) => `${c}=${sql(r[c])}`).join(", ")} WHERE id=${sql(id)};`);
+    }
+
+    // Belt and braces: this script only ever emits single-row UPDATEs of VocabWord.
+    for (const statement of updates) {
+        if (!/^UPDATE VocabWord SET .+ WHERE id='[^']*';$/s.test(statement)) {
+            throw new Error(`refusing to run an unexpected statement: ${statement.slice(0, 80)}`);
+        }
     }
 
     const onlyLocal = [...local.keys()].filter((id) => !remote.has(id));
@@ -87,6 +113,8 @@ const main = () => {
 
     console.log(`\nrows to update: ${updates.length}`);
     for (const [c, n] of perColumn) if (n) console.log(`  ${c.padEnd(20)} ${n}`);
+    console.log(`approved on production (skipped): ${approvedOnRemote.length}${approvedOnRemote.length ? `  e.g. ${approvedOnRemote.slice(0, 5).join(", ")}` : ""}`);
+    console.log(`production values kept because local is empty: ${keptRemoteValue}`);
     console.log(`only in local (not copied):      ${onlyLocal.length}${onlyLocal.length ? `  e.g. ${onlyLocal.slice(0, 5).join(", ")}` : ""}`);
     console.log(`only in production (untouched):  ${onlyRemote.length}${onlyRemote.length ? `  e.g. ${onlyRemote.slice(0, 5).join(", ")}` : ""}`);
 
