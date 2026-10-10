@@ -2,8 +2,11 @@
 //
 // The curation loop runs locally (AI extraction and generation, then review in /admin), so
 // production needs the result without the rest of the local database: users, progress and
-// XP on production are real and are never touched. Only the content columns of existing
-// VocabWord rows are compared, and only rows that differ are updated, keyed by `id`.
+// XP on production are real and are never touched. Only existing VocabWord rows are
+// updated, keyed by `id`, and only to fill in what production is missing: a column is
+// written only where production has nothing and local has a value. A value production
+// already has is never replaced, even when local differs — those are counted in the
+// report instead, so a later, deliberate run can decide about them.
 //
 // Rows that exist on one side only are reported, not created or deleted — the word list
 // itself comes from the seed, and a missing id means the two databases were seeded from
@@ -12,10 +15,11 @@
 //   node scripts/sync-words-to-remote.mjs            # dry run: counts per column, SQL on disk
 //   node scripts/sync-words-to-remote.mjs --write    # execute against production
 //
-// Two more rules keep production's own curation safe:
-//   - a row a human approved on production (`reviewState = 'approved'`) is never touched;
-//   - a column that is empty locally never blanks a filled production value.
-// Skipped rows are listed so nothing is lost silently.
+// A row a human approved on production (`reviewState = 'approved'`) is never touched.
+//
+// Review state follows the content: when a row gets content filled in and local has it
+// flagged for review (an AI pass was unsure of it), production's row is flagged too, with
+// the flags merged — otherwise doubtful AI text would go live as if nobody doubted it.
 //
 // Every run writes the update SQL and a rollback SQL (production's values before the
 // change) to data/sync/. Back up first anyway:
@@ -31,7 +35,7 @@ const OUT_DIR = join(ROOT, "data/sync");
 const WRITE = process.argv.includes("--write");
 const CHUNK = 400;
 
-const COLUMNS = [
+const CONTENT = [
     "meaningTh",
     "pronunciationTh",
     "pronunciationRoman",
@@ -43,11 +47,16 @@ const COLUMNS = [
     "exampleThRoman",
     "posUsages",
     "letterBreakdown",
-    "notes",
-    "reviewState",
-    "reviewFlags",
-    "reviewedAt",
 ];
+const COLUMNS = [...CONTENT, "reviewState", "reviewFlags"];
+const blank = (value) => value == null || String(value).trim() === "" || value === "[]";
+const flagsOf = (value) => {
+    try {
+        return JSON.parse(value || "[]");
+    } catch {
+        return [];
+    }
+};
 
 const d1 = (where, sql) => {
     const out = execFileSync(
@@ -59,6 +68,52 @@ const d1 = (where, sql) => {
 };
 
 const sql = (value) => (value == null ? "NULL" : `'${String(value).replace(/'/g, "''")}'`);
+
+/**
+ * Decide what to write. Pure: takes the two row maps (id -> row), returns statements and
+ * counts. Exported so the fill-only rules can be tested without a database.
+ */
+export const planSync = (local, remote) => {
+    const updates = [];
+    const rollback = [];
+    const approvedOnRemote = [];
+    let flaggedForReview = 0;
+    const filled = new Map(CONTENT.map((c) => [c, 0]));
+    const keptDifferent = new Map(CONTENT.map((c) => [c, 0]));
+    for (const [id, l] of local) {
+        const r = remote.get(id);
+        if (!r) continue;
+        if (r.reviewState === "approved") {
+            if (CONTENT.some((c) => blank(r[c]) && !blank(l[c]))) approvedOnRemote.push(id);
+            continue;
+        }
+
+        const set = {};
+        for (const c of CONTENT) {
+            if (blank(l[c]) || l[c] === r[c]) continue;
+            if (blank(r[c])) {
+                set[c] = l[c];
+                filled.set(c, filled.get(c) + 1);
+            } else {
+                keptDifferent.set(c, keptDifferent.get(c) + 1);
+            }
+        }
+        if (Object.keys(set).length === 0) continue;
+
+        if (l.reviewState === "flagged") {
+            const merged = [...new Set([...flagsOf(r.reviewFlags), ...flagsOf(l.reviewFlags)])];
+            set.reviewState = "flagged";
+            set.reviewFlags = JSON.stringify(merged);
+            flaggedForReview++;
+        }
+
+        const cols = Object.keys(set);
+        updates.push(`UPDATE VocabWord SET ${cols.map((c) => `${c}=${sql(set[c])}`).join(", ")} WHERE id=${sql(id)};`);
+        rollback.push(`UPDATE VocabWord SET ${cols.map((c) => `${c}=${sql(r[c])}`).join(", ")} WHERE id=${sql(id)};`);
+    }
+
+    return { updates, rollback, approvedOnRemote, flaggedForReview, filled, keptDifferent };
+};
 
 const main = () => {
     const select = `SELECT id, ${COLUMNS.join(", ")} FROM VocabWord`;
@@ -74,32 +129,7 @@ const main = () => {
     const remote = new Map(d1("remote", select).map((row) => [row.id, row]));
     console.log(`local ${local.size} words, production ${remote.size} words`);
 
-    const updates = [];
-    const rollback = [];
-    const approvedOnRemote = [];
-    let keptRemoteValue = 0;
-    const perColumn = new Map(COLUMNS.map((c) => [c, 0]));
-    for (const [id, l] of local) {
-        const r = remote.get(id);
-        if (!r) continue;
-        if (r.reviewState === "approved") {
-            if (COLUMNS.some((c) => (l[c] ?? null) !== (r[c] ?? null))) approvedOnRemote.push(id);
-            continue;
-        }
-        const blank = (v) => v == null || v === "" || v === "[]";
-        const changed = COLUMNS.filter((c) => {
-            if ((l[c] ?? null) === (r[c] ?? null)) return false;
-            if (blank(l[c]) && !blank(r[c])) {
-                keptRemoteValue++;
-                return false;
-            }
-            return true;
-        });
-        if (!changed.length) continue;
-        for (const c of changed) perColumn.set(c, perColumn.get(c) + 1);
-        updates.push(`UPDATE VocabWord SET ${changed.map((c) => `${c}=${sql(l[c])}`).join(", ")} WHERE id=${sql(id)};`);
-        rollback.push(`UPDATE VocabWord SET ${changed.map((c) => `${c}=${sql(r[c])}`).join(", ")} WHERE id=${sql(id)};`);
-    }
+    const { updates, rollback, approvedOnRemote, flaggedForReview, filled, keptDifferent } = planSync(local, remote);
 
     // Belt and braces: this script only ever emits single-row UPDATEs of VocabWord.
     for (const statement of updates) {
@@ -112,9 +142,12 @@ const main = () => {
     const onlyRemote = [...remote.keys()].filter((id) => !local.has(id));
 
     console.log(`\nrows to update: ${updates.length}`);
-    for (const [c, n] of perColumn) if (n) console.log(`  ${c.padEnd(20)} ${n}`);
+    console.log("  empty fields filled, per column:");
+    for (const [c, n] of filled) if (n) console.log(`    ${c.padEnd(20)} ${n}`);
+    console.log(`  rows also flagged for review (AI was unsure): ${flaggedForReview}`);
+    console.log("not changed — production already has a value that differs from local:");
+    for (const [c, n] of keptDifferent) if (n) console.log(`    ${c.padEnd(20)} ${n}`);
     console.log(`approved on production (skipped): ${approvedOnRemote.length}${approvedOnRemote.length ? `  e.g. ${approvedOnRemote.slice(0, 5).join(", ")}` : ""}`);
-    console.log(`production values kept because local is empty: ${keptRemoteValue}`);
     console.log(`only in local (not copied):      ${onlyLocal.length}${onlyLocal.length ? `  e.g. ${onlyLocal.slice(0, 5).join(", ")}` : ""}`);
     console.log(`only in production (untouched):  ${onlyRemote.length}${onlyRemote.length ? `  e.g. ${onlyRemote.slice(0, 5).join(", ")}` : ""}`);
 
@@ -141,4 +174,4 @@ const main = () => {
     console.log("done");
 };
 
-main();
+if (process.argv[1] === fileURLToPath(import.meta.url)) main();
