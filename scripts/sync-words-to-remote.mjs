@@ -14,6 +14,16 @@
 //
 //   node scripts/sync-words-to-remote.mjs            # dry run: counts per column, SQL on disk
 //   node scripts/sync-words-to-remote.mjs --write    # execute against production
+//   add --repair-thai to either to also fix damaged meaningTh / pronunciationTh (see below)
+//
+// --repair-thai additionally replaces meaningTh / pronunciationTh that production *has*
+// but that are worse than local's PDF re-read:
+//   - production's value is OCR debris (Latin letters or digits, or no Thai at all);
+//   - production's value differs only by a decomposed sara am (`ํา` for `ำ`);
+//   - the row was never curated on production (no exampleEn there) and the text differs
+//     by more than spacing.
+// A row curated on production keeps its text apart from the lossless sara-am fix, and a
+// spacing-only difference is never worth a write.
 //
 // A row a human approved on production (`reviewState = 'approved'`) is never touched.
 //
@@ -33,6 +43,8 @@ import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT_DIR = join(ROOT, "data/sync");
 const WRITE = process.argv.includes("--write");
+const REPAIR_THAI = process.argv.includes("--repair-thai");
+const REPAIRABLE = ["meaningTh", "pronunciationTh"];
 const CHUNK = 400;
 
 const CONTENT = [
@@ -50,6 +62,18 @@ const CONTENT = [
 ];
 const COLUMNS = [...CONTENT, "reviewState", "reviewFlags"];
 const blank = (value) => value == null || String(value).trim() === "" || value === "[]";
+const THAI = /[\u0E00-\u0E7F]/;
+const squash = (value) => String(value ?? "").replace(/\s+/g, "");
+
+/** Should local's value replace production's existing one? Only under --repair-thai. */
+export const shouldRepair = (column, prodValue, localValue, prodCurated) => {
+    if (!REPAIRABLE.includes(column) || blank(localValue) || blank(prodValue)) return false;
+    if (squash(prodValue) === squash(localValue)) return false;
+    if (/[A-Za-z0-9]/.test(prodValue) || !THAI.test(prodValue)) return true;
+    if (squash(prodValue.replace(/\u0E4D\u0E32/g, "\u0E33")) === squash(localValue)) return true;
+    return !prodCurated;
+};
+
 const flagsOf = (value) => {
     try {
         return JSON.parse(value || "[]");
@@ -73,13 +97,14 @@ const sql = (value) => (value == null ? "NULL" : `'${String(value).replace(/'/g,
  * Decide what to write. Pure: takes the two row maps (id -> row), returns statements and
  * counts. Exported so the fill-only rules can be tested without a database.
  */
-export const planSync = (local, remote) => {
+export const planSync = (local, remote, { repairThai = REPAIR_THAI } = {}) => {
     const updates = [];
     const rollback = [];
     const approvedOnRemote = [];
     let flaggedForReview = 0;
     const filled = new Map(CONTENT.map((c) => [c, 0]));
     const keptDifferent = new Map(CONTENT.map((c) => [c, 0]));
+    const repaired = new Map(REPAIRABLE.map((c) => [c, 0]));
     for (const [id, l] of local) {
         const r = remote.get(id);
         if (!r) continue;
@@ -94,6 +119,9 @@ export const planSync = (local, remote) => {
             if (blank(r[c])) {
                 set[c] = l[c];
                 filled.set(c, filled.get(c) + 1);
+            } else if (repairThai && shouldRepair(c, r[c], l[c], !blank(r.exampleEn))) {
+                set[c] = l[c];
+                repaired.set(c, repaired.get(c) + 1);
             } else {
                 keptDifferent.set(c, keptDifferent.get(c) + 1);
             }
@@ -112,7 +140,7 @@ export const planSync = (local, remote) => {
         rollback.push(`UPDATE VocabWord SET ${cols.map((c) => `${c}=${sql(r[c])}`).join(", ")} WHERE id=${sql(id)};`);
     }
 
-    return { updates, rollback, approvedOnRemote, flaggedForReview, filled, keptDifferent };
+    return { updates, rollback, approvedOnRemote, flaggedForReview, filled, keptDifferent, repaired };
 };
 
 const main = () => {
@@ -129,7 +157,7 @@ const main = () => {
     const remote = new Map(d1("remote", select).map((row) => [row.id, row]));
     console.log(`local ${local.size} words, production ${remote.size} words`);
 
-    const { updates, rollback, approvedOnRemote, flaggedForReview, filled, keptDifferent } = planSync(local, remote);
+    const { updates, rollback, approvedOnRemote, flaggedForReview, filled, keptDifferent, repaired } = planSync(local, remote);
 
     // Belt and braces: this script only ever emits single-row UPDATEs of VocabWord.
     for (const statement of updates) {
@@ -144,6 +172,10 @@ const main = () => {
     console.log(`\nrows to update: ${updates.length}`);
     console.log("  empty fields filled, per column:");
     for (const [c, n] of filled) if (n) console.log(`    ${c.padEnd(20)} ${n}`);
+    if (REPAIR_THAI) {
+        console.log("  existing Thai replaced (--repair-thai), per column:");
+        for (const [c, n] of repaired) console.log(`    ${c.padEnd(20)} ${n}`);
+    }
     console.log(`  rows also flagged for review (AI was unsure): ${flaggedForReview}`);
     console.log("not changed — production already has a value that differs from local:");
     for (const [c, n] of keptDifferent) if (n) console.log(`    ${c.padEnd(20)} ${n}`);
