@@ -1592,19 +1592,22 @@ app.use("*", async (c, next) => {
         } catch {
             // fall through as anonymous
         }
-    } else {
-        for (const userToken of userTokens) {
-            try {
-                const { payload } = await jwtVerify(userToken, secretOf(c));
-                if (payload.role === "user" && typeof payload.userId === "string") {
-                    c.set("role", "user");
-                    c.set("userId", payload.userId);
-                    break;
-                }
-            } catch {
-                // Try the next same-name cookie. A different localhost app may have
-                // issued this candidate with another signing key.
+    }
+
+    // Admin and learner cookies can coexist. Keep admin authority for editorial routes,
+    // but resolve the learner independently: gameplay requires their verified userId.
+    // Neither a valid nor an expired admin cookie may hide a signed-in learner.
+    for (const userToken of userTokens) {
+        try {
+            const { payload } = await jwtVerify(userToken, secretOf(c));
+            if (payload.role === "user" && typeof payload.userId === "string") {
+                if (c.get("role") !== "admin") c.set("role", "user");
+                c.set("userId", payload.userId);
+                break;
             }
+        } catch {
+            // Try the next same-name cookie. A different localhost app may have
+            // issued this candidate with another signing key.
         }
     }
 
