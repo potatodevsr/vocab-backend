@@ -817,7 +817,7 @@ progress.get("/progress/today", async (c) => {
         prisma.mixedSession.findFirst({
             where: { userId, completedAt: null },
             orderBy: { createdAt: "desc" },
-            select: { id: true, level: true, unit: true, createdAt: true },
+            select: { id: true, level: true, unit: true, mode: true, createdAt: true },
         }),
         prisma.userUnitProgress.findFirst({
             where: {

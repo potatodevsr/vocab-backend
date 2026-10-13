@@ -1,6 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "vocab-api",
+  "account_id": "57703efb2da262dd0fa5c94b01b41ae6",
   "main": "src/index.ts",
   "compatibility_date": "2026-07-01",
   // nodejs_compat is required by the Prisma client runtime.

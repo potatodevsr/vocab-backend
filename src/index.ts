@@ -556,11 +556,12 @@ const SESSION_OPENAPI = {
                     inProgressSession: {
                         nullable: true,
                         type: "object",
-                        required: ["id", "level", "unit", "createdAt"],
+                        required: ["id", "level", "unit", "mode", "createdAt"],
                         properties: {
                             id: { type: "string" },
                             level: { type: "string" },
                             unit: { type: "integer", nullable: true },
+                            mode: { type: "string", enum: ["normal", "review", "comeback", "mistakes"] },
                             createdAt: { type: "string" },
                         },
                         additionalProperties: false,
