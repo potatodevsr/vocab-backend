@@ -6,7 +6,7 @@ allowBuilds:
   better-sqlite3: true
   esbuild: true
   prisma: true
-  sharp: set this to true or false
+  sharp: false
   workerd: true
 minimumReleaseAgeExclude:
   - prisma-generator-express@1.41.0
